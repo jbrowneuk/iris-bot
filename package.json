@@ -1,0 +1,32 @@
+{
+  "name": "iris-bot",
+  "version": "0.0.1",
+  "description": "Discord chatbot",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbrowneuk/iris-bot.git"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "author": "Jason Browne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jbrowneuk/iris-bot/issues"
+  },
+  "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
+  "dependencies": {
+    "discord.js": "11.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "9.6.6",
+    "nodemon": "1.17.3",
+    "ts-node": "6.0.0",
+    "typescript": "2.8.3"
+  }
+}
