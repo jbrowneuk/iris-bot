@@ -1,0 +1,21 @@
+{
+  "name": "iris-bot",
+  "version": "0.0.1",
+  "description": "Discord chatbot",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jbrowneuk/iris-bot.git"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "author": "Jason Browne",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jbrowneuk/iris-bot/issues"
+  },
+  "homepage": "https://github.com/jbrowneuk/iris-bot#readme"
+}
