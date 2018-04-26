@@ -5,7 +5,9 @@
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts"
+    "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts",
+    "lint": "tslint --project tsconfig.json --config tslint.json",
+    "pr-check": "npm build && npm test && npm lint"
   },
   "repository": {
     "type": "git",
