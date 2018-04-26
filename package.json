@@ -4,7 +4,8 @@
   "description": "Discord chatbot",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jasmine-ts \"src/**/*.spec.ts\"",
+    "coverage": "nyc --reporter=lcov --reporter=text-lcov npm test",
     "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts",
     "lint": "tslint --project tsconfig.json --config tslint.json",
     "lint:fix": "prettier --config ./.prettierrc --write ./src/**/*.ts",
@@ -27,14 +28,32 @@
     "discord.js": "11.3.2"
   },
   "devDependencies": {
+    "@types/jasmine": "^2.8.6",
     "@types/node": "9.6.6",
+    "jasmine-ts": "0.2.1",
     "nodemon": "1.17.3",
+    "nyc": "11.7.1",
     "prettier": "1.12.1",
     "ts-node": "6.0.0",
     "tslint": "5.9.1",
     "tslint-config-airbnb": "5.8.0",
     "tslint-consistent-codestyle": "1.13.0",
     "tslint-eslint-rules": "5.1.0",
+    "typemoq": "2.1.0",
     "typescript": "2.8.3"
+  },
+  "nyc": {
+    "check-coverage": true,
+    "all": true,
+    "extension": [
+      ".ts"
+    ],
+    "include": [
+      "src/**/!(*.spec.*).ts"
+    ],
+    "reporter": [
+      "html",
+      "lcov"
+    ]
   }
 }
