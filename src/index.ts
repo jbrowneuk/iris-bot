@@ -1,7 +1,7 @@
 import * as discord from 'discord.js';
 
 const client = new discord.Client();
-const token = ''; //DO NOT SUBMIT
+const token = ''; // DO NOT SUBMIT
 
 client.on('ready', () => {
   console.log('connected');
