@@ -18,16 +18,16 @@ export class DiscordClient extends EventEmitter implements Client {
   constructor(private token: string) {
     super();
 
+    this.client = null;
     this.connected = false;
-
     this.lastMessage = null;
-
-    this.client = this.generateClient();
-    this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
-    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) => this.onMessage(message));
   }
 
   public connect(): void {
+    this.client = this.generateClient();
+    this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
+    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) => this.onMessage(message));
+
     this.client.login(this.token);
   }
 
