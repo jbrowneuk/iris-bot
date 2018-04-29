@@ -6,7 +6,7 @@ import { Client } from '../interfaces/client';
 
 const DISCORD_EVENTS = {
   connected: 'ready',
-  message: 'message'
+  message: 'message',
 };
 
 export class DiscordClient extends EventEmitter implements Client {

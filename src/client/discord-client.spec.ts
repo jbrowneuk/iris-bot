@@ -32,4 +32,4 @@ describe('Discord client wrapper', () => {
     discordMock.verify(m => m.on(It.isValue('ready'), It.isAny()), Times.once());
     discordMock.verify(m => m.on(It.isValue('message'), It.isAny()), Times.once());
   });
-})
+});
