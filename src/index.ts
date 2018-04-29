@@ -1,24 +1,21 @@
 import * as discord from 'discord.js';
 
-const client = new discord.Client();
+import * as LifecycleEvents from './constants/lifecycle-events';
+import { DiscordClient } from './client/discord-client';
+
 const token = ''; // DO NOT SUBMIT
+const client = new DiscordClient(token);
 
-client.on('ready', () => {
-  console.log('connected');
-});
+client.on(LifecycleEvents.CONNECTED, () => console.log('Connected'));
 
-client.on('message', (message: discord.Message) => {
-  if (message.author === client.user) {
-    return;
-  }
-
-  if (message.channel.type !== 'text') {
-    return;
-  }
-
+client.on(LifecycleEvents.MESSAGE, (message: discord.Message) => {
   if (message.content === '+echo') {
-    message.channel.send('echo!');
+    client.queueMessages(['echo!'], message.channel);
+  }
+
+  if (message.content === '+leave') {
+    client.disconnect();
   }
 });
 
-client.login(token);
+client.connect();
