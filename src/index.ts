@@ -1,21 +1,8 @@
-import * as discord from 'discord.js';
+import 'reflect-metadata';
 
-import * as LifecycleEvents from './constants/lifecycle-events';
-import { DiscordClient } from './client/discord-client';
+import { container } from './infrastructure/installer';
+import { TYPES } from './constants/types';
+import { Engine } from './interfaces/engine';
 
-const token = ''; // DO NOT SUBMIT
-const client = new DiscordClient(token);
-
-client.on(LifecycleEvents.CONNECTED, () => console.log('Connected'));
-
-client.on(LifecycleEvents.MESSAGE, (message: discord.Message) => {
-  if (message.content === '+echo') {
-    client.queueMessages(['echo!'], message.channel);
-  }
-
-  if (message.content === '+leave') {
-    client.disconnect();
-  }
-});
-
-client.connect();
+const botEngine = container.get<Engine>(TYPES.Engine);
+botEngine.run();

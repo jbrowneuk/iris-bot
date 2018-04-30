@@ -1,34 +1,38 @@
 import { EventEmitter } from 'events';
+import { injectable, decorate } from 'inversify';
 import * as discord from 'discord.js';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
+
+decorate(injectable(), EventEmitter);
 
 const DISCORD_EVENTS = {
   connected: 'ready',
   message: 'message',
 };
 
+@injectable()
 export class DiscordClient extends EventEmitter implements Client {
 
   private client: discord.Client;
   private lastMessage: discord.Message;
   private connected: boolean;
 
-  constructor(private token: string) {
+  constructor() {
     super();
 
     this.client = null;
-    this.connected = false;
     this.lastMessage = null;
+    this.connected = false;
   }
 
-  public connect(): void {
+  public connect(token: string): void {
     this.client = this.generateClient();
     this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
     this.client.on(DISCORD_EVENTS.message, (message: discord.Message) => this.onMessage(message));
 
-    this.client.login(this.token);
+    this.client.login(token);
   }
 
   public disconnect(): void {

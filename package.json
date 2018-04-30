@@ -4,7 +4,7 @@
   "description": "Discord chatbot",
   "scripts": {
     "build": "tsc",
-    "test": "jasmine-ts \"src/**/*.spec.ts\"",
+    "test": "jasmine-ts",
     "coverage": "nyc --reporter=lcov --reporter=text-lcov npm test",
     "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts",
     "lint": "tslint --project tsconfig.json --config tslint.json",
@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
-    "discord.js": "11.3.2"
+    "discord.js": "11.3.2",
+    "inversify": "4.13.0",
+    "reflect-metadata": "0.1.12"
   },
   "devDependencies": {
     "@types/jasmine": "^2.8.6",

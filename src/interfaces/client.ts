@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import * as discord from 'discord.js';
 
 export interface Client extends EventEmitter {
-  connect(): void;
+  connect(token: string): void;
   disconnect(): void;
 
   isConnected(): boolean;
