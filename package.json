@@ -25,7 +25,9 @@
   },
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
-    "discord.js": "11.3.2"
+    "discord.js": "11.3.2",
+    "inversify": "4.13.0",
+    "reflect-metadata": "0.1.12"
   },
   "devDependencies": {
     "@types/jasmine": "^2.8.6",
