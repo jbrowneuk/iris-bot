@@ -4,7 +4,7 @@
   "description": "Discord chatbot",
   "scripts": {
     "build": "tsc",
-    "test": "jasmine-ts \"src/**/*.spec.ts\"",
+    "test": "jasmine-ts",
     "coverage": "nyc --reporter=lcov --reporter=text-lcov npm test",
     "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts",
     "lint": "tslint --project tsconfig.json --config tslint.json",

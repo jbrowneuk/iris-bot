@@ -11,14 +11,14 @@ describe('Discord client wrapper', () => {
   beforeEach(() => {
     discordMock = Mock.ofType<discord.Client>();
 
-    client = new DiscordClient(MOCK_TOKEN);
+    client = new DiscordClient();
     spyOn((client as any), 'generateClient').and.returnValue(discordMock.object);
   });
 
   it('should connect with token', () => {
     discordMock.setup(m => m.login(It.isAnyString()));
 
-    client.connect();
+    client.connect(MOCK_TOKEN);
 
     discordMock.verify(m => m.login(It.isValue(MOCK_TOKEN)), Times.once());
   });
@@ -26,7 +26,7 @@ describe('Discord client wrapper', () => {
   it('should initialise event listeners on connect', () => {
     discordMock.setup(m => m.on(It.isAnyString(), It.isAny()));
 
-    client.connect();
+    client.connect(MOCK_TOKEN);
 
     // Connected and message
     discordMock.verify(m => m.on(It.isValue('ready'), It.isAny()), Times.once());
