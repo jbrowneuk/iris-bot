@@ -11,7 +11,7 @@ export interface Client extends EventEmitter {
   findChannelById(channelId: string): discord.Channel;
   findChannelByName(channelName: string): discord.Channel;
 
-  getClientInformation(): discord.User;
+  getUserInformation(): discord.User;
 
   queueMessages(messages: string[], channel?: discord.Channel): void;
   sendReaction(emoji: string, message?: discord.Message): void;

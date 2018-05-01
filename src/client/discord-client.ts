@@ -5,16 +5,12 @@ import * as discord from 'discord.js';
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
 
-decorate(injectable(), EventEmitter);
+import { DISCORD_EVENTS } from './discord-events';
 
-const DISCORD_EVENTS = {
-  connected: 'ready',
-  message: 'message',
-};
+decorate(injectable(), EventEmitter);
 
 @injectable()
 export class DiscordClient extends EventEmitter implements Client {
-
   private client: discord.Client;
   private lastMessage: discord.Message;
   private connected: boolean;
@@ -30,7 +26,9 @@ export class DiscordClient extends EventEmitter implements Client {
   public connect(token: string): void {
     this.client = this.generateClient();
     this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
-    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) => this.onMessage(message));
+    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) =>
+      this.onMessage(message)
+    );
 
     this.client.login(token);
   }
@@ -44,26 +42,33 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   public findChannelById(channelId: string): discord.Channel {
-    const channel = this.client.channels.find(c => c.id === channelId);
-    return channel || null;
-  }
-
-  public findChannelByName(channelName: string): discord.Channel {
-    const textChannels = this.client.channels.filter(c => c instanceof discord.TextChannel);
-    if (textChannels.size === 0) {
+    if (!this.client.channels.has(channelId)) {
       return null;
     }
 
-    const channel = textChannels.find(c => (c as discord.TextChannel).name === channelName);
+    return this.client.channels.get(channelId);
+  }
+
+  public findChannelByName(channelName: string): discord.Channel {
+    const filterProperty = 'name';
+    const namedChannels = this.client.channels.filter(c =>
+      Object.hasOwnProperty.call(c, filterProperty)
+    );
+    if (namedChannels.size === 0) {
+      return null;
+    }
+
+    const channel = namedChannels.find(
+      c => (c as discord.TextChannel).name === channelName
+    );
     return channel || null;
   }
 
-  public getClientInformation(): discord.User {
+  public getUserInformation(): discord.User {
     return this.client.user;
   }
 
   public queueMessages(messages: string[], channel?: discord.Channel): void {
-    console.log(`Sending ${messages.length} messages`);
     messages.forEach((message: string) => this.sendMessage(message));
   }
 
@@ -81,7 +86,10 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   private onMessage(message: discord.Message): void {
-    if (message.channel.type !== 'text' || message.author === this.client.user) {
+    if (
+      message.channel.type !== 'text' ||
+      message.author === this.client.user
+    ) {
       return;
     }
 
