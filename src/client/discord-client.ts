@@ -63,7 +63,6 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   public queueMessages(messages: string[], channel?: discord.Channel): void {
-    console.log(`Sending ${messages.length} messages`);
     messages.forEach((message: string) => this.sendMessage(message));
   }
 
