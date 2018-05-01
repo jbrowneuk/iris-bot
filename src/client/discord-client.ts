@@ -40,17 +40,25 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   public findChannelById(channelId: string): discord.Channel {
-    const channel = this.client.channels.find(c => c.id === channelId);
-    return channel || null;
-  }
-
-  public findChannelByName(channelName: string): discord.Channel {
-    const textChannels = this.client.channels.filter(c => c instanceof discord.TextChannel);
-    if (textChannels.size === 0) {
+    if (!this.client.channels.has(channelId)) {
       return null;
     }
 
-    const channel = textChannels.find(c => (c as discord.TextChannel).name === channelName);
+    return this.client.channels.get(channelId);
+  }
+
+  public findChannelByName(channelName: string): discord.Channel {
+    const filterProperty = 'name';
+    const namedChannels = this.client.channels.filter(c =>
+      Object.hasOwnProperty.call(c, filterProperty)
+    );
+    if (namedChannels.size === 0) {
+      return null;
+    }
+
+    const channel = namedChannels.find(
+      c => (c as discord.TextChannel).name === channelName
+    );
     return channel || null;
   }
 
