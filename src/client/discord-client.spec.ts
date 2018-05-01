@@ -1,7 +1,7 @@
 import * as discord from 'discord.js';
 import { IMock, Mock, It, Times } from 'typemoq';
 import { DiscordClient } from './discord-client';
-
+import * as LifecycleEvents from '../constants/lifecycle-events';
 import { DISCORD_EVENTS } from './discord-events';
 
 const MOCK_TOKEN = '12345abcde';
@@ -180,5 +180,83 @@ describe('Discord client wrapper', () => {
     const user = client.getUserInformation();
 
     expect(user.username).toBe(username);
+  });
+
+  it('should get online status', () => {
+    const states = [true, false];
+    states.forEach((state: boolean) => {
+      (client as any).connected = state;
+      expect(client.isConnected()).toBe(state);
+    });
+  });
+
+  it('should handle connection event', () => {
+    let eventRaised = false;
+    const callbacks: { evt: string; cb: Function }[] = [];
+    discordMock
+      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .callback((evt: string, cb: Function) => {
+        callbacks.push({ evt, cb });
+      });
+    client.on(LifecycleEvents.CONNECTED, () => { eventRaised = true; });
+
+    client.connect(MOCK_TOKEN);
+
+    const relatedHandler = callbacks.find(
+      cb => cb.evt === DISCORD_EVENTS.connected
+    );
+    relatedHandler.cb.call(client);
+
+    expect(eventRaised).toBeTruthy();
+  });
+
+  it('should handle incoming message event from text channel', () => {
+    let eventRaised = false;
+    const callbacks: { evt: string; cb: Function }[] = [];
+    discordMock
+      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .callback((evt: string, cb: Function) => {
+        callbacks.push({ evt, cb });
+      });
+    client.connect(MOCK_TOKEN);
+    client.on(LifecycleEvents.MESSAGE, () => { eventRaised = true; });
+
+    const mockMessage = {
+      channel: { type: 'text' },
+      user: {},
+      content: 'text message'
+    };
+
+    const relatedHandler = callbacks.find(
+      cb => cb.evt === DISCORD_EVENTS.message
+    );
+    relatedHandler.cb.call(client, mockMessage);
+
+    expect(eventRaised).toBeTruthy();
+  });
+
+  it('should not handle incoming message event from non-text channel', () => {
+    let eventRaised = false;
+    const callbacks: { evt: string; cb: Function }[] = [];
+    discordMock
+      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .callback((evt: string, cb: Function) => {
+        callbacks.push({ evt, cb });
+      });
+    client.connect(MOCK_TOKEN);
+    client.on(LifecycleEvents.MESSAGE, () => { eventRaised = true; });
+
+    const mockMessage = {
+      channel: { type: 'dm' },
+      user: {},
+      content: 'text message'
+    };
+
+    const relatedHandler = callbacks.find(
+      cb => cb.evt === DISCORD_EVENTS.message
+    );
+    relatedHandler.cb.call(client, mockMessage);
+
+    expect(eventRaised).toBeFalsy();
   });
 });
