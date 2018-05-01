@@ -26,7 +26,9 @@ export class DiscordClient extends EventEmitter implements Client {
   public connect(token: string): void {
     this.client = this.generateClient();
     this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
-    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) => this.onMessage(message));
+    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) =>
+      this.onMessage(message)
+    );
 
     this.client.login(token);
   }
@@ -84,7 +86,10 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   private onMessage(message: discord.Message): void {
-    if (message.channel.type !== 'text' || message.author === this.client.user) {
+    if (
+      message.channel.type !== 'text' ||
+      message.author === this.client.user
+    ) {
       return;
     }
 
