@@ -2,6 +2,8 @@ import * as discord from 'discord.js';
 import { IMock, Mock, It, Times } from 'typemoq';
 import { DiscordClient } from './discord-client';
 
+import { DISCORD_EVENTS } from './discord-events';
+
 const MOCK_TOKEN = '12345abcde';
 
 describe('Discord client wrapper', () => {

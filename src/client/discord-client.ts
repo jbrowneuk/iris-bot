@@ -5,16 +5,12 @@ import * as discord from 'discord.js';
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
 
-decorate(injectable(), EventEmitter);
+import { DISCORD_EVENTS } from './discord-events';
 
-const DISCORD_EVENTS = {
-  connected: 'ready',
-  message: 'message',
-};
+decorate(injectable(), EventEmitter);
 
 @injectable()
 export class DiscordClient extends EventEmitter implements Client {
-
   private client: discord.Client;
   private lastMessage: discord.Message;
   private connected: boolean;
