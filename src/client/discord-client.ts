@@ -58,7 +58,7 @@ export class DiscordClient extends EventEmitter implements Client {
     return channel || null;
   }
 
-  public getClientInformation(): discord.User {
+  public getUserInformation(): discord.User {
     return this.client.user;
   }
 
