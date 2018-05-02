@@ -19,16 +19,23 @@ export class BotEngine implements Engine {
   }
 
   private attachEvents(): void {
-    this.client.on(LifecycleEvents.CONNECTED, () => console.log('Connected'));
+    this.client.on(LifecycleEvents.CONNECTED, () => this.onConnected());
+    this.client.on(LifecycleEvents.MESSAGE, (message: discord.Message) =>
+      this.onMessage(message)
+    );
+  }
 
-    this.client.on(LifecycleEvents.MESSAGE, (message: discord.Message) => {
-      if (message.content === '+echo') {
-        this.client.queueMessages(['echo!'], message.channel);
-      }
+  private onConnected(): void {
+    console.log('Connected');
+  }
 
-      if (message.content === '+leave') {
-        this.client.disconnect();
-      }
-    });
+  private onMessage(message: discord.Message): void {
+    if (message.content === '+echo') {
+      this.client.queueMessages(['echo!'], message.channel);
+    }
+
+    if (message.content === '+leave') {
+      this.client.disconnect();
+    }
   }
 }
