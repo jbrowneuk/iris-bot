@@ -39,12 +39,31 @@ export class BotEngine implements Engine {
   }
 
   private onMessage(message: discord.Message): void {
-    if (message.content === '+echo') {
-      this.client.queueMessages(['echo!'], message.channel);
-    }
+    // if addressed, do the addressed loop else
+    this.handleAmbientMessage(message);
+  }
 
-    if (message.content === '+leave') {
-      this.client.disconnect();
-    }
+  private dequeuePromises(funcs: Promise<string>[]): void {
+    funcs.reduce(
+      (prev: Promise<string>, curr: Promise<string>) => {
+        return prev.then((result: string) => {
+          if (result !== null) {
+            this.client.queueMessages([result]);
+            return;
+          }
+
+          return curr;
+        });
+      },
+      Promise.resolve(null)
+    ).catch((err: Error) => {
+      console.error(err);
+    });
+  }
+
+  private handleAmbientMessage(message: discord.Message): void {
+    const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
+    funcs.push(Promise.resolve(null));
+    this.dequeuePromises(funcs);
   }
 }
