@@ -2,6 +2,8 @@ import { BotEngine } from './bot-engine';
 import { IMock, Mock, It, Times } from 'typemoq';
 import { Client } from '../interfaces/client';
 import * as LifecycleEvents from '../constants/lifecycle-events';
+import { Personality } from '../interfaces/personality';
+import * as discord from 'discord.js';
 
 describe('Bot engine', () => {
   let client: IMock<Client>;
@@ -83,5 +85,67 @@ describe('Bot engine', () => {
     relatedHandler.cb.call(client);
 
     expect(untypedEngine.onMessage).toHaveBeenCalled();
+  });
+
+  it('should add personality construct', () => {
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+    const mockCore = Mock.ofType<Personality>();
+    
+    expect(untypedEngine.personalityConstructs.length).toBe(0);
+
+    engine.addPersonality(mockCore.object);
+
+    expect(untypedEngine.personalityConstructs.length).toBe(1);
+  });
+
+  it('should send message when one is generated as a response', (done: DoneFn) => {
+    const mockMessage = 'hello world';
+    const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+
+    untypedEngine.dequeuePromises(fakeMessageFns);
+
+    setTimeout(
+      () => {
+        client.verify(c => c.queueMessages(It.isValue([mockMessage])), Times.once());
+        done();
+      },
+      100);
+  });
+
+  it('should handle an exception being thrown', (done: DoneFn) => {
+    const failureMessage = 'I am a failure';
+    const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+    spyOn(console, 'error');
+
+    untypedEngine.dequeuePromises(fakeMessageFns);
+
+    setTimeout(
+      () => {
+        expect(console.error).toHaveBeenCalledWith(failureMessage);
+        client.verify(c => c.queueMessages(It.isAny()), Times.never());
+        done();
+      },
+      100);
+  });
+
+  it('should queue messages from personality cores', () => {
+    let queuedPromises = [];
+    const mockMessage = { content: 'lol hello' };
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => { queuedPromises = arg; });
+    const mockPersonalityCore = Mock.ofType<Personality>();
+    mockPersonalityCore.setup(m => m.onMessage(It.isAny())).returns(() => Promise.resolve(null));
+    untypedEngine.personalityConstructs = [mockPersonalityCore.object];
+
+    untypedEngine.handleAmbientMessage(mockMessage);
+
+    expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
+    expect(queuedPromises.length).toBe(2); // Personality construct + default response
   });
 });
