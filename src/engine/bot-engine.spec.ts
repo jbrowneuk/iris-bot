@@ -3,8 +3,6 @@ import { IMock, Mock, It, Times } from 'typemoq';
 import { Client } from '../interfaces/client';
 import * as LifecycleEvents from '../constants/lifecycle-events';
 
-const MOCK_TOKEN = '';
-
 describe('Bot engine', () => {
   let client: IMock<Client>;
 
@@ -23,7 +21,7 @@ describe('Bot engine', () => {
 
     engine.run();
 
-    client.verify(m => m.connect(It.isValue(MOCK_TOKEN)), Times.once());
+    client.verify(m => m.connect(It.isAnyString()), Times.once());
   });
 
   it('should initialise event listeners on run', () => {
