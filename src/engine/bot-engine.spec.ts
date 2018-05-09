@@ -5,6 +5,9 @@ import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Personality } from '../interfaces/personality';
 import * as discord from 'discord.js';
 
+const MOCK_USERNAME = 'bot';
+const MOCK_ID = 'BOT12345';
+
 describe('Bot engine', () => {
   let client: IMock<Client>;
 
@@ -147,5 +150,37 @@ describe('Bot engine', () => {
 
     expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
     expect(queuedPromises.length).toBe(2); // Personality construct + default response
+  });
+
+  it('should detect when being addressed', (done: DoneFn) => {
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+
+    interface InputOutputPair { input: string; expectedOutput: string; }
+    const messageMappedToExpectedResults: InputOutputPair[] = [
+      { input: 'hehehe', expectedOutput: null },
+      { input: 'okay', expectedOutput: null },
+      { input: 'hey', expectedOutput: null },
+      { input: `long ${MOCK_USERNAME}: message`, expectedOutput: null },
+      { input: `${MOCK_USERNAME}, hello`, expectedOutput: 'hello' },
+      { input: `${MOCK_USERNAME} hello`, expectedOutput: 'hello' },
+      { input: `${MOCK_USERNAME}`, expectedOutput: '' },
+      { input: `${MOCK_USERNAME}:`, expectedOutput: '' },
+      { input: `ok ${MOCK_USERNAME} hello`, expectedOutput: 'hello' },
+      { input: `<@${MOCK_ID}>! hi`, expectedOutput: 'hi' },
+      { input: `hey <@${MOCK_ID}>, open door`, expectedOutput: 'open door' }
+    ];
+
+    const mockUserInfo = Mock.ofType<discord.User>();
+    mockUserInfo.setup(m => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup(m => m.id).returns(() => MOCK_ID);
+
+    messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
+      client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
+      const actualResult = untypedEngine.calculateAddressedMessage({ content: kvp.input });
+      expect(actualResult).toBe(kvp.expectedOutput);
+    });
+
+    done();
   });
 });
