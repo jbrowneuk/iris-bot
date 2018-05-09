@@ -40,11 +40,17 @@ export class BotEngine implements Engine {
   }
 
   private onMessage(message: discord.Message): void {
-    // if addressed, do the addressed loop else
+    const addressedMessage = this.calculateAddressedMessage(message);
+    if (addressedMessage !== null) {
+      this.handleAddressedMessage(message, addressedMessage);
+      return;
+    }
+
     this.handleAmbientMessage(message);
   }
 
   private dequeuePromises(funcs: Promise<string>[]): void {
+    funcs.push(Promise.resolve(null)); // Lazy workaround
     funcs.reduce(
       (prev: Promise<string>, curr: Promise<string>) => {
         return prev.then((result: string) => {
@@ -64,7 +70,13 @@ export class BotEngine implements Engine {
 
   private handleAmbientMessage(message: discord.Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
-    funcs.push(Promise.resolve(null));
+    this.dequeuePromises(funcs);
+  }
+
+  private handleAddressedMessage(message: discord.Message, addressedMessage: string): void {
+    const funcs = this.personalityConstructs.map(
+      (c: Personality) => c.onAddressed(message, addressedMessage)
+    );
     this.dequeuePromises(funcs);
   }
 

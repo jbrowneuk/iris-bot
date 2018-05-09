@@ -8,7 +8,7 @@ describe('basic intelligence', () => {
     message.setup(m => m.content).returns(() => 'anything');
     const core = new BasicIntelligence();
 
-    core.onAddressed(message.object).then((result: string) => {
+    core.onAddressed(message.object, 'anything').then((result: string) => {
       expect(result).toBe(null);
       done();
     });

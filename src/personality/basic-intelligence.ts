@@ -2,7 +2,7 @@ import * as discord from 'discord.js';
 import { Personality } from '../interfaces/personality';
 
 export class BasicIntelligence implements Personality {
-  onAddressed(message: discord.Message): Promise<string> {
+  onAddressed(message: discord.Message, addressedMessage: string): Promise<string> {
     return Promise.resolve(null);
   }
 
