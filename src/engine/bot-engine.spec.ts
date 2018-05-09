@@ -161,6 +161,7 @@ describe('Bot engine', () => {
       { input: 'hehehe', expectedOutput: null },
       { input: 'okay', expectedOutput: null },
       { input: 'hey', expectedOutput: null },
+      { input: `hey${MOCK_USERNAME}`, expectedOutput: null }, // no space before bot name
       { input: `long ${MOCK_USERNAME}: message`, expectedOutput: null },
       { input: `${MOCK_USERNAME}, hello`, expectedOutput: 'hello' },
       { input: `${MOCK_USERNAME} hello`, expectedOutput: 'hello' },
