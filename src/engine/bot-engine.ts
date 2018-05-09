@@ -105,7 +105,7 @@ export class BotEngine implements Engine {
     }
 
     let messageLocation = usernameLocation + username.length;
-    if (messageLocation > messageText.length) {
+    if (messageLocation >= messageText.length) {
       return '';
     }
 
