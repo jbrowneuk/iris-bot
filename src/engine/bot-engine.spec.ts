@@ -102,6 +102,30 @@ describe('Bot engine', () => {
     expect(untypedEngine.personalityConstructs.length).toBe(1);
   });
 
+  it('should handle ambient messages when message received', () => {
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+
+    spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue(null);
+    spyOn(untypedEngine, 'handleAmbientMessage');
+
+    untypedEngine.onMessage({});
+
+    expect(untypedEngine.handleAmbientMessage).toHaveBeenCalled();
+  });
+
+  it('should handle addressed messages when message received', () => {
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+
+    spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue('test');
+    spyOn(untypedEngine, 'handleAddressedMessage');
+
+    untypedEngine.onMessage({});
+
+    expect(untypedEngine.handleAddressedMessage).toHaveBeenCalled();
+  });
+
   it('should send message when one is generated as a response', (done: DoneFn) => {
     const mockMessage = 'hello world';
     const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
@@ -149,7 +173,7 @@ describe('Bot engine', () => {
     untypedEngine.handleAmbientMessage(mockMessage);
 
     expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
-    expect(queuedPromises.length).toBe(2); // Personality construct + default response
+    expect(queuedPromises.length).toBe(1);
   });
 
   it('should detect when being addressed', (done: DoneFn) => {
@@ -183,5 +207,23 @@ describe('Bot engine', () => {
     });
 
     done();
+  });
+
+  it('should queue addressed messages from personality cores', () => {
+    let queuedPromises = [];
+    const messageText = 'lol hello';
+    const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
+    const engine = new BotEngine(client.object);
+    const untypedEngine = engine as any;
+    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => { queuedPromises = arg; });
+    const mockPersonalityCore = Mock.ofType<Personality>();
+    mockPersonalityCore.setup(m => m.onAddressed(It.isAny(), It.isAnyString()))
+      .returns(() => Promise.resolve(null));
+    untypedEngine.personalityConstructs = [mockPersonalityCore.object];
+
+    untypedEngine.handleAddressedMessage(mockMessage, messageText);
+
+    expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
+    expect(queuedPromises.length).toBe(1);
   });
 });
