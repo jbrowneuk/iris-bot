@@ -7,6 +7,7 @@ import { TYPES } from '../constants/types';
 import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
+import { getValueStartedWith, isPunctuation } from '../utils';
 
 const token = ''; // DO NOT SUBMIT
 
@@ -39,11 +40,17 @@ export class BotEngine implements Engine {
   }
 
   private onMessage(message: discord.Message): void {
-    // if addressed, do the addressed loop else
+    const addressedMessage = this.calculateAddressedMessage(message);
+    if (addressedMessage !== null) {
+      this.handleAddressedMessage(message, addressedMessage);
+      return;
+    }
+
     this.handleAmbientMessage(message);
   }
 
   private dequeuePromises(funcs: Promise<string>[]): void {
+    funcs.push(Promise.resolve(null)); // Lazy workaround
     funcs.reduce(
       (prev: Promise<string>, curr: Promise<string>) => {
         return prev.then((result: string) => {
@@ -63,7 +70,64 @@ export class BotEngine implements Engine {
 
   private handleAmbientMessage(message: discord.Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
-    funcs.push(Promise.resolve(null));
     this.dequeuePromises(funcs);
+  }
+
+  private handleAddressedMessage(message: discord.Message, addressedMessage: string): void {
+    const funcs = this.personalityConstructs.map(
+      (c: Personality) => c.onAddressed(message, addressedMessage)
+    );
+    this.dequeuePromises(funcs);
+  }
+
+  private calculateAddressedMessage(message: discord.Message): string {
+    const botInfo = this.client.getUserInformation();
+    const username = botInfo.username;
+    const botId = `<@${botInfo.id}>`;
+    const messageText = message.content.replace(botId, username);
+
+    const lowercaseMessage = messageText.toLowerCase();
+    const lowercaseUsername = username.toLowerCase();
+    const usernameLocation = lowercaseMessage.indexOf(lowercaseUsername);
+
+    if (usernameLocation < 0) {
+      return null;
+    }
+
+    if (usernameLocation > 0) {
+      const attentionGrabbers = ['hey', 'ok', 'okay'];
+      const attentionGrabber = getValueStartedWith(
+        lowercaseMessage,
+        attentionGrabbers
+      );
+      if (!attentionGrabber) {
+        return null;
+      }
+
+      const characterAfterAttentionGrabber = messageText.charAt(
+        attentionGrabber.length
+      );
+      const hasAttentionGrabber =
+        characterAfterAttentionGrabber === ' ' &&
+        usernameLocation === attentionGrabber.length + 1;
+
+      if (!hasAttentionGrabber) {
+        return null;
+      }
+    }
+
+    let messageLocation = usernameLocation + username.length;
+    if (messageLocation >= messageText.length) {
+      return '';
+    }
+
+    const messageStartsWithPunctuation = isPunctuation(
+      messageText.charAt(messageLocation)
+    );
+    if (messageStartsWithPunctuation) {
+      messageLocation += 1;
+    }
+
+    return messageText.substr(messageLocation).trim();
   }
 }

@@ -6,7 +6,7 @@
     "build": "tsc",
     "test": "jasmine-ts",
     "coverage": "nyc npm test",
-    "watch": "nodemon -e tsc -w ./src -x ts-node src/index.ts",
+    "watch": "nodemon",
     "lint": "tslint --project tsconfig.json --config tslint.json",
     "lint:fix": "prettier --config ./.prettierrc --write ./src/**/*.ts",
     "pr-check": "npm run build && npm run test && npm run lint"
