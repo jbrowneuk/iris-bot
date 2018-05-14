@@ -5,7 +5,12 @@ import { TYPES } from './constants/types';
 import { Engine } from './interfaces/engine';
 
 import { BasicIntelligence } from './personality/basic-intelligence';
+import { GameElements } from './personality/game-elements';
 
 const botEngine = container.get<Engine>(TYPES.Engine);
-botEngine.addPersonality(new BasicIntelligence); // TODO: dep injection
+
+// TODO: dep injection
+botEngine.addPersonality(new BasicIntelligence());
+botEngine.addPersonality(new GameElements());
+
 botEngine.run();
