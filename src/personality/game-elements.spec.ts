@@ -76,6 +76,19 @@ describe('Game elements', () => {
     });
   });
 
+  it('should roll dice in the format <count>d<sides> multiple times', (done: DoneFn) => {
+    spyOn(Math, 'random').and.returnValue(1);
+    const message = Mock.ofType<Message>();
+    message.setup(m => m.content).returns(() => '+roll 4d6 5d8');
+    const core = new GameElements();
+
+    core.onMessage(message.object).then((result: string) => {
+      expect(result.includes('Rolling a 6-sided die 4 times: 6, 6, 6, 6')).toBe(true);
+      expect(result.includes('Rolling a 8-sided die 5 times: 8, 8, 8, 8')).toBe(true);
+      done();
+    });
+  });
+
   it('should roll a single die in the format d<sides>', (done: DoneFn) => {
     const message = Mock.ofType<Message>();
     message.setup(m => m.content).returns(() => '+roll d6');
