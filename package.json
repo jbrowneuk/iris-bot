@@ -27,10 +27,12 @@
   "dependencies": {
     "discord.js": "11.3.2",
     "inversify": "4.13.0",
+    "mongodb": "3.0.0",
     "reflect-metadata": "0.1.12"
   },
   "devDependencies": {
-    "@types/jasmine": "^2.8.6",
+    "@types/jasmine": "2.8.6",
+    "@types/mongodb": "3.0.18",
     "@types/node": "9.6.6",
     "jasmine-ts": "0.2.1",
     "nodemon": "1.17.3",
