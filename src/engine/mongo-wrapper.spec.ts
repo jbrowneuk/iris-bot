@@ -46,7 +46,7 @@ describe('MongoDB wrapper', () => {
     });
   });
 
-  it('should retrieve records', () => {
+  it('should retrieve records', (done: DoneFn) => {
     const collectionName = 'testCollection';
     const filter = { tags: 'a tag' };
     const mockDoc = { id: 'ABC123', tags: 'a tag' };
@@ -62,19 +62,23 @@ describe('MongoDB wrapper', () => {
       .setup(m => m.forEach(It.isAny(), It.isAny()))
       .returns((it: Function, err: Function) => {
         it(mockDoc);
+        err(null);
       });
 
     const wrapper = new MongoWrapper();
     const untypedWrapper = wrapper as any;
     untypedWrapper.db = mockDb.object;
 
-    const results = wrapper.getRecordsFromCollection(collectionName, filter);
+    wrapper.getRecordsFromCollection(collectionName, filter)
+      .then((results: any[]) => {
+        mockDb.verify(m => m.collection(It.isValue(collectionName)), Times.once());
+        mockCollection.verify(m => m.find(It.isValue(filter)), Times.once());
 
-    mockDb.verify(m => m.collection(It.isValue(collectionName)), Times.once());
-    mockCollection.verify(m => m.find(It.isValue(filter)), Times.once());
+        expect(results.length).toBe(1);
+        expect(results[0]).toEqual(mockDoc);
 
-    expect(results.length).toBe(1);
-    expect(results[0]).toEqual(mockDoc);
+        done();
+      });
   });
 
   it('should return empty array on error when retreiving records', () => {
@@ -99,12 +103,15 @@ describe('MongoDB wrapper', () => {
     const untypedWrapper = wrapper as any;
     untypedWrapper.db = mockDb.object;
 
-    const results = wrapper.getRecordsFromCollection(collectionName, {});
-
-    expect(results.length).toBe(0);
-    expect(console.error).toHaveBeenCalledWith(
-      `Could not fetch records from ${collectionName}`,
-      mockError.message
-    );
+    wrapper.getRecordsFromCollection(collectionName, {})
+      .then((res: any[]) => {
+        fail('Should not get results');
+      }).catch((reason: any) => {
+        expect(reason).toEqual(mockError);
+        expect(console.error).toHaveBeenCalledWith(
+          `Could not fetch records from ${collectionName}`,
+          mockError.message
+        );
+      });
   });
 });
