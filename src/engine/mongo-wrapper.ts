@@ -1,5 +1,4 @@
 import { MongoClient, MongoError, Db } from 'mongodb';
-
 import { Database } from '../interfaces/database';
 
 const uri = 'mongodb://localhost:27017';
@@ -13,38 +12,43 @@ export class MongoWrapper implements Database {
     this.client = null;
   }
 
-  connect(): void {
+  connect(): Promise<void> {
     this.client = this.generateClient();
-    this.client.connect().then(() => {
+    return this.client.connect().then(() => {
       this.db = this.client.db(dbName);
     }); // todo handle failure with .catch
   }
 
-  disconnect(): void {
+  disconnect(): Promise<void> {
     if (!this.client) {
       return;
     }
 
-    this.client.close().then(() => {
+    return this.client.close().then(() => {
       this.client = null;
     });
   }
 
-  public getRecordsFromCollection(collectionName: string, filter: any): any[] {
-    const results: any[] = [];
-    const relatedCollection = this.db.collection(collectionName);
-    const cursor = relatedCollection.find(filter);
-    cursor.forEach(
-      (doc: any) => {
-        results.push(doc);
-      },
-      (err: MongoError) => {
-        console.error(`Could not fetch records from ${collectionName}`, err.message);
-      }
-    );
+  public getRecordsFromCollection(collectionName: string, filter: any): Promise<any[]> {
+    return new Promise<any[]>((resolve, reject) => {
+      const results: any[] = [];
+      const relatedCollection = this.db.collection(collectionName);
+      const cursor = relatedCollection.find(filter);
+      cursor.forEach(
+        (doc: any) => {
+          results.push(doc);
+        },
+        (err: MongoError) => {
+          if (err !== null) {
+            console.error(`Could not fetch records from ${collectionName}`, err.message);
+            reject(err);
+          }
 
-    cursor.close();
-    return results;
+          cursor.close();
+          resolve(results);
+        }
+      );
+    });
   }
 
   private generateClient(): MongoClient {

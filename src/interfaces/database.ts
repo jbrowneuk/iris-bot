@@ -1,5 +1,5 @@
 export interface Database {
-  connect(): void;
-  disconnect(): void;
-  getRecordsFromCollection(collectionName: string, filter: any): any[];
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  getRecordsFromCollection(collectionName: string, filter: any): Promise<any[]>;
 }
