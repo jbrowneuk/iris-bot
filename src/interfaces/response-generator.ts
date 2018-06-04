@@ -1,3 +1,3 @@
 export interface ResponseGenerator {
-  generateResponse(phrase: string): string;
+  generateResponse(phrase: string): Promise<string>;
 }
