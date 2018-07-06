@@ -85,9 +85,17 @@ export class BotEngine implements Engine {
 
   private calculateAddressedMessage(message: discord.Message): string {
     const botInfo = this.client.getUserInformation();
-    const username = botInfo.username;
-    const botId = `<@${botInfo.id}>`;
-    const messageText = message.content.replace(botId, username);
+    let username = botInfo.username;
+
+    // If the bot is in a "server" but has been renamed, update the value of the username
+    const guildMemberInfo = message.guild.members.get(botInfo.id);
+    if (guildMemberInfo && guildMemberInfo.nickname.length > 0) {
+      username = guildMemberInfo.nickname;
+    }
+
+    const atUsername = `@${username}`;
+    const botId = `<@!${botInfo.id}>`;
+    const messageText = message.content.replace(botId, username).replace(atUsername, username);
 
     const lowercaseMessage = messageText.toLowerCase();
     const lowercaseUsername = username.toLowerCase();
