@@ -49,9 +49,9 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Promise<string>[]): void {
+  private dequeuePromises(funcs: Promise<string>[]): Promise<string | void> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
-    funcs.reduce(
+    return funcs.reduce(
       (prev: Promise<string>, curr: Promise<string>) => {
         return prev.then((result: string) => {
           if (result !== null) {
@@ -63,28 +63,39 @@ export class BotEngine implements Engine {
         });
       },
       Promise.resolve(null)
-    ).catch((err: Error) => {
-      console.error(err);
-    });
+    );
   }
 
   private handleAmbientMessage(message: discord.Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
-    this.dequeuePromises(funcs);
+    this.dequeuePromises(funcs)
+      .catch((err: any) => console.error(err));
   }
 
   private handleAddressedMessage(message: discord.Message, addressedMessage: string): void {
     const funcs = this.personalityConstructs.map(
       (c: Personality) => c.onAddressed(message, addressedMessage)
     );
-    this.dequeuePromises(funcs);
+    this.dequeuePromises(funcs)
+      .then(() => {
+        this.client.queueMessages(['Unhandled addressed message (yeah I\'m totally a bot)']);
+      })
+      .catch((err: any) => console.error(err));
   }
 
   private calculateAddressedMessage(message: discord.Message): string {
     const botInfo = this.client.getUserInformation();
-    const username = botInfo.username;
-    const botId = `<@${botInfo.id}>`;
-    const messageText = message.content.replace(botId, username);
+    let username = botInfo.username;
+
+    // If the bot is in a "server" but has been renamed, update the value of the username
+    const guildMemberInfo = message.guild.members.get(botInfo.id);
+    if (guildMemberInfo && guildMemberInfo.nickname.length > 0) {
+      username = guildMemberInfo.nickname;
+    }
+
+    const atUsername = `@${username}`;
+    const botId = `<@!${botInfo.id}>`;
+    const messageText = message.content.replace(botId, username).replace(atUsername, username);
 
     const lowercaseMessage = messageText.toLowerCase();
     const lowercaseUsername = username.toLowerCase();
