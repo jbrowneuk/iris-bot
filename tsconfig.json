@@ -11,5 +11,9 @@
     "strictNullChecks": false,
     "outDir": "dist",
     "rootDir": "src"
-  }
+  },
+  "exclude": [
+    "**/*.spec.ts",
+    "spec/**"
+  ]
 }
