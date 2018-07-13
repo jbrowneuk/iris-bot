@@ -94,7 +94,7 @@ describe('Bot engine', () => {
     const engine = new BotEngine(client.object);
     const untypedEngine = engine as any;
     const mockCore = Mock.ofType<Personality>();
-    
+
     expect(untypedEngine.personalityConstructs.length).toBe(0);
 
     engine.addPersonality(mockCore.object);
@@ -147,17 +147,14 @@ describe('Bot engine', () => {
     const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
     const engine = new BotEngine(client.object);
     const untypedEngine = engine as any;
-    spyOn(console, 'error');
 
-    untypedEngine.dequeuePromises(fakeMessageFns);
-
-    setTimeout(
-      () => {
-        expect(console.error).toHaveBeenCalledWith(failureMessage);
+    untypedEngine.dequeuePromises(fakeMessageFns)
+      .then(() => fail('should not get here'))
+      .catch((err: any) => {
+        expect(err).toBe(failureMessage);
         client.verify(c => c.queueMessages(It.isAny()), Times.never());
         done();
-      },
-      100);
+      });
   });
 
   it('should queue messages from personality cores', () => {
@@ -165,7 +162,10 @@ describe('Bot engine', () => {
     const mockMessage = { content: 'lol hello' };
     const engine = new BotEngine(client.object);
     const untypedEngine = engine as any;
-    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => { queuedPromises = arg; });
+    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
+      queuedPromises = arg;
+      return Promise.resolve(null);
+    });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore.setup(m => m.onMessage(It.isAny())).returns(() => Promise.resolve(null));
     untypedEngine.personalityConstructs = [mockPersonalityCore.object];
@@ -192,8 +192,9 @@ describe('Bot engine', () => {
       { input: `${MOCK_USERNAME}`, expectedOutput: '' },
       { input: `${MOCK_USERNAME}:`, expectedOutput: '' },
       { input: `ok ${MOCK_USERNAME} hello`, expectedOutput: 'hello' },
-      { input: `<@${MOCK_ID}>! hi`, expectedOutput: 'hi' },
-      { input: `hey <@${MOCK_ID}>, open door`, expectedOutput: 'open door' }
+      { input: `<@!${MOCK_ID}>! hi`, expectedOutput: 'hi' },
+      { input: `hey <@!${MOCK_ID}>, open door`, expectedOutput: 'open door' },
+      { input: `@${MOCK_USERNAME} 12345`, expectedOutput: '12345' }
     ];
 
     const mockUserInfo = Mock.ofType<discord.User>();
@@ -202,7 +203,8 @@ describe('Bot engine', () => {
 
     messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
       client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
-      const actualResult = untypedEngine.calculateAddressedMessage({ content: kvp.input });
+      const mockMessage = { content: kvp.input, guild: { members: { get: () => {} } } };
+      const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
       expect(actualResult).toBe(kvp.expectedOutput);
     });
 
@@ -215,7 +217,10 @@ describe('Bot engine', () => {
     const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
     const engine = new BotEngine(client.object);
     const untypedEngine = engine as any;
-    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => { queuedPromises = arg; });
+    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
+      queuedPromises = arg;
+      return Promise.resolve(null);
+    });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore.setup(m => m.onAddressed(It.isAny(), It.isAnyString()))
       .returns(() => Promise.resolve(null));
