@@ -53,7 +53,7 @@
       ".ts"
     ],
     "include": [
-      "src/**/!(*.spec.*).ts"
+      "src/**/!(*.spec).ts"
     ],
     "reporter": [
       "html",
