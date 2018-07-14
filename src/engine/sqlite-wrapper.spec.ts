@@ -102,7 +102,7 @@ describe('SQLite wrapper', () => {
   it('should handle error returned from getting a collection', (done: DoneFn) => {
     const expectedError = 'ERROR';
     mockStatement
-      .setup(m => m.get(It.isAny(), It.isAny()))
+      .setup(m => m.all(It.isAny(), It.isAny()))
       .callback((filter: any, cb: Function) => {
         cb(new Error(expectedError));
       });
@@ -123,7 +123,7 @@ describe('SQLite wrapper', () => {
     const expectedCollection = 'myCollection';
     const mockRows = [{ id: 0 }, { id: 1 }];
     mockStatement
-      .setup(m => m.get(It.isAny(), It.isAny()))
+      .setup(m => m.all(It.isAny(), It.isAny()))
       .callback((filter: any, cb: Function) => {
         cb(null, mockRows);
       });
@@ -147,7 +147,7 @@ describe('SQLite wrapper', () => {
   it('should correctly build SQL statement when filter has been applied', (done: DoneFn) => {
     const filter = { a: 'a', b: 'b' };
     mockStatement
-      .setup(m => m.get(It.isAny(), It.isAny()))
+      .setup(m => m.all(It.isAny(), It.isAny()))
       .callback((filter: any, cb: Function) => {
         cb(null, []);
       });

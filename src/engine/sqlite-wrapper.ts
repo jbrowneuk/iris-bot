@@ -1,8 +1,10 @@
 import { Database } from '../interfaces/database';
 import * as sqlite from 'sqlite3';
+import { injectable } from 'inversify';
 
 const databaseFile = './bot.sqlite';
 
+@injectable()
 export class SqliteWrapper implements Database {
   private db: sqlite.Database;
 
@@ -45,13 +47,16 @@ export class SqliteWrapper implements Database {
     const objKeys = Object.keys(filter);
     const comparisonOp = '=?';
     let where = objKeys.join(`${comparisonOp} AND `);
+    let vals: any[] = [];
     if (where.length > 0) {
       where = ` WHERE ${where}${comparisonOp}`;
+      vals = objKeys.map((key: string) => filter[key]);
     }
 
     return new Promise((resolve, reject) => {
-      const statement = this.db.prepare(`SELECT * FROM ${collectionName}${where}`);
-      statement.get(filter, (err: Error, rows: any) => {
+      const sql = `SELECT * FROM ${collectionName}${where}`;
+      const statement = this.db.prepare(sql);
+      statement.all(vals, (err: Error, rows: any) => {
         statement.finalize();
 
         if (err) {

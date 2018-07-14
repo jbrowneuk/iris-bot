@@ -8,6 +8,7 @@ import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith, isPunctuation } from '../utils';
+import { ResponseGenerator } from '../interfaces/response-generator';
 
 const token = ''; // DO NOT SUBMIT
 
@@ -15,7 +16,10 @@ const token = ''; // DO NOT SUBMIT
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
 
-  constructor(@inject(TYPES.Client) private client: Client) {
+  constructor(
+    @inject(TYPES.Client) private client: Client,
+    @inject(TYPES.ResponseGenerator) private responses: ResponseGenerator
+  ) {
     this.personalityConstructs = [];
   }
 
@@ -78,7 +82,10 @@ export class BotEngine implements Engine {
     );
     this.dequeuePromises(funcs)
       .then(() => {
-        this.client.queueMessages(['Unhandled addressed message (yeah I\'m totally a bot)']);
+        return this.responses.generateResponse('addressedGeneric')
+          .then((response: string) => {
+            this.client.queueMessages([response]);
+          });
       })
       .catch((err: any) => console.error(err));
   }
