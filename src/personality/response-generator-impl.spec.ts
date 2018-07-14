@@ -14,9 +14,6 @@ describe('response generator', () => {
 
   beforeEach(() => {
     database = Mock.ofType<Database>();
-    database
-      .setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
-      .returns((collection: string) => Promise.resolve(mockDbRows));
   });
 
   it('should create', () => {
@@ -25,12 +22,29 @@ describe('response generator', () => {
   });
 
   it('should generate a response for a phrase', (done: DoneFn) => {
+    database
+      .setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
+      .returns((collection: string) => Promise.resolve(mockDbRows));
+
     const gen = new ResponseGeneratorImpl(database.object);
 
     gen.generateResponse('phrase').then((response: string) => {
       // Verify that the result is equal to one of the texts in the rows
       const mappedToMockRow = mockDbRows.find(x => x.text === response);
       expect(mappedToMockRow).toBeTruthy();
+      done();
+    });
+  });
+
+  it('should return an empty string if no rows are returned from the database', (done: DoneFn) => {
+    database
+      .setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
+      .returns((collection: string) => Promise.resolve([]));
+
+    const gen = new ResponseGeneratorImpl(database.object);
+
+    gen.generateResponse('phrase').then((response: string) => {
+      expect(response).toBe('');
       done();
     });
   });
