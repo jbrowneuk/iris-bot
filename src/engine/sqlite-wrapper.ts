@@ -1,8 +1,10 @@
 import { Database } from '../interfaces/database';
 import * as sqlite from 'sqlite3';
+import { injectable } from 'inversify';
 
 const databaseFile = './bot.sqlite';
 
+@injectable()
 export class SqliteWrapper implements Database {
   private db: sqlite.Database;
 
