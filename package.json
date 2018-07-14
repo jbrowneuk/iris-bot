@@ -6,10 +6,12 @@
     "build": "tsc",
     "test": "jasmine-ts",
     "coverage": "nyc npm test",
-    "watch": "nodemon",
+    "develop": "nodemon",
     "lint": "tslint --project tsconfig.json --config tslint.json",
     "lint:fix": "prettier --config ./.prettierrc --write ./src/**/*.ts",
-    "pr-check": "npm run build && npm run test && npm run lint"
+    "pr-check": "npm run build && npm run test && npm run lint",
+    "quickstart": "npm i && npm run build && npm run start",
+    "start": "node ./dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -53,7 +55,7 @@
       ".ts"
     ],
     "include": [
-      "src/**/!(*.spec.*).ts"
+      "src/**/!(*.spec).ts"
     ],
     "reporter": [
       "html",
