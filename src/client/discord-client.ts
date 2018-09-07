@@ -98,6 +98,10 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   private sendMessage(message: string): void {
+    if (!message || message.length === 0) {
+      return;
+    }
+
     this.lastMessage.channel.send(message);
   }
 }
