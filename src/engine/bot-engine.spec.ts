@@ -6,6 +6,7 @@ import * as LifecycleEvents from '../constants/lifecycle-events';
 import * as discord from 'discord.js';
 
 import { BotEngine } from './bot-engine';
+import { Settings } from '../interfaces/settings';
 
 const MOCK_USERNAME = 'bot';
 const MOCK_ID = 'BOT12345';
@@ -13,22 +14,25 @@ const MOCK_ID = 'BOT12345';
 describe('Bot engine', () => {
   let client: IMock<Client>;
   let responseGenerator: IMock<ResponseGenerator>;
+  let settings: IMock<Settings>;
 
   beforeEach(() => {
     client = Mock.ofType<Client>();
     responseGenerator = Mock.ofType<ResponseGenerator>();
     responseGenerator.setup(m => m.generateResponse(It.isAnyString()))
       .returns((phrase: string) => Promise.resolve(phrase));
+    settings = Mock.ofType<Settings>();
+    settings.setup(s => s.getSettings()).returns(() => ({ token: 'bot-token' }));
   });
 
   it('should construct', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     expect(engine).toBeTruthy();
   });
 
   it('should connect on run', () => {
     client.setup(m => m.connect(It.isAnyString()));
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
 
     engine.run();
 
@@ -37,7 +41,7 @@ describe('Bot engine', () => {
 
   it('should initialise event listeners on run', () => {
     client.setup(m => m.on(It.isAnyString(), It.isAny()));
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
 
     engine.run();
 
@@ -53,7 +57,7 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onConnected');
 
@@ -75,7 +79,7 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onMessage');
 
@@ -97,7 +101,7 @@ describe('Bot engine', () => {
   });
 
   it('should add personality construct', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
     const mockCore = Mock.ofType<Personality>();
 
@@ -109,7 +113,7 @@ describe('Bot engine', () => {
   });
 
   it('should handle ambient messages when message received', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
 
     spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue(null);
@@ -121,7 +125,7 @@ describe('Bot engine', () => {
   });
 
   it('should handle addressed messages when message received', () => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
 
     spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue('test');
@@ -135,7 +139,7 @@ describe('Bot engine', () => {
   it('should send message when one is generated as a response', (done: DoneFn) => {
     const mockMessage = 'hello world';
     const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
 
     untypedEngine.dequeuePromises(fakeMessageFns);
@@ -151,7 +155,7 @@ describe('Bot engine', () => {
   it('should handle an exception being thrown', (done: DoneFn) => {
     const failureMessage = 'I am a failure';
     const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
 
     untypedEngine.dequeuePromises(fakeMessageFns)
@@ -166,7 +170,7 @@ describe('Bot engine', () => {
   it('should queue messages from personality cores', () => {
     let queuedPromises = [];
     const mockMessage = { content: 'lol hello' };
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
       queuedPromises = arg;
@@ -183,7 +187,7 @@ describe('Bot engine', () => {
   });
 
   it('should detect when being addressed', (done: DoneFn) => {
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
 
     interface InputOutputPair { input: string; expectedOutput: string; }
@@ -221,7 +225,7 @@ describe('Bot engine', () => {
     let queuedPromises = [];
     const messageText = 'lol hello';
     const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
-    const engine = new BotEngine(client.object, responseGenerator.object);
+    const engine = new BotEngine(client.object, responseGenerator.object, settings.object);
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
       queuedPromises = arg;
