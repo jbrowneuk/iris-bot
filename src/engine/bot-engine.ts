@@ -9,8 +9,7 @@ import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { ResponseGenerator } from '../interfaces/response-generator';
-
-const token = ''; // DO NOT SUBMIT
+import { Settings } from '../interfaces/settings';
 
 @injectable()
 export class BotEngine implements Engine {
@@ -18,7 +17,8 @@ export class BotEngine implements Engine {
 
   constructor(
     @inject(TYPES.Client) private client: Client,
-    @inject(TYPES.ResponseGenerator) private responses: ResponseGenerator
+    @inject(TYPES.ResponseGenerator) private responses: ResponseGenerator,
+    @inject(TYPES.Settings) private settings: Settings
   ) {
     this.personalityConstructs = [];
   }
@@ -29,7 +29,7 @@ export class BotEngine implements Engine {
 
   public run(): void {
     this.attachEvents();
-    this.client.connect(token);
+    this.client.connect(this.settings.getSettings().token);
   }
 
   private attachEvents(): void {
