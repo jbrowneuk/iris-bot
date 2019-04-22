@@ -6,10 +6,19 @@ import { TYPES } from '../constants/types';
 
 const collectionName = 'responses';
 
+/**
+ * Used to randomly select a response from a collection of responses
+ */
 @injectable()
 export class ResponseGeneratorImpl implements ResponseGenerator {
   constructor(@inject(TYPES.Database) private database: Database) {}
 
+  /**
+   * Generates a response from a collection of responses.
+   * Returns a blank string if the phrase or mood is not found.
+   *
+   * @param phrase the phrase type to generate
+   */
   public async generateResponse(phrase: string): Promise<string> {
     const filter = { type: phrase, mood: 'none' };
     const responses = await this.database.getRecordsFromCollection(collectionName, filter);
