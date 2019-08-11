@@ -1,15 +1,14 @@
-import { injectable, inject } from 'inversify';
-
 import * as discord from 'discord.js';
+import { inject, injectable } from 'inversify';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { TYPES } from '../constants/types';
 import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
-import { getValueStartedWith, isPunctuation } from '../utils';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
+import { getValueStartedWith, isPunctuation } from '../utils';
 
 @injectable()
 export class BotEngine implements Engine {
@@ -53,7 +52,7 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Promise<string>[]): Promise<string | void> {
+  private dequeuePromises(funcs: Array<Promise<string>>): Promise<string | void> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
     return funcs.reduce(
       (prev: Promise<string>, curr: Promise<string>) => {
@@ -92,16 +91,10 @@ export class BotEngine implements Engine {
 
   private calculateAddressedMessage(message: discord.Message): string {
     const botInfo = this.client.getUserInformation();
-    let username = botInfo.username;
-
-    // If the bot is in a "server" but has been renamed, update the value of the username
-    const guildMemberInfo = message.guild.members.get(botInfo.id);
-    if (guildMemberInfo && guildMemberInfo.nickname && guildMemberInfo.nickname.length > 0) {
-      username = guildMemberInfo.nickname;
-    }
+    const username = this.calculateUserName(botInfo, message);
 
     const atUsername = `@${username}`;
-    const botId = `<@!${botInfo.id}>`;
+    const botId = `<@${botInfo.id}>`;
     const messageText = message.content.replace(botId, username).replace(atUsername, username);
 
     const lowercaseMessage = messageText.toLowerCase();
@@ -147,5 +140,15 @@ export class BotEngine implements Engine {
     }
 
     return messageText.substr(messageLocation).trim();
+  }
+
+  private calculateUserName(botInfo: discord.User, message: discord.Message): string {
+    // If the bot is in a "server" but has been renamed, update the value of the username
+    const guildMemberInfo = message.guild.members.get(botInfo.id);
+    if (guildMemberInfo && guildMemberInfo.nickname && guildMemberInfo.nickname.length > 0) {
+      return guildMemberInfo.nickname;
+    }
+
+    return botInfo.username;
   }
 }

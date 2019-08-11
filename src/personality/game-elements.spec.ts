@@ -1,6 +1,6 @@
+import { Message } from 'discord.js';
 import { Mock } from 'typemoq';
 import { GameElements } from './game-elements';
-import { Message } from 'discord.js';
 
 describe('Game elements', () => {
   it('should not handle an addressed message', (done: DoneFn) => {

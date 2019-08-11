@@ -19,13 +19,13 @@ export class HugBot implements Personality {
     prefix: string,
     suffix: string
   ): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const send = (message: string) => {
-        if (message === null) {
+    return new Promise((resolve) => {
+      const send = (messageText: string) => {
+        if (messageText === null) {
           return;
         }
 
-        resolve(message);
+        resolve(messageText);
       };
 
       send(this.response(message, text, `${prefix}hug${suffix}`, 'hug'));
@@ -49,13 +49,7 @@ export class HugBot implements Personality {
       return null;
     }
 
-    let item;
-    if (!itemOverride) {
-      item = command;
-    } else {
-      item = itemOverride;
-    }
-
+    const item = itemOverride ? itemOverride : command;
     const bits = text.substr(command.length + 1).split(' ');
     const addressedBitIndex = 0;
     if (bits[addressedBitIndex].startsWith('<@') && bits[addressedBitIndex].endsWith('>')) {

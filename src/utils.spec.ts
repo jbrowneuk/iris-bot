@@ -1,4 +1,4 @@
-import { isPunctuation, getValueStartedWith } from './utils';
+import { getValueStartedWith, isPunctuation } from './utils';
 
 describe('utilities - test whether character is in a regex', () => {
   it('should match specific punctuation', () => {

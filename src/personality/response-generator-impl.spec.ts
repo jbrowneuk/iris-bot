@@ -1,4 +1,4 @@
-import { IMock, Mock, It, Times } from 'typemoq';
+import { IMock, It, Mock } from 'typemoq';
 import { Database } from '../interfaces/database';
 
 import { ResponseGeneratorImpl } from './response-generator-impl';

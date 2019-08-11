@@ -1,7 +1,9 @@
 {
-  "extends": "tslint-config-airbnb",
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier"
+  ],
   "rules": {
-    "align": [true, "statements", "members", "elements"],
-    "trailing-comma": [true, "never"]
+    "interface-name": [true, "never-prefix"]
   }
 }

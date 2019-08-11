@@ -1,6 +1,7 @@
-import { IMock, It, Mock, Times } from 'typemoq';
-import { SqliteWrapper } from './sqlite-wrapper';
 import * as sqlite from 'sqlite3';
+import { IMock, It, Mock, Times } from 'typemoq';
+
+import { SqliteWrapper } from './sqlite-wrapper';
 
 describe('SQLite wrapper', () => {
   let mockSqlite: IMock<sqlite.Database>;
@@ -35,7 +36,7 @@ describe('SQLite wrapper', () => {
 
   it('should disconnect if connected', (done: DoneFn) => {
     const mySqlite = {
-      close(cb: Function) {
+      close(cb: () => void) {
         cb();
       }
     };
@@ -69,7 +70,7 @@ describe('SQLite wrapper', () => {
   it('should bubble up error and reject if disconnect fails', (done: DoneFn) => {
     const expectedError = 'ERROR';
     const mySqlite = {
-      close(cb: Function) {
+      close(cb: (err: any) => void) {
         cb(new Error(expectedError));
       }
     };
@@ -103,7 +104,7 @@ describe('SQLite wrapper', () => {
     const expectedError = 'ERROR';
     mockStatement
       .setup(m => m.all(It.isAny(), It.isAny()))
-      .callback((filter: any, cb: Function) => {
+      .callback((filter: any, cb: (err: any) => void) => {
         cb(new Error(expectedError));
       });
 
@@ -124,7 +125,7 @@ describe('SQLite wrapper', () => {
     const mockRows = [{ id: 0 }, { id: 1 }];
     mockStatement
       .setup(m => m.all(It.isAny(), It.isAny()))
-      .callback((filter: any, cb: Function) => {
+      .callback((filter: any, cb: (err: any, rows: any[]) => void) => {
         cb(null, mockRows);
       });
 
@@ -148,7 +149,7 @@ describe('SQLite wrapper', () => {
     const filter = { a: 'a', b: 'b' };
     mockStatement
       .setup(m => m.all(It.isAny(), It.isAny()))
-      .callback((filter: any, cb: Function) => {
+      .callback((f: any, cb: (err: any, rows: any[]) => void) => {
         cb(null, []);
       });
 

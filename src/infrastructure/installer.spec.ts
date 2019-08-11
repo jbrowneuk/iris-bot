@@ -1,5 +1,5 @@
-import { container } from './installer';
 import { TYPES } from '../constants/types';
+import { container } from './installer';
 
 describe('inversion of control framework', () => {
   it('should return a value for each defined type', () => {

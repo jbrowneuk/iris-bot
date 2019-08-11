@@ -1,6 +1,7 @@
-import { Database } from '../interfaces/database';
-import * as sqlite from 'sqlite3';
 import { injectable } from 'inversify';
+import * as sqlite from 'sqlite3';
+
+import { Database } from '../interfaces/database';
 
 const databaseFile = './bot.sqlite';
 
@@ -12,7 +13,7 @@ export class SqliteWrapper implements Database {
     this.db = null;
   }
 
-  connect(): Promise<void> {
+  public connect(): Promise<void> {
     if (this.db !== null) {
       return Promise.reject(new Error('Connection already established'));
     }
@@ -21,7 +22,7 @@ export class SqliteWrapper implements Database {
     return Promise.resolve();
   }
 
-  disconnect(): Promise<void> {
+  public disconnect(): Promise<void> {
     if (this.db === null) {
       return Promise.reject(new Error('No connection established'));
     }
@@ -39,7 +40,7 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  getRecordsFromCollection(collectionName: string, filter: any): Promise<any[]> {
+  public getRecordsFromCollection(collectionName: string, filter: any): Promise<any[]> {
     if (this.db === null) {
       return Promise.reject(new Error('No connection established'));
     }

@@ -13,7 +13,7 @@ export class BasicIntelligence implements Personality {
    * @param message the message object related to this call
    * @param addressedMessage the substring of the message text after the attention grabber
    */
-  onAddressed(message: discord.Message, addressedMessage: string): Promise<string> {
+  public onAddressed(message: discord.Message, addressedMessage: string): Promise<string> {
     return Promise.resolve(null);
   }
 
@@ -22,7 +22,7 @@ export class BasicIntelligence implements Personality {
    *
    * @param message the message object related to this call
    */
-  onMessage(message: discord.Message): Promise<string> {
+  public onMessage(message: discord.Message): Promise<string> {
     return new Promise((resolve) => {
       if (message.content === '+echo') {
         resolve('Echo!');
