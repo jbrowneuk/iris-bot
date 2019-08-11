@@ -1,6 +1,6 @@
+import { Message, User } from 'discord.js';
 import { IMock, Mock } from 'typemoq';
 import { HugBot } from './hug-bot';
-import { Message, User } from 'discord.js';
 
 describe('Hugbot', () => {
   const authorId = 'AUTHID';

@@ -1,12 +1,12 @@
-import { IMock, Mock, It, Times } from 'typemoq';
+import * as discord from 'discord.js';
+import { IMock, It, Mock, Times } from 'typemoq';
+
+import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
 import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import * as LifecycleEvents from '../constants/lifecycle-events';
-import * as discord from 'discord.js';
-
-import { BotEngine } from './bot-engine';
 import { Settings } from '../interfaces/settings';
+import { BotEngine } from './bot-engine';
 
 const MOCK_USERNAME = 'bot';
 const MOCK_ID = 'BOT12345';
@@ -61,10 +61,10 @@ describe('Bot engine', () => {
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onConnected');
 
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 
@@ -83,10 +83,10 @@ describe('Bot engine', () => {
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onMessage');
 
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: { evt: string; cb: () => void }[] = [];
     client
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 

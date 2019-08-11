@@ -1,7 +1,8 @@
 import * as discord from 'discord.js';
-import { IMock, Mock, It, Times } from 'typemoq';
-import { DiscordClient } from './discord-client';
+import { IMock, It, Mock, Times } from 'typemoq';
+
 import * as LifecycleEvents from '../constants/lifecycle-events';
+import { DiscordClient } from './discord-client';
 import { DISCORD_EVENTS } from './discord-events';
 
 const MOCK_TOKEN = '12345abcde';
@@ -70,10 +71,10 @@ describe('Discord client wrapper', () => {
   it('should add connection event handler on connection', () => {
     const untypedClient = client as any;
     spyOn(untypedClient, 'onConnected');
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 
@@ -90,10 +91,10 @@ describe('Discord client wrapper', () => {
   it('should add message event handler on connection', () => {
     const untypedClient = client as any;
     spyOn(untypedClient, 'onMessage');
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 
@@ -192,10 +193,10 @@ describe('Discord client wrapper', () => {
 
   it('should handle connection event', () => {
     let eventRaised = false;
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
     client.on(LifecycleEvents.CONNECTED, () => { eventRaised = true; });
@@ -212,10 +213,10 @@ describe('Discord client wrapper', () => {
 
   it('should handle incoming message event from text channel', () => {
     let eventRaised = false;
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
     client.connect(MOCK_TOKEN);
@@ -223,8 +224,8 @@ describe('Discord client wrapper', () => {
 
     const mockMessage = {
       channel: { type: 'text' },
-      user: {},
-      content: 'text message'
+      content: 'text message',
+      user: {}
     };
 
     const relatedHandler = callbacks.find(
@@ -237,10 +238,10 @@ describe('Discord client wrapper', () => {
 
   it('should not handle incoming message event from non-text channel', () => {
     let eventRaised = false;
-    const callbacks: { evt: string; cb: Function }[] = [];
+    const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: Function) => {
+      .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
     client.connect(MOCK_TOKEN);
@@ -248,8 +249,8 @@ describe('Discord client wrapper', () => {
 
     const mockMessage = {
       channel: { type: 'dm' },
-      user: {},
-      content: 'text message'
+      content: 'text message',
+      user: {}
     };
 
     const relatedHandler = callbacks.find(

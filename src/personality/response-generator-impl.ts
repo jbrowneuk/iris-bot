@@ -1,8 +1,8 @@
-import { ResponseGenerator } from '../interfaces/response-generator';
-import { Database } from '../interfaces/database';
-import { randomNumber } from '../utils';
-import { injectable, inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { TYPES } from '../constants/types';
+import { Database } from '../interfaces/database';
+import { ResponseGenerator } from '../interfaces/response-generator';
+import { randomNumber } from '../utils';
 
 const collectionName = 'responses';
 

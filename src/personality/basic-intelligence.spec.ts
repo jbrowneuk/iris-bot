@@ -1,6 +1,6 @@
+import { Message } from 'discord.js';
 import { Mock } from 'typemoq';
 import { BasicIntelligence } from './basic-intelligence';
-import { Message } from 'discord.js';
 
 describe('basic intelligence', () => {
   it('should not handle an addressed message', (done: DoneFn) => {

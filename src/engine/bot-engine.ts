@@ -1,15 +1,14 @@
-import { injectable, inject } from 'inversify';
-
 import * as discord from 'discord.js';
+import { inject, injectable } from 'inversify';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { TYPES } from '../constants/types';
 import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
-import { getValueStartedWith, isPunctuation } from '../utils';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
+import { getValueStartedWith, isPunctuation } from '../utils';
 
 @injectable()
 export class BotEngine implements Engine {
@@ -53,7 +52,7 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Promise<string>[]): Promise<string | void> {
+  private dequeuePromises(funcs: Array<Promise<string>>): Promise<string | void> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
     return funcs.reduce(
       (prev: Promise<string>, curr: Promise<string>) => {
