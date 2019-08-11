@@ -1,0 +1,6 @@
+{
+  "generalConfiguration.sortOnBeforeSave": true,
+  "sortConfiguration.joinImportPaths": true,
+  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.type": "maxLineLength",
+  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 140
+}
