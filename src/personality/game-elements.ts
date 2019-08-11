@@ -1,6 +1,9 @@
 import * as discord from 'discord.js';
 import { Personality } from '../interfaces/personality';
 
+/**
+ * Game elements engine – adds features such as rolling dice, flipping coins, etc.
+ */
 export class GameElements implements Personality {
   public onAddressed(
     message: discord.Message,
@@ -27,6 +30,11 @@ export class GameElements implements Personality {
     });
   }
 
+  /**
+   * Flips a coin and returns 'heads' or 'tails' as a message
+   *
+   * @param message the message object related to this call
+   */
   private flipCoin(message: discord.Message): string {
     if (message.content.startsWith('+flip')) {
       return Math.random() > 0.5 ? 'heads' : 'tails';
@@ -35,6 +43,11 @@ export class GameElements implements Personality {
     return null;
   }
 
+  /**
+   * Used as a wrapper to parse a dice roll command
+   *
+   * @param message the message object related to this call
+   */
   private rollDice(message: discord.Message): string {
     const rollCommand = '+roll';
     if (
@@ -52,6 +65,11 @@ export class GameElements implements Personality {
     return dice.join('\n');
   }
 
+  /**
+   * Used as a wrapper to parse the sides of a die for the die roll command
+   *
+   * @param input the raw message string with the command removed
+   */
   private parseDice(input: string): string[] {
     const potentialBits = input.toLowerCase().split(' ');
     const bitsParsed = potentialBits.map((bit: string) =>
@@ -61,6 +79,12 @@ export class GameElements implements Personality {
     return bitsParsed.filter((bit: string) => bit.length > 0);
   }
 
+  /**
+   * Used to parse a die roll input and perform the die roll, using the format
+   * [number]d[sides]
+   *
+   * @param rollInfo a string containing a potential die format
+   */
   private handleSingleDieRoll(rollInfo: string): string {
     if (!rollInfo.includes('d')) {
       return '';
@@ -85,6 +109,11 @@ export class GameElements implements Personality {
     return this.calculateDieRoll(numberDice, numberSides);
   }
 
+  /**
+   * Conveneience method to parse a number from text. Returns -1 is parse unsuccessful
+   *
+   * @param bit a potential number
+   */
   private parseDieBit(bit: string) {
     if (!bit) {
       return -1;
@@ -98,6 +127,12 @@ export class GameElements implements Personality {
     return parsed;
   }
 
+  /**
+   * Performs the rolling of virtual dice
+   *
+   * @param amount amount of dice to roll
+   * @param sides the number of sides for this dice
+   */
   private calculateDieRoll(amount: number, sides: number): string {
     const rolls: number[] = [];
     for (let roll = 0; roll < amount; roll += 1) {
