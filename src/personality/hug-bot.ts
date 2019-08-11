@@ -6,10 +6,19 @@ export class HugBot implements Personality {
     message: discord.Message,
     addressedMessage: string
   ): Promise<string> {
-    return Promise.resolve(null);
+    return this.commandWrapper(message, addressedMessage, 'give a ', ' to');
   }
 
   public onMessage(message: discord.Message): Promise<string> {
+    return this.commandWrapper(message, message.content, '!', '');
+  }
+
+  private commandWrapper(
+    message: discord.Message,
+    text: string,
+    prefix: string,
+    suffix: string
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const send = (message: string) => {
         if (message === null) {
@@ -19,19 +28,24 @@ export class HugBot implements Personality {
         resolve(message);
       };
 
-      send(this.response(message, 'hug'));
-      send(this.response(message, 'cake', '🎂'));
-      send(this.response(message, 'pizza', '🍕'));
-      send(this.response(message, 'burger', '🍔'));
-      send(this.response(message, 'beer', '🍺'));
-      send(this.response(message, 'cookie', '🍪'));
+      send(this.response(message, text, `${prefix}hug${suffix}`, 'hug'));
+      send(this.response(message, text, `${prefix}cake${suffix}`, '🎂'));
+      send(this.response(message, text, `${prefix}pizza${suffix}`, '🍕'));
+      send(this.response(message, text, `${prefix}burger${suffix}`, '🍔'));
+      send(this.response(message, text, `${prefix}beer${suffix}`, '🍺'));
+      send(this.response(message, text, `${prefix}cookie${suffix}`, '🍪'));
 
       resolve(null);
     });
   }
 
-  private response(message: discord.Message, command: string, itemOverride?: string): string {
-    if (!message.content.startsWith(`!${command}`)) {
+  private response(
+    message: discord.Message,
+    text: string,
+    command: string,
+    itemOverride?: string
+  ): string {
+    if (!text.startsWith(command)) {
       return null;
     }
 
@@ -42,9 +56,10 @@ export class HugBot implements Personality {
       item = itemOverride;
     }
 
-    const bits = message.content.split(' ');
-    if (bits[1].startsWith('<@') && bits[1].endsWith('>')) {
-      return `Gives a ${item} to ${bits[1]} from <@${message.author.id}>`;
+    const bits = text.substr(command.length + 1).split(' ');
+    const addressedBitIndex = 0;
+    if (bits[addressedBitIndex].startsWith('<@') && bits[addressedBitIndex].endsWith('>')) {
+      return `Gives a ${item} to ${bits[addressedBitIndex]} from <@${message.author.id}>`;
     }
 
     return null;
