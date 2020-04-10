@@ -1,19 +1,21 @@
-import 'reflect-metadata';
-
-import { TYPES } from './constants/types';
-import { container } from './infrastructure/installer';
-import { Engine } from './interfaces/engine';
-
-import { Database } from './interfaces/database';
+import { DiscordClient } from './client/discord-client';
+import { BotEngine } from './engine/bot-engine';
+import { SettingsManager } from './engine/settings-manager';
+import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { BasicIntelligence } from './personality/basic-intelligence';
 import { GameElements } from './personality/game-elements';
 import { HugBot } from './personality/hug-bot';
+import { ResponseGeneratorImpl } from './personality/response-generator-impl';
 
-const botEngine = container.get<Engine>(TYPES.Engine);
-const db = container.get<Database>(TYPES.Database);
+const db = new SqliteWrapper();
 db.connect().then(() => {
   console.log('Database connected');
 });
+
+const client = new DiscordClient();
+const responseGen = new ResponseGeneratorImpl(db);
+const settings = new SettingsManager();
+const botEngine = new BotEngine(client, responseGen, settings);
 
 // TODO: dep injection
 botEngine.addPersonality(new BasicIntelligence());

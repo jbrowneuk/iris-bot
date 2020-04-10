@@ -28,8 +28,6 @@
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
     "discord.js": "^11.5.1",
-    "inversify": "^5.0.1",
-    "reflect-metadata": "^0.1.13",
     "sqlite3": "^4.0.9"
   },
   "devDependencies": {

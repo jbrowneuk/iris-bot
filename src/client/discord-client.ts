@@ -1,14 +1,10 @@
 import * as discord from 'discord.js';
 import { EventEmitter } from 'events';
-import { decorate, injectable } from 'inversify';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
 import { DISCORD_EVENTS } from './discord-events';
 
-decorate(injectable(), EventEmitter);
-
-@injectable()
 export class DiscordClient extends EventEmitter implements Client {
   private client: discord.Client;
   private lastMessage: discord.Message;

@@ -1,5 +1,3 @@
-import { inject, injectable } from 'inversify';
-import { TYPES } from '../constants/types';
 import { Database } from '../interfaces/database';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { randomNumber } from '../utils';
@@ -9,9 +7,8 @@ const collectionName = 'responses';
 /**
  * Used to randomly select a response from a collection of responses
  */
-@injectable()
 export class ResponseGeneratorImpl implements ResponseGenerator {
-  constructor(@inject(TYPES.Database) private database: Database) {}
+  constructor(private database: Database) {}
 
   /**
    * Generates a response from a collection of responses.
