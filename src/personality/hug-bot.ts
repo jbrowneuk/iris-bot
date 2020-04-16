@@ -20,12 +20,13 @@ export class HugBot implements Personality {
     suffix: string
   ): Promise<string> {
     return new Promise((resolve) => {
+      let sentMessage = null;
       const send = (messageText: string) => {
         if (messageText === null) {
           return;
         }
 
-        resolve(messageText);
+        sentMessage = messageText;
       };
 
       send(this.response(message, text, `${prefix}hug${suffix}`, 'hug'));
@@ -34,8 +35,9 @@ export class HugBot implements Personality {
       send(this.response(message, text, `${prefix}burger${suffix}`, '🍔'));
       send(this.response(message, text, `${prefix}beer${suffix}`, '🍺'));
       send(this.response(message, text, `${prefix}cookie${suffix}`, '🍪'));
+      send(this.response(message, text, `${prefix}something healthy${suffix}`, '🥗'));
 
-      resolve(null);
+      resolve(sentMessage);
     });
   }
 
