@@ -7,6 +7,7 @@ import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
 import { getValueStartedWith, isPunctuation } from '../utils';
+import { HandledResponseError } from './handled-response-error';
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
@@ -54,8 +55,9 @@ export class BotEngine implements Engine {
       console.log('User ID', botInfo.id);
 
       this.logMessages = message.content.includes('on');
-      return console.log(`Message debugging: ${this.logMessages}`);
-      // return this.client.queueMessages([]);
+      return this.client.queueMessages([
+        `Message debugging: ${this.logMessages}`
+      ]);
     }
 
     const addressedMessage = this.calculateAddressedMessage(message);
@@ -67,41 +69,74 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Array<Promise<string>>): Promise<string | void> {
+  private dequeuePromises(funcs: Array<Promise<string>>): Promise<string> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
-    return funcs.reduce(
-      (prev: Promise<string>, curr: Promise<string>) => {
-        return prev.then((result: string) => {
-          if (result !== null) {
-            this.client.queueMessages([result]);
-            return;
-          }
+    return funcs.reduce((prev: Promise<string>, curr: Promise<string>) => {
+      if (!prev) {
+        return null;
+      }
 
-          return curr;
-        });
-      },
-      Promise.resolve(null)
-    );
+      return prev.then((result: string) => {
+        if (result !== null) {
+          this.client.queueMessages([result]);
+          return Promise.reject(new HandledResponseError());
+        }
+
+        return curr;
+      });
+    }, Promise.resolve(null));
   }
 
   private handleAmbientMessage(message: discord.Message): void {
-    const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
-    this.dequeuePromises(funcs)
-      .catch((err: any) => console.error(err));
+    const funcs = this.personalityConstructs.map((c: Personality) =>
+      c.onMessage(message)
+    );
+    this.dequeuePromises(funcs).catch((err: any) => console.error(err));
   }
 
-  private handleAddressedMessage(message: discord.Message, addressedMessage: string): void {
-    const funcs = this.personalityConstructs.map(
-      (c: Personality) => c.onAddressed(message, addressedMessage)
+  private handleAddressedMessage(
+    message: discord.Message,
+    addressedMessage: string
+  ): void {
+    if (this.logMessages) {
+      console.log('Message:', addressedMessage);
+    }
+
+    if (addressedMessage.length === 0) {
+      this.responses
+        .generateResponse('addressedNoCommand')
+        .then((response: string) => {
+          this.client.queueMessages([response]);
+        });
+      return;
+    }
+
+    const unhandledResponse = () =>
+      this.responses
+        .generateResponse('addressedNoResponse')
+        .then((response: string) => {
+          this.client.queueMessages([response]);
+        });
+
+    const funcs = this.personalityConstructs.map((c: Personality) =>
+      c.onAddressed(message, addressedMessage)
     );
     this.dequeuePromises(funcs)
-      .then(() => {
-        return this.responses.generateResponse('addressedGeneric')
-          .then((response: string) => {
-            this.client.queueMessages([response]);
-          });
+      .then(response => {
+        if (response !== null) {
+          return;
+        }
+
+        return unhandledResponse();
       })
-      .catch((err: any) => console.error(err));
+      .catch((err: any) => {
+        if (err instanceof HandledResponseError) {
+          console.log('Response handled, ignoring');
+          return;
+        }
+
+        console.error(err);
+      });
   }
 
   private calculateAddressedMessage(message: discord.Message): string {
@@ -110,7 +145,9 @@ export class BotEngine implements Engine {
 
     const atUsername = `@${username}`;
     const botId = `<@!${botInfo.id}>`;
-    const messageText = message.content.replace(botId, username).replace(atUsername, username);
+    const messageText = message.content
+      .replace(botId, username)
+      .replace(atUsername, username);
 
     const lowercaseMessage = messageText.toLowerCase();
     const lowercaseUsername = username.toLowerCase();
@@ -121,7 +158,7 @@ export class BotEngine implements Engine {
     }
 
     if (usernameLocation > 0) {
-      const attentionGrabbers = ['hey', 'ok', 'okay'];
+      const attentionGrabbers = ['hey', 'okay', 'ok'];
       const attentionGrabber = getValueStartedWith(
         lowercaseMessage,
         attentionGrabbers
@@ -157,10 +194,17 @@ export class BotEngine implements Engine {
     return messageText.substr(messageLocation).trim();
   }
 
-  private calculateUserName(botInfo: discord.User, message: discord.Message): string {
+  private calculateUserName(
+    botInfo: discord.User,
+    message: discord.Message
+  ): string {
     // If the bot is in a "server" but has been renamed, update the value of the username
     const guildMemberInfo = message.guild.members.get(botInfo.id);
-    if (guildMemberInfo && guildMemberInfo.nickname && guildMemberInfo.nickname.length > 0) {
+    if (
+      guildMemberInfo &&
+      guildMemberInfo.nickname &&
+      guildMemberInfo.nickname.length > 0
+    ) {
       return guildMemberInfo.nickname;
     }
 
