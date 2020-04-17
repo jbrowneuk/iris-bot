@@ -47,7 +47,7 @@ export class BotEngine implements Engine {
       console.log(message.content);
     }
 
-    if (message.content.includes('+debug')) {
+    if (message.content && message.content.includes('+debug')) {
       const botInfo = this.client.getUserInformation();
       const username = this.calculateUserName(botInfo, message);
 
