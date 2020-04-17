@@ -211,9 +211,9 @@ describe('Discord client wrapper', () => {
     expect(eventRaised).toBeTruthy();
   });
 
-  it('should handle incoming message event from text channel', () => {
+  function messageHandlerTest(mockMessage: any): boolean {
     let eventRaised = false;
-    const callbacks: Array<{ evt: string; cb: () => void }> = [];
+    const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
     discordMock
       .setup(m => m.on(It.isAnyString(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
@@ -222,42 +222,33 @@ describe('Discord client wrapper', () => {
     client.connect(MOCK_TOKEN);
     client.on(LifecycleEvents.MESSAGE, () => { eventRaised = true; });
 
+    const relatedHandler = callbacks.find(
+      cb => cb.evt === DISCORD_EVENTS.message
+    );
+    relatedHandler.cb.call(client, mockMessage);
+
+    return eventRaised;
+  }
+
+  it('should handle incoming message event from text channel', () => {
     const mockMessage = {
       channel: { type: 'text' },
       content: 'text message',
       user: {}
     };
 
-    const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.message
-    );
-    relatedHandler.cb.call(client, mockMessage);
-
+    const eventRaised = messageHandlerTest(mockMessage);
     expect(eventRaised).toBeTruthy();
   });
 
   it('should not handle incoming message event from non-text channel', () => {
-    let eventRaised = false;
-    const callbacks: Array<{ evt: string; cb: () => void }> = [];
-    discordMock
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
-      .callback((evt: string, cb: () => void) => {
-        callbacks.push({ evt, cb });
-      });
-    client.connect(MOCK_TOKEN);
-    client.on(LifecycleEvents.MESSAGE, () => { eventRaised = true; });
-
     const mockMessage = {
       channel: { type: 'dm' },
       content: 'text message',
       user: {}
     };
 
-    const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.message
-    );
-    relatedHandler.cb.call(client, mockMessage);
-
+    const eventRaised = messageHandlerTest(mockMessage);
     expect(eventRaised).toBeFalsy();
   });
 });

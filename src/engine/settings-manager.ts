@@ -1,16 +1,14 @@
 import * as fs from 'fs';
-import { injectable, optional } from 'inversify';
 
 import { Settings } from '../interfaces/settings';
 
 const defaultPath = './config.json';
 
-@injectable()
 export class SettingsManager implements Settings {
 
   private settingsData: { [key: string]: any };
 
-  constructor(@optional() path: string = defaultPath) {
+  constructor(path: string = defaultPath) {
     this.settingsData = {};
 
     this.initialiseFromFile(path);
