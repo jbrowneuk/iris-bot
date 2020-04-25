@@ -1,6 +1,8 @@
-import * as discord from 'discord.js';
+import { Message } from 'discord.js';
+
+import { MessageType } from '../types';
 
 export interface Personality {
-  onAddressed(message: discord.Message, addressedMessage: string): Promise<string>;
-  onMessage(message: discord.Message): Promise<string>;
+  onAddressed(message: Message, addressedMessage: string): Promise<MessageType>;
+  onMessage(message: Message): Promise<MessageType>;
 }
