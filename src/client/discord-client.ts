@@ -3,6 +3,7 @@ import { EventEmitter } from 'events';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
+import { MessageType } from '../types';
 import { DISCORD_EVENTS } from './discord-events';
 
 export class DiscordClient extends EventEmitter implements Client {
@@ -63,8 +64,8 @@ export class DiscordClient extends EventEmitter implements Client {
     return this.client.user;
   }
 
-  public queueMessages(messages: string[], channel?: discord.Channel): void {
-    messages.forEach((message: string) => this.sendMessage(message));
+  public queueMessages(messages: MessageType[]): void {
+    messages.forEach((message: MessageType) => this.sendMessage(message));
   }
 
   public sendReaction(emoji: string, message?: discord.Message): void {
@@ -92,8 +93,12 @@ export class DiscordClient extends EventEmitter implements Client {
     this.emit(LifecycleEvents.MESSAGE, message);
   }
 
-  private sendMessage(message: string): void {
-    if (!message || message.length === 0) {
+  private sendMessage(message: MessageType): void {
+    if (!message) {
+      return;
+    }
+
+    if (typeof message === 'string' && message.length === 0) {
       return;
     }
 

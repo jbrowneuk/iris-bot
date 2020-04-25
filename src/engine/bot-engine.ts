@@ -6,8 +6,12 @@ import { Engine } from '../interfaces/engine';
 import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
+import { MessageType } from '../types';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { HandledResponseError } from './handled-response-error';
+
+// TODO: possibly swap out with proper logger
+const logger = console;
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
@@ -39,20 +43,20 @@ export class BotEngine implements Engine {
   }
 
   private onConnected(): void {
-    console.log('Connected');
+    logger.log('Connected');
   }
 
   private onMessage(message: discord.Message): void {
     if (this.logMessages) {
-      console.log(message.content);
+      logger.log(message.content);
     }
 
     if (message.content && message.content.includes('+debug')) {
       const botInfo = this.client.getUserInformation();
       const username = this.calculateUserName(botInfo, message);
 
-      console.log('Calculated user name:', username);
-      console.log('User ID', botInfo.id);
+      logger.log('Calculated user name:', username);
+      logger.log('User ID', botInfo.id);
 
       this.logMessages = message.content.includes('on');
       return this.client.queueMessages([
@@ -69,14 +73,14 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Array<Promise<string>>): Promise<string> {
+  private dequeuePromises(funcs: Array<Promise<MessageType>>): Promise<MessageType> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
-    return funcs.reduce((prev: Promise<string>, curr: Promise<string>) => {
+    return funcs.reduce((prev: Promise<MessageType>, curr: Promise<MessageType>) => {
       if (!prev) {
         return null;
       }
 
-      return prev.then((result: string) => {
+      return prev.then((result: MessageType) => {
         if (result !== null) {
           this.client.queueMessages([result]);
           return Promise.reject(new HandledResponseError());
@@ -91,7 +95,14 @@ export class BotEngine implements Engine {
     const funcs = this.personalityConstructs.map((c: Personality) =>
       c.onMessage(message)
     );
-    this.dequeuePromises(funcs).catch((err: any) => console.error(err));
+    this.dequeuePromises(funcs).catch((err: Error) => {
+      if (err instanceof HandledResponseError) {
+        logger.log('Response handled, ignoring');
+        return;
+      }
+
+      logger.error(err);
+    });
   }
 
   private handleAddressedMessage(
@@ -99,7 +110,7 @@ export class BotEngine implements Engine {
     addressedMessage: string
   ): void {
     if (this.logMessages) {
-      console.log('Message:', addressedMessage);
+      logger.log('Message:', addressedMessage);
     }
 
     if (addressedMessage.length === 0) {
@@ -135,7 +146,7 @@ export class BotEngine implements Engine {
           return;
         }
 
-        console.error(err);
+        logger.error(err);
       });
   }
 
@@ -144,7 +155,7 @@ export class BotEngine implements Engine {
     const username = this.calculateUserName(botInfo, message);
 
     const atUsername = `@${username}`;
-    const botId = `<@!${botInfo.id}>`;
+    const botId = new RegExp(`<@!?${botInfo.id}>`);
     const messageText = message.content
       .replace(botId, username)
       .replace(atUsername, username);
