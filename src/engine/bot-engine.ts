@@ -155,7 +155,7 @@ export class BotEngine implements Engine {
     const username = this.calculateUserName(botInfo, message);
 
     const atUsername = `@${username}`;
-    const botId = `<@!${botInfo.id}>`;
+    const botId = new RegExp(`<@!?${botInfo.id}>`);
     const messageText = message.content
       .replace(botId, username)
       .replace(atUsername, username);
