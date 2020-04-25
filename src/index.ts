@@ -13,6 +13,7 @@ import { BlogRoll } from './personality/blog-roll';
 import { CallResponse } from './personality/call-response';
 import { DieRoll } from './personality/die-roll';
 import { FoxBot } from './personality/fox-bot';
+import { HangmanGame } from './personality/hangman-game';
 import { HugBot } from './personality/hug-bot';
 import { McServer } from './personality/mc-server';
 import { MoodControl } from './personality/mood-control';
@@ -61,6 +62,7 @@ engine.addPersonality(new SimpleInteractions(dependencies));
 engine.addPersonality(new CallResponse(dependencies));
 engine.addPersonality(new FoxBot(dependencies));
 engine.addPersonality(new McServer(dependencies));
+engine.addPersonality(new HangmanGame());
 
 // Start bot
 engine.initialise();
