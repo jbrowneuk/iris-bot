@@ -30,6 +30,14 @@ export class BotEngine implements Engine {
     this.personalityConstructs.push(personality);
   }
 
+  public initialise(): void {
+    this.personalityConstructs.forEach(personality => {
+      if (typeof personality.initialise === 'function') {
+        personality.initialise();
+      }
+    });
+  }
+
   public run(): void {
     this.attachEvents();
     this.client.connect(this.settings.getSettings().token);
@@ -142,7 +150,7 @@ export class BotEngine implements Engine {
       })
       .catch((err: any) => {
         if (err instanceof HandledResponseError) {
-          console.log('Response handled, ignoring');
+          logger.log('Response handled, ignoring');
           return;
         }
 
