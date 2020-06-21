@@ -4,6 +4,7 @@ import { SettingsManager } from './engine/settings-manager';
 import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
 import { BasicIntelligence } from './personality/basic-intelligence';
+import { BlogRoll } from './personality/blog-roll';
 import { GameElements } from './personality/game-elements';
 import { HugBot } from './personality/hug-bot';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
@@ -40,6 +41,7 @@ const dependencies: DependencyContainer = {
 engine.addPersonality(new BasicIntelligence());
 engine.addPersonality(new GameElements());
 engine.addPersonality(new HugBot());
+botEngine.addPersonality(new BlogRoll(client));
 
 // Start bot
 engine.initialise();
