@@ -41,7 +41,7 @@ const dependencies: DependencyContainer = {
 engine.addPersonality(new BasicIntelligence());
 engine.addPersonality(new GameElements());
 engine.addPersonality(new HugBot());
-botEngine.addPersonality(new BlogRoll(client));
+engine.addPersonality(new BlogRoll(dependencies));
 
 // Start bot
 engine.initialise();
