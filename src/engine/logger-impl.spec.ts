@@ -9,7 +9,7 @@ describe('Logger implementation', () => {
 
   beforeEach(() => {
     mockConsole = Mock.ofType<Console>();
-    logger = new LoggerImpl(console);
+    logger = new LoggerImpl(mockConsole.object);
   });
 
   it('should pass error to underlying implementation', () => {
@@ -18,7 +18,7 @@ describe('Logger implementation', () => {
 
     logger.error(message, params);
 
-    mockConsole.verify(c => c.error(It.isValue(message), It.isValue(params)), Times.once());
+    mockConsole.verify(c => c.error(It.isValue(message), It.isValue([params])), Times.once());
   });
 
   it('should pass log to underlying implementation', () => {
@@ -27,6 +27,6 @@ describe('Logger implementation', () => {
 
     logger.log(message, params);
 
-    mockConsole.verify(c => c.log(It.isValue(message), It.isValue(params)), Times.once());
+    mockConsole.verify(c => c.log(It.isValue(message), It.isValue([params])), Times.once());
   });
 });

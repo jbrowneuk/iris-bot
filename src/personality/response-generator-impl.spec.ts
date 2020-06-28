@@ -1,6 +1,6 @@
 import { IMock, It, Mock } from 'typemoq';
-import { Database } from '../interfaces/database';
 
+import { Database } from '../interfaces/database';
 import { ResponseGeneratorImpl } from './response-generator-impl';
 
 const mockDbRows = [
@@ -17,7 +17,7 @@ describe('response generator', () => {
   });
 
   it('should create', () => {
-    const gen = new ResponseGeneratorImpl(database.object);
+    const gen = new ResponseGeneratorImpl(database.object, console);
     expect(gen).toBeTruthy();
   });
 
@@ -26,7 +26,7 @@ describe('response generator', () => {
       .setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
       .returns((collection: string) => Promise.resolve(mockDbRows));
 
-    const gen = new ResponseGeneratorImpl(database.object);
+    const gen = new ResponseGeneratorImpl(database.object, console);
 
     gen.generateResponse('phrase').then((response: string) => {
       // Verify that the result is equal to one of the texts in the rows
@@ -41,7 +41,7 @@ describe('response generator', () => {
       .setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
       .returns((collection: string) => Promise.resolve([]));
 
-    const gen = new ResponseGeneratorImpl(database.object);
+    const gen = new ResponseGeneratorImpl(database.object, console);
 
     gen.generateResponse('phrase').then((response: string) => {
       expect(response).toBe('');

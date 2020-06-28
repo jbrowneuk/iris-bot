@@ -3,15 +3,13 @@ import * as discord from 'discord.js';
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
+import { Logger } from '../interfaces/logger';
 import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
 import { MessageType } from '../types';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { HandledResponseError } from './handled-response-error';
-
-// TODO: possibly swap out with proper logger
-const logger = console;
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
@@ -20,7 +18,8 @@ export class BotEngine implements Engine {
   constructor(
     private client: Client,
     private responses: ResponseGenerator,
-    private settings: Settings
+    private settings: Settings,
+    private logger: Logger
   ) {
     this.personalityConstructs = [];
     this.logMessages = false;
@@ -51,20 +50,20 @@ export class BotEngine implements Engine {
   }
 
   private onConnected(): void {
-    logger.log('Connected');
+    this.logger.log('Connected');
   }
 
   private onMessage(message: discord.Message): void {
     if (this.logMessages) {
-      logger.log(message.content);
+      this.logger.log(message.content);
     }
 
     if (message.content && message.content.includes('+debug')) {
       const botInfo = this.client.getUserInformation();
       const username = this.calculateUserName(botInfo, message);
 
-      logger.log('Calculated user name:', username);
-      logger.log('User ID', botInfo.id);
+      this.logger.log('Calculated user name:', username);
+      this.logger.log('User ID', botInfo.id);
 
       this.logMessages = message.content.includes('on');
       return this.client.queueMessages([
@@ -99,18 +98,20 @@ export class BotEngine implements Engine {
     }, Promise.resolve(null));
   }
 
+  private onDequeueCatch(err: Error): void {
+    if (err instanceof HandledResponseError) {
+      this.logger.log('Response handled, ignoring');
+      return;
+    }
+
+    this.logger.error(err);
+  }
+
   private handleAmbientMessage(message: discord.Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) =>
       c.onMessage(message)
     );
-    this.dequeuePromises(funcs).catch((err: Error) => {
-      if (err instanceof HandledResponseError) {
-        logger.log('Response handled, ignoring');
-        return;
-      }
-
-      logger.error(err);
-    });
+    this.dequeuePromises(funcs).catch(this.onDequeueCatch.bind(this));
   }
 
   private handleAddressedMessage(
@@ -118,7 +119,7 @@ export class BotEngine implements Engine {
     addressedMessage: string
   ): void {
     if (this.logMessages) {
-      logger.log('Message:', addressedMessage);
+      this.logger.log('Message:', addressedMessage);
     }
 
     if (addressedMessage.length === 0) {
@@ -148,14 +149,7 @@ export class BotEngine implements Engine {
 
         return unhandledResponse();
       })
-      .catch((err: any) => {
-        if (err instanceof HandledResponseError) {
-          logger.log('Response handled, ignoring');
-          return;
-        }
-
-        logger.error(err);
-      });
+      .catch(this.onDequeueCatch.bind(this));
   }
 
   private calculateAddressedMessage(message: discord.Message): string {

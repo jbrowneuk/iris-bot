@@ -1,6 +1,7 @@
 import { Client } from './client';
 import { Database } from './database';
 import { Engine } from './engine';
+import { Logger } from './logger';
 import { ResponseGenerator } from './response-generator';
 import { Settings } from './settings';
 
@@ -17,10 +18,8 @@ export interface DependencyContainer {
 
   /**
    * Logger
-   *
-   * @todo this should not be type `Console`
    */
-  logger: Console;
+  logger: Logger;
 
   /** Response generator */
   responses: ResponseGenerator;
