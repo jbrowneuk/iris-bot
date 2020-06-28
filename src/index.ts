@@ -1,5 +1,6 @@
 import { DiscordClient } from './client/discord-client';
 import { BotEngine } from './engine/bot-engine';
+import { LoggerImpl } from './engine/logger-impl';
 import { SettingsManager } from './engine/settings-manager';
 import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
@@ -10,7 +11,7 @@ import { HugBot } from './personality/hug-bot';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
 
 // Initialise foundation
-const logger = console;
+const logger = new LoggerImpl();
 const database = new SqliteWrapper();
 database.connect().then(() => {
   logger.log('Database connected');
@@ -23,7 +24,7 @@ process.on('beforeExit', () => {
 
 // Initialise bot core
 const client = new DiscordClient();
-const responses = new ResponseGeneratorImpl(database);
+const responses = new ResponseGeneratorImpl(database, logger);
 const settings = new SettingsManager();
 const engine = new BotEngine(client, responses, settings);
 

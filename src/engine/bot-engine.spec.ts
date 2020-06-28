@@ -33,7 +33,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     expect(engine).toBeTruthy();
   });
@@ -43,7 +44,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
 
     engine.run();
@@ -56,7 +58,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
 
     engine.run();
@@ -76,7 +79,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onConnected');
@@ -102,7 +106,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onMessage');
@@ -128,7 +133,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
     const mockCore = Mock.ofType<Personality>();
@@ -148,7 +154,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
 
     engine.addPersonality(coreNoInit);
@@ -164,7 +171,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
 
@@ -180,7 +188,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
 
@@ -201,7 +210,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
 
@@ -229,7 +239,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
 
@@ -249,7 +260,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
@@ -272,7 +284,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
 
@@ -322,7 +335,8 @@ describe('Bot engine', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
-      settings.object
+      settings.object,
+      console
     );
     const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
