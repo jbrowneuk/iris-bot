@@ -1,4 +1,4 @@
-import { Message, RichEmbed, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import { readFile, writeFile } from 'fs';
 import * as nodeFetch from 'node-fetch';
 
@@ -203,8 +203,8 @@ export class BlogRoll implements Personality {
    *
    * @param postData post information from API
    */
-  private formatPostData(postData: PostData): RichEmbed {
-    const embed = new RichEmbed();
+  private formatPostData(postData: PostData): MessageEmbed {
+    const embed = new MessageEmbed();
     embed.setColor('#48647F');
     embed.setURL(`${siteRoot}journal/post/${postData.slug}`);
     embed.setThumbnail(`${siteRoot}icons/icon-120.png`);

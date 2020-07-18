@@ -1,3 +1,3 @@
-import { RichEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 
-export type MessageType = string | RichEmbed;
+export type MessageType = string | MessageEmbed;
