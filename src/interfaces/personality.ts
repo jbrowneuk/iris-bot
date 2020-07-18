@@ -8,6 +8,11 @@ export interface Personality {
    */
   initialise?(): void;
 
+  /**
+   * Called to destroy the personality when the bot is stopping. Optional.
+   */
+  destroy?(): void;
+
   /** Called on every addressed (i.e. `@bot message`) message */
   onAddressed(message: Message, addressedMessage: string): Promise<MessageType>;
 

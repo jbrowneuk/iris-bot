@@ -7,6 +7,8 @@ import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { BlogRoll } from './blog-roll';
 
+const testOutputFile = 'blog-roll.test.json';
+
 class TestableBlogRoll extends BlogRoll {
   get updateInterval(): number | NodeJS.Timer {
     return this.timerInterval;
@@ -28,11 +30,12 @@ class TestableBlogRoll extends BlogRoll {
     this.lastPostId = value;
   }
 
-  public clearUpdateInterval(): void {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval as number);
-      this.timerInterval = null;
+  constructor(dependencies: DependencyContainer, pathOverride?: string) {
+    if (typeof pathOverride === 'undefined') {
+      pathOverride = testOutputFile;
     }
+
+    super(dependencies, pathOverride);
   }
 
   public invokeFetch(): void {
@@ -58,8 +61,17 @@ describe('Blog roll', () => {
     };
   });
 
-  afterEach(() => {
-    personality.clearUpdateInterval();
+  afterEach(done => {
+    personality.destroy();
+
+    // Clean up test output file
+    unlink(testOutputFile, err => {
+      if (err && err.code !== 'ENOENT') {
+        fail(err);
+      }
+
+      done();
+    });
   });
 
   describe('Initialisation', () => {
@@ -90,7 +102,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect(personality.updateInterval).not.toBe(0);
         done();
-      }, 200);
+      });
     });
   });
 
@@ -111,21 +123,8 @@ describe('Blog roll', () => {
   });
 
   describe('onMessage', () => {
-    const testOutputFile = 'blog-roll.test.json';
-
     beforeEach(() => {
-      personality = new TestableBlogRoll(mockDependencies, testOutputFile);
-    });
-
-    afterEach(done => {
-      // Clean up test output file
-      unlink(testOutputFile, err => {
-        if (err && err.code !== 'ENOENT') {
-          fail(err);
-        }
-
-        done();
-      });
+      personality = new TestableBlogRoll(mockDependencies);
     });
 
     it('should cache channel when set channel command invoked', done => {

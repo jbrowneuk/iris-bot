@@ -7,6 +7,9 @@ export interface Engine {
   /** Initialise the bot and all personality implementations */
   initialise(): void;
 
+  /** Tear down the bot and all personality implementations */
+  destroy(): void;
+
   /** Connect to the server and process messages */
   run(): void;
 }

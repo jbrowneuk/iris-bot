@@ -167,6 +167,27 @@ describe('Bot engine', () => {
     expect(initSpy).toHaveBeenCalled();
   });
 
+  it('should run destroy on personality constructs if implemented', () => {
+    const coreNoInit: Personality = { onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
+    const coreWithDestroy: Personality = { destroy: () => null, onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
+    const destroySpy = spyOn(coreWithDestroy, 'destroy');
+
+    const engine = new BotEngine(
+      client.object,
+      responseGenerator.object,
+      settings.object,
+      console
+    );
+
+    engine.addPersonality(coreNoInit);
+    engine.addPersonality(coreWithDestroy);
+    engine.destroy();
+
+    // Not possible to assess whether the non-initialise version is not called,
+    // but by getting here we haven't had an exception thrown.
+    expect(destroySpy).toHaveBeenCalled();
+  });
+
   it('should handle ambient messages when message received', () => {
     const engine = new BotEngine(
       client.object,

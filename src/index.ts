@@ -17,16 +17,21 @@ database.connect().then(() => {
   logger.log('Database connected');
 });
 
-process.on('beforeExit', () => {
+// Set up process exit handler
+function destroyHandler(): void {
   logger.log('Disconnecting database');
+  engine.destroy();
   database.disconnect();
-});
+}
+
+process.on('beforeExit', destroyHandler);
+process.on('SIGINT', destroyHandler);
 
 // Initialise bot core
 const client = new DiscordClient();
 const responses = new ResponseGeneratorImpl(database, logger);
 const settings = new SettingsManager();
-const engine = new BotEngine(client, responses, settings);
+const engine = new BotEngine(client, responses, settings, logger);
 
 // Construct dependency container
 const dependencies: DependencyContainer = {
