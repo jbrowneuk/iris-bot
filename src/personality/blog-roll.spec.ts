@@ -38,13 +38,6 @@ class TestableBlogRoll extends BlogRoll {
     super(dependencies, pathOverride);
   }
 
-  public clearUpdateInterval(): void {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval as number);
-      this.timerInterval = null;
-    }
-  }
-
   public invokeFetch(): void {
     this.fetchJournal();
   }
@@ -68,8 +61,17 @@ describe('Blog roll', () => {
     };
   });
 
-  afterEach(() => {
-    personality.clearUpdateInterval();
+  afterEach(done => {
+    personality.destroy();
+
+    // Clean up test output file
+    unlink(testOutputFile, err => {
+      if (err && err.code !== 'ENOENT') {
+        fail(err);
+      }
+
+      done();
+    });
   });
 
   describe('Initialisation', () => {
@@ -123,17 +125,6 @@ describe('Blog roll', () => {
   describe('onMessage', () => {
     beforeEach(() => {
       personality = new TestableBlogRoll(mockDependencies);
-    });
-
-    afterEach(done => {
-      // Clean up test output file
-      unlink(testOutputFile, err => {
-        if (err && err.code !== 'ENOENT') {
-          fail(err);
-        }
-
-        done();
-      });
     });
 
     it('should cache channel when set channel command invoked', done => {
