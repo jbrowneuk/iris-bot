@@ -220,7 +220,7 @@ export class BotEngine implements Engine {
     message: discord.Message
   ): string {
     // If the bot is in a "server" but has been renamed, update the value of the username
-    const guildMemberInfo = message.guild.members.get(botInfo.id);
+    const guildMemberInfo = message.guild.members.resolve(botInfo.id);
     if (
       guildMemberInfo &&
       guildMemberInfo.nickname &&

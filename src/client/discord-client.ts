@@ -3,8 +3,9 @@ import { EventEmitter } from 'events';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
+import { Logger } from '../interfaces/logger';
 import { MessageType } from '../types';
-import { DISCORD_EVENTS } from './discord-events';
+import { messageEvent, readyEvent } from './discord-events';
 
 export class DiscordClient extends EventEmitter implements Client {
   private client: discord.Client;
@@ -21,8 +22,8 @@ export class DiscordClient extends EventEmitter implements Client {
 
   public connect(token: string): void {
     this.client = this.generateClient();
-    this.client.on(DISCORD_EVENTS.connected, () => this.onConnected());
-    this.client.on(DISCORD_EVENTS.message, (message: discord.Message) =>
+    this.client.on(readyEvent, () => this.onConnected());
+    this.client.on(messageEvent, (message: discord.Message) =>
       this.onMessage(message)
     );
 
@@ -38,26 +39,7 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   public findChannelById(channelId: string): discord.Channel {
-    if (!this.client.channels.has(channelId)) {
-      return null;
-    }
-
-    return this.client.channels.get(channelId);
-  }
-
-  public findChannelByName(channelName: string): discord.Channel {
-    const filterProperty = 'name';
-    const namedChannels = this.client.channels.filter(c =>
-      Object.hasOwnProperty.call(c, filterProperty)
-    );
-    if (namedChannels.size === 0) {
-      return null;
-    }
-
-    const channel = namedChannels.find(
-      c => (c as discord.TextChannel).name === channelName
-    );
-    return channel || null;
+    return this.client.channels.resolve(channelId) || null;
   }
 
   public getUserInformation(): discord.User {

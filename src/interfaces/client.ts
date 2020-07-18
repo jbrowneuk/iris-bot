@@ -10,7 +10,6 @@ export interface Client extends EventEmitter {
   isConnected(): boolean;
 
   findChannelById(channelId: string): discord.Channel;
-  findChannelByName(channelName: string): discord.Channel;
 
   getUserInformation(): discord.User;
 

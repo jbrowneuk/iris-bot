@@ -301,7 +301,7 @@ describe('Bot engine', () => {
     expect(queuedPromises.length).toBe(1);
   });
 
-  it('should detect when being addressed', (done: DoneFn) => {
+  it('should detect when being addressed', () => {
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
@@ -340,13 +340,36 @@ describe('Bot engine', () => {
         .returns(() => mockUserInfo.object);
       const mockMessage = {
         content: kvp.input,
-        guild: { members: { get: () => {} } }
+        guild: { members: { resolve: (): discord.GuildMember => null } }
       };
       const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
       expect(actualResult).toBe(kvp.expectedOutput);
     });
+  });
 
-    done();
+  it('should detect if addressed and username overriden in guild', () => {
+    const overridenUsername = 'totally_not_a_bot';
+    const engine = new BotEngine(
+      client.object,
+      responseGenerator.object,
+      settings.object,
+      console
+    );
+    const untypedEngine = engine as any;
+    const mockUserInfo = Mock.ofType<discord.User>();
+    mockUserInfo.setup(m => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup(m => m.id).returns(() => MOCK_ID);
+
+    client
+        .setup(m => m.getUserInformation())
+        .returns(() => mockUserInfo.object);
+      const mockMessage = {
+        content: `${overridenUsername}, hello`,
+        guild: { members: { resolve: () => ({ nickname: overridenUsername }) } }
+      };
+
+      const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
+      expect(actualResult).toBe('hello');
   });
 
   it('should queue addressed messages from personality cores', () => {

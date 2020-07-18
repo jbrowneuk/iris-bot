@@ -3,7 +3,7 @@ import { IMock, It, Mock, Times } from 'typemoq';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { DiscordClient } from './discord-client';
-import { DISCORD_EVENTS } from './discord-events';
+import { messageEvent, readyEvent } from './discord-events';
 
 const MOCK_TOKEN = '12345abcde';
 
@@ -14,22 +14,26 @@ const MOCK_CHAN_2_ID = 'chan2';
 const MOCK_CHAN_2_NAME = 'chan2 name';
 
 // Can’t seem to mock discord.Channel using TypeMoq so this is hacky
-const MOCK_CHANNELS = new discord.Collection<string, any>();
+const MOCK_CHANNELS = new Map<string, any>();
 MOCK_CHANNELS.set(MOCK_CHAN_1_ID, {
-  name: MOCK_CHAN_1_NAME,
-  id: MOCK_CHAN_1_ID
+  id: MOCK_CHAN_1_ID,
+  name: MOCK_CHAN_1_NAME
 });
 MOCK_CHANNELS.set(MOCK_CHAN_2_ID, {
-  name: MOCK_CHAN_2_NAME,
-  id: MOCK_CHAN_2_ID
+  id: MOCK_CHAN_2_ID,
+  name: MOCK_CHAN_2_NAME
 });
 
 describe('Discord client wrapper', () => {
   let discordMock: IMock<discord.Client>;
   let client: DiscordClient;
+  let mockChannels: IMock<discord.ChannelManager>;
 
   beforeEach(() => {
     discordMock = Mock.ofType<discord.Client>();
+
+    mockChannels = Mock.ofType<discord.ChannelManager>();
+    mockChannels.setup(c => c.resolve(It.isAnyString())).returns(id => MOCK_CHANNELS.get(id));
 
     client = new DiscordClient();
     spyOn(client as any, 'generateClient').and.returnValue(discordMock.object);
@@ -53,17 +57,17 @@ describe('Discord client wrapper', () => {
   });
 
   it('should initialise event listeners on connect', () => {
-    discordMock.setup(m => m.on(It.isAnyString(), It.isAny()));
+    // discordMock.setup(m => m.on(It.isAny(), It.isAny()));
 
     client.connect(MOCK_TOKEN);
 
     // Connected and message
     discordMock.verify(
-      m => m.on(It.isValue(DISCORD_EVENTS.connected), It.isAny()),
+      m => m.on(It.isValue(readyEvent), It.isAny()),
       Times.once()
     );
     discordMock.verify(
-      m => m.on(It.isValue(DISCORD_EVENTS.message), It.isAny()),
+      m => m.on(It.isValue(messageEvent), It.isAny()),
       Times.once()
     );
   });
@@ -73,7 +77,7 @@ describe('Discord client wrapper', () => {
     spyOn(untypedClient, 'onConnected');
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAny(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -81,7 +85,7 @@ describe('Discord client wrapper', () => {
     client.connect(MOCK_TOKEN);
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.connected
+      cb => cb.evt === readyEvent
     );
     relatedHandler.cb.call(client);
 
@@ -93,7 +97,7 @@ describe('Discord client wrapper', () => {
     spyOn(untypedClient, 'onMessage');
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAny(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -101,7 +105,7 @@ describe('Discord client wrapper', () => {
     client.connect(MOCK_TOKEN);
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.message
+      cb => cb.evt === messageEvent
     );
     relatedHandler.cb.call(client);
 
@@ -110,7 +114,7 @@ describe('Discord client wrapper', () => {
 
   it('should find channel by id', () => {
     (client as any).client = discordMock.object; // This is set when connected
-    discordMock.setup(m => m.channels).returns(() => MOCK_CHANNELS);
+    discordMock.setup(m => m.channels).returns(() => mockChannels.object);
 
     const channel = client.findChannelById(MOCK_CHAN_1_ID);
 
@@ -120,27 +124,9 @@ describe('Discord client wrapper', () => {
 
   it('should return null if cannot find channel by id', () => {
     (client as any).client = discordMock.object; // This is set when connected
-    discordMock.setup(m => m.channels).returns(() => MOCK_CHANNELS);
+    discordMock.setup(m => m.channels).returns(() => mockChannels.object);
 
     const channel = client.findChannelById('SomethingThatDoesNotExist');
-
-    expect(channel).toBeNull();
-  });
-
-  it('should find channel by name', () => {
-    (client as any).client = discordMock.object; // This is set when connected
-    discordMock.setup(m => m.channels).returns(() => MOCK_CHANNELS);
-
-    const channel = client.findChannelByName(MOCK_CHAN_2_NAME);
-
-    expect(channel.id).toBe(MOCK_CHAN_2_ID);
-  });
-
-  it('should return null if cannot find channel by name', () => {
-    (client as any).client = discordMock.object; // This is set when connected
-    discordMock.setup(m => m.channels).returns(() => MOCK_CHANNELS);
-
-    const channel = client.findChannelByName('This channel does not exist');
 
     expect(channel).toBeNull();
   });
@@ -195,7 +181,7 @@ describe('Discord client wrapper', () => {
     let eventRaised = false;
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     discordMock
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAny(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -204,7 +190,7 @@ describe('Discord client wrapper', () => {
     client.connect(MOCK_TOKEN);
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.connected
+      cb => cb.evt === readyEvent
     );
     relatedHandler.cb.call(client);
 
@@ -215,7 +201,7 @@ describe('Discord client wrapper', () => {
     let eventRaised = false;
     const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
     discordMock
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAny(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -223,7 +209,7 @@ describe('Discord client wrapper', () => {
     client.on(LifecycleEvents.MESSAGE, () => { eventRaised = true; });
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === DISCORD_EVENTS.message
+      cb => cb.evt === messageEvent
     );
     relatedHandler.cb.call(client, mockMessage);
 
