@@ -8,10 +8,10 @@ export class LoggerImpl implements Logger {
   }
 
   public error(message: any, ...optionalParams: any[]): void {
-    this.impl.error(message, optionalParams);
+    this.impl.error(message, ...optionalParams);
   }
 
   public log(message: any, ...optionalParams: any[]): void {
-    this.impl.log(message, optionalParams);
+    this.impl.log(message, ...optionalParams);
   }
 }
