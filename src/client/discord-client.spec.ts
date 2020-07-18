@@ -35,7 +35,7 @@ describe('Discord client wrapper', () => {
     mockChannels = Mock.ofType<discord.ChannelManager>();
     mockChannels.setup(c => c.resolve(It.isAnyString())).returns(id => MOCK_CHANNELS.get(id));
 
-    client = new DiscordClient();
+    client = new DiscordClient(console);
     spyOn(client as any, 'generateClient').and.returnValue(discordMock.object);
   });
 

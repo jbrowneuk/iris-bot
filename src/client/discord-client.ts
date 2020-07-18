@@ -12,7 +12,7 @@ export class DiscordClient extends EventEmitter implements Client {
   private lastMessage: discord.Message;
   private connected: boolean;
 
-  constructor() {
+  constructor(private logger: Logger) {
     super();
 
     this.client = null;
@@ -51,7 +51,7 @@ export class DiscordClient extends EventEmitter implements Client {
   }
 
   public sendReaction(emoji: string, message?: discord.Message): void {
-    console.log(emoji);
+    this.logger.log('Should send', emoji, 'to', message.id);
   }
 
   private generateClient(): discord.Client {

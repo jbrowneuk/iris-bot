@@ -28,7 +28,7 @@ process.on('beforeExit', destroyHandler);
 process.on('SIGINT', destroyHandler);
 
 // Initialise bot core
-const client = new DiscordClient();
+const client = new DiscordClient(logger);
 const responses = new ResponseGeneratorImpl(database, logger);
 const settings = new SettingsManager();
 const engine = new BotEngine(client, responses, settings, logger);
