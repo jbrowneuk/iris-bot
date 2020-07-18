@@ -37,6 +37,14 @@ export class BotEngine implements Engine {
     });
   }
 
+  public destroy(): void {
+    this.personalityConstructs.forEach(personality => {
+      if (typeof personality.destroy === 'function') {
+        personality.destroy();
+      }
+    });
+  }
+
   public run(): void {
     this.attachEvents();
     this.client.connect(this.settings.getSettings().token);
