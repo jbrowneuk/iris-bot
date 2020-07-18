@@ -7,7 +7,7 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { calculateReadTime, formatTimestamp } from './blog-roll.utils';
 
-const updateInterval = 5 * 60 * 1000; // 5 mins, in sec, in msec
+const defaultUpdateMins = 60;
 const defaultSettingsFile = 'blog-roll.json';
 const settingsFileEnc = 'utf-8';
 
@@ -25,6 +25,8 @@ export class BlogRoll implements Personality {
 
   public initialise(): void {
     readFile(this.settingsFilePath, settingsFileEnc, this.parseSettings.bind(this));
+
+    const updateInterval = defaultUpdateMins * 60 * 1000; // Convert to msec
     this.timerInterval = setInterval(this.fetchJournal.bind(this), updateInterval);
   }
 

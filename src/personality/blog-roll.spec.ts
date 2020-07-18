@@ -7,6 +7,8 @@ import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { BlogRoll } from './blog-roll';
 
+const testOutputFile = 'blog-roll.test.json';
+
 class TestableBlogRoll extends BlogRoll {
   get updateInterval(): number | NodeJS.Timer {
     return this.timerInterval;
@@ -26,6 +28,14 @@ class TestableBlogRoll extends BlogRoll {
 
   set lastPost(value: number) {
     this.lastPostId = value;
+  }
+
+  constructor(dependencies: DependencyContainer, pathOverride?: string) {
+    if (typeof pathOverride === 'undefined') {
+      pathOverride = testOutputFile;
+    }
+
+    super(dependencies, pathOverride);
   }
 
   public clearUpdateInterval(): void {
@@ -90,7 +100,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect(personality.updateInterval).not.toBe(0);
         done();
-      }, 200);
+      });
     });
   });
 
@@ -111,10 +121,8 @@ describe('Blog roll', () => {
   });
 
   describe('onMessage', () => {
-    const testOutputFile = 'blog-roll.test.json';
-
     beforeEach(() => {
-      personality = new TestableBlogRoll(mockDependencies, testOutputFile);
+      personality = new TestableBlogRoll(mockDependencies);
     });
 
     afterEach(done => {
