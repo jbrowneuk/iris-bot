@@ -28,7 +28,7 @@
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "sqlite3": "^4.2.0"
   },
   "devDependencies": {
