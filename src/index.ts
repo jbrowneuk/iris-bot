@@ -8,6 +8,7 @@ import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
 import { GameElements } from './personality/game-elements';
 import { HugBot } from './personality/hug-bot';
+import { MoodControl } from './personality/mood-control';
 import { MoodEngineImpl } from './personality/mood-engine-impl';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
 
@@ -20,7 +21,7 @@ database.connect().then(() => {
 
 // Set up process exit handler
 function destroyHandler(): void {
-  logger.log('Disconnecting database');
+  logger.log('Destroy handler called');
   engine.destroy();
   database.disconnect();
 }
@@ -50,6 +51,7 @@ engine.addPersonality(new BasicIntelligence());
 engine.addPersonality(new GameElements());
 engine.addPersonality(new HugBot());
 engine.addPersonality(new BlogRoll(dependencies));
+engine.addPersonality(new MoodControl(dependencies, moodEngine));
 
 // Start bot
 engine.initialise();
