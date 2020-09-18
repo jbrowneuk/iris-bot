@@ -39,13 +39,14 @@ export function getValueStartedWith(
 }
 
 /**
- * Central location for random number generation
+ * Central location for random number generation, returning float values between
+ * min and max
  *
  * @param min if max is specifed, acts as the lower bound of the random number
  *            range. If not, acts as the upper bound.
  * @param max (optional) upper bound of the random number range
  */
-export function randomNumber(min: number, max?: number): number {
+export function randomFloat(min: number, max?: number): number {
   let minimum = min;
   let maximum = max;
   if (typeof max === 'undefined') {
@@ -53,5 +54,24 @@ export function randomNumber(min: number, max?: number): number {
     maximum = min;
   }
 
-  return Math.floor(Math.random() * (maximum - minimum)) + minimum;
+  return (Math.random() * (maximum - minimum)) + minimum;
+}
+
+/**
+ * Central location for random number generation, returning integer values
+ * between min and max
+ *
+ * @param min if max is specifed, acts as the lower bound of the random number
+ *            range. If not, acts as the upper bound.
+ * @param max (optional) upper bound of the random number range
+ */
+export function randomInteger(min: number, max?: number): number {
+  return Math.floor(randomFloat(min, max));
+}
+
+/**
+ * @deprecated
+ */
+export function randomNumber(min: number, max?: number): number {
+  return randomInteger(min, max);
 }
