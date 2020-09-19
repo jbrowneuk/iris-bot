@@ -36,6 +36,7 @@
     "@types/node": "^12.12.62",
     "@types/node-fetch": "^2.5.7",
     "@types/sqlite3": "^3.1.6",
+    "@types/ws": "^7.2.6",
     "jasmine": "^3.6.1",
     "jasmine-ts": "^0.3.0",
     "nyc": "^14.1.1",
