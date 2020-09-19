@@ -8,6 +8,7 @@ import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
 import { GameElements } from './personality/game-elements';
 import { HugBot } from './personality/hug-bot';
+import { MoodEngineImpl } from './personality/mood-engine-impl';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
 
 // Initialise foundation
@@ -29,7 +30,8 @@ process.on('SIGINT', destroyHandler);
 
 // Initialise bot core
 const client = new DiscordClient(logger);
-const responses = new ResponseGeneratorImpl(database, logger);
+const moodEngine = new MoodEngineImpl();
+const responses = new ResponseGeneratorImpl(database, logger, moodEngine);
 const settings = new SettingsManager();
 const engine = new BotEngine(client, responses, settings, logger);
 

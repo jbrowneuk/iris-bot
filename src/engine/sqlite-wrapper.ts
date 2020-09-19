@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 
-import { Database } from '../interfaces/database';
+import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 
 const databaseFile = './bot.sqlite';
 
@@ -38,18 +38,34 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  public getRecordsFromCollection(collectionName: string, filter: any): Promise<any[]> {
+  public getRecordsFromCollection(
+    collectionName: string,
+    filter: QueryFilter
+  ): Promise<any[]> {
     if (this.db === null) {
       return Promise.reject(new Error('No connection established'));
     }
 
-    const objKeys = Object.keys(filter);
-    const comparisonOp = '=?';
-    let where = objKeys.join(`${comparisonOp} AND `);
-    let vals: any[] = [];
-    if (where.length > 0) {
-      where = ` WHERE ${where}${comparisonOp}`;
-      vals = objKeys.map((key: string) => filter[key]);
+    let where: string;
+    let vals: string[];
+    if (filter.where && filter.where.length > 0) {
+      const comparisonOperator = '=?';
+      where =
+        ' WHERE ' +
+        filter.where
+          .map((op, idx) => {
+            let logic = '';
+            if (idx > 0) {
+              logic += ` ${op.logic || QueryLogic.And} `;
+            }
+
+            return `${logic}${op.field}${comparisonOperator}`;
+          })
+          .join('');
+      vals = filter.where.map(op => op.value);
+    } else {
+      where = '';
+      vals = [];
     }
 
     return new Promise((resolve, reject) => {

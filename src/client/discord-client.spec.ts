@@ -237,4 +237,18 @@ describe('Discord client wrapper', () => {
     const eventRaised = messageHandlerTest(mockMessage);
     expect(eventRaised).toBeFalsy();
   });
+
+  it('should set presence data', () => {
+    const mockUser = {
+      setPresence: (data: any) => {}
+    };
+    const presenceSpy = spyOn(mockUser, 'setPresence');
+    discordMock.setup(m => m.user).returns(() => mockUser as discord.ClientUser);
+    const mockPresence = { activity: {} };
+    (client as any).client = discordMock.object; // This is set when connected
+
+    client.setPresence(mockPresence);
+
+    expect(presenceSpy).toHaveBeenCalledWith(mockPresence);
+  });
 });

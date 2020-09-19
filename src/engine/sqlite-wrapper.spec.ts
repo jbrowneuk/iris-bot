@@ -146,7 +146,12 @@ describe('SQLite wrapper', () => {
   });
 
   it('should correctly build SQL statement when filter has been applied', (done: DoneFn) => {
-    const filter = { a: 'a', b: 'b' };
+    const filter = {
+      where: [
+        { field: 'a', value: 'a' },
+        { field: 'b', value: 'b' }
+      ]
+    };
     mockStatement
       .setup(m => m.all(It.isAny(), It.isAny()))
       .callback((f: any, cb: (err: any, rows: any[]) => void) => {

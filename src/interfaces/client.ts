@@ -1,4 +1,4 @@
-import * as discord from 'discord.js';
+import { Channel, Message, PresenceData, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import { MessageType } from '../types';
@@ -9,10 +9,11 @@ export interface Client extends EventEmitter {
 
   isConnected(): boolean;
 
-  findChannelById(channelId: string): discord.Channel;
+  findChannelById(channelId: string): Channel;
 
-  getUserInformation(): discord.User;
+  getUserInformation(): User;
 
   queueMessages(messages: MessageType[]): void;
-  sendReaction(emoji: string, message?: discord.Message): void;
+  sendReaction(emoji: string, message?: Message): void;
+  setPresence(data: PresenceData): void;
 }
