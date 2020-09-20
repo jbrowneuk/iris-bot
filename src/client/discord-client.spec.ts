@@ -157,6 +157,21 @@ describe('Discord client wrapper', () => {
     expect(sendCount).toBe(3);
   });
 
+  it('should replace user string with last message user name', () => {
+    const expectedName = 'bob-bobertson';
+    let lastMessage: string = null
+    const mockChannel = {
+      send: (message: string) => lastMessage = message
+    };
+    const untypedClient = client as any;
+    untypedClient.lastMessage = { channel: mockChannel, author: { username: expectedName } };
+
+    const messages = ['{£user} {£user} {£user}'];
+    client.queueMessages(messages);
+
+    expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
+  });
+
   it('should get user information', () => {
     const username = 'test';
     const mockUserInfo = Mock.ofType<discord.ClientUser>();
