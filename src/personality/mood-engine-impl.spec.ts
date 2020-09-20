@@ -1,4 +1,4 @@
-import { Mood, MoodletSize } from '../interfaces/mood-engine';
+import { Mood, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 import { MoodEngineImpl } from './mood-engine-impl';
 
 describe('Mood engine', () => {
@@ -68,11 +68,21 @@ describe('Mood engine', () => {
   });
 
   describe('addMoodlet', () => {
-    it('should add to mood value when moodlet is positive', () => {
-      const randomiser = () => 1;
-      const moodEngine = new MoodEngineImpl(randomiser);
+    let moodEngine: MoodEngineImpl;
+    let magnitudes: MoodletDelta[];
 
-      const magnitudes = [MoodletSize.Small, MoodletSize.Medium, MoodletSize.Large];
+    beforeEach(() => {
+      const randomiser = () => 1;
+      moodEngine = new MoodEngineImpl(randomiser);
+
+      magnitudes = [
+        { sizeRepresentation: MoodletSize.Small, delta: 1 },
+        { sizeRepresentation: MoodletSize.Medium, delta: 2 },
+        { sizeRepresentation: MoodletSize.Large, delta: 3 }
+      ];
+    });
+
+    it('should add to mood value when moodlet is positive', () => {
       magnitudes.forEach(magnitude => {
         moodEngine.setMood(0);
         moodEngine.addMoodlet(Mood.Positive, magnitude);
@@ -81,10 +91,6 @@ describe('Mood engine', () => {
     });
 
     it('should subtract from mood value when moodlet is negative', () => {
-      const randomiser = () => 1;
-      const moodEngine = new MoodEngineImpl(randomiser);
-
-      const magnitudes = [MoodletSize.Small, MoodletSize.Medium, MoodletSize.Large];
       magnitudes.forEach(magnitude => {
         moodEngine.setMood(0);
         moodEngine.addMoodlet(Mood.Negative, magnitude);
@@ -93,10 +99,6 @@ describe('Mood engine', () => {
     });
 
     it('should neutralise mood value when moodlet is neutral and mood is positive', () => {
-      const randomiser = () => 1;
-      const moodEngine = new MoodEngineImpl(randomiser);
-
-      const magnitudes = [MoodletSize.Small, MoodletSize.Medium, MoodletSize.Large];
       magnitudes.forEach(magnitude => {
         const initialMood = 50;
         moodEngine.setMood(initialMood);
@@ -106,10 +108,6 @@ describe('Mood engine', () => {
     });
 
     it('should neutralise mood value when moodlet is neutral and mood is positive', () => {
-      const randomiser = () => 1;
-      const moodEngine = new MoodEngineImpl(randomiser);
-
-      const magnitudes = [MoodletSize.Small, MoodletSize.Medium, MoodletSize.Large];
       magnitudes.forEach(magnitude => {
         const initialMood = -50;
         moodEngine.setMood(initialMood);
@@ -117,38 +115,38 @@ describe('Mood engine', () => {
         expect(moodEngine.getRawMood()).toBeGreaterThan(initialMood);
       });
     });
+  });
 
-    describe('neutraliseMood', () => {
-      let moodEngine: MoodEngineImpl;
+  describe('neutraliseMood', () => {
+    let moodEngine: MoodEngineImpl;
 
-      beforeEach(() => {
-        const randomiser = () => 1;
-        moodEngine = new MoodEngineImpl(randomiser);
-      });
+    beforeEach(() => {
+      const randomiser = () => 1;
+      moodEngine = new MoodEngineImpl(randomiser);
+    });
 
-      it('should decrease magnitude of positive mood', () => {
-        const initialMood = 50;
-        moodEngine.setMood(initialMood);
-        moodEngine.neutraliseMood();
-        expect(moodEngine.getRawMood()).toBeLessThan(initialMood);
-      });
+    it('should decrease magnitude of positive mood', () => {
+      const initialMood = 50;
+      moodEngine.setMood(initialMood);
+      moodEngine.neutraliseMood();
+      expect(moodEngine.getRawMood()).toBeLessThan(initialMood);
+    });
 
-      it('should decrease magnitude of negative mood', () => {
-        const initialMood = -50;
-        moodEngine.setMood(initialMood);
-        moodEngine.neutraliseMood();
-        expect(moodEngine.getRawMood()).toBeGreaterThan(initialMood);
-      });
+    it('should decrease magnitude of negative mood', () => {
+      const initialMood = -50;
+      moodEngine.setMood(initialMood);
+      moodEngine.neutraliseMood();
+      expect(moodEngine.getRawMood()).toBeGreaterThan(initialMood);
+    });
 
-      it('should neutralise to zero value', () => {
-        moodEngine.setMood(1);
-        moodEngine.neutraliseMood();
-        expect(moodEngine.getRawMood()).toBeCloseTo(0, Number.EPSILON);
+    it('should neutralise to zero value if small value', () => {
+      moodEngine.setMood(0.001);
+      moodEngine.neutraliseMood();
+      expect(moodEngine.getRawMood()).toBeCloseTo(0, Number.EPSILON);
 
-        moodEngine.setMood(-1);
-        moodEngine.neutraliseMood();
-        expect(moodEngine.getRawMood()).toBeCloseTo(0, Number.EPSILON);
-      });
+      moodEngine.setMood(-0.001);
+      moodEngine.neutraliseMood();
+      expect(moodEngine.getRawMood()).toBeCloseTo(0, Number.EPSILON);
     });
   });
 });

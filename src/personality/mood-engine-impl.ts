@@ -1,4 +1,4 @@
-import { Mood, MoodEngine, MoodletSize } from '../interfaces/mood-engine';
+import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 
 const maxMood = 100;
 
@@ -17,9 +17,6 @@ export class MoodEngineImpl implements MoodEngine {
     }
   }
 
-  /**
-   * Gets the current mood representation, with a random chance to be neutral
-   */
   public getMood(): Mood {
     const moodScaled = this.moodValue / maxMood;
 
@@ -32,9 +29,16 @@ export class MoodEngineImpl implements MoodEngine {
     return this.moodValue > 0 ? Mood.Positive : Mood.Negative;
   }
 
-  public addMoodlet(mood: Mood, amount: MoodletSize): void {
-    const moodSize = this.generateMoodletSize(amount);
-    this.adjustMoodValue(mood, moodSize);
+  public calculateDelta(size: MoodletSize, totalMinutes: number): MoodletDelta {
+    const moodSize = this.generateMoodletSize(size);
+    return {
+      delta: moodSize / totalMinutes,
+      sizeRepresentation: size
+    }
+  }
+
+  public addMoodlet(mood: Mood, delta: MoodletDelta): void {
+    this.adjustMoodValue(mood, delta.delta);
     this.constrainMoodValue();
   }
 
@@ -43,14 +47,26 @@ export class MoodEngineImpl implements MoodEngine {
     this.constrainMoodValue();
   }
 
+  /**
+   * (Internal) sets the mood to a specific value
+   *
+   * @param value raw value
+   */
   public setMood(value: number): void {
     this.moodValue = value;
+    this.constrainMoodValue();
   }
 
+  /**
+   * (Internal) gets the raw value of the mood
+   */
   public getRawMood(): number {
     return this.moodValue;
   }
 
+  /**
+   * Constrains the mood value to the limits
+   */
   private constrainMoodValue(): void {
     if (this.moodValue > maxMood) {
       this.moodValue = maxMood;
@@ -60,8 +76,9 @@ export class MoodEngineImpl implements MoodEngine {
       this.moodValue = -maxMood;
     }
 
+    // TOD: reconsider this, may not be necessary
     const abs = Math.abs(this.moodValue);
-    if (abs < 1) {
+    if (abs < Number.EPSILON) {
       this.moodValue = 0;
     }
   }
@@ -77,6 +94,12 @@ export class MoodEngineImpl implements MoodEngine {
     return Math.ceil(this.randomiser() * range + lower);
   }
 
+  /**
+   * Moves the mood value in a direction
+   *
+   * @param mood the direction of the mood
+   * @param amount the amount to move the mood
+   */
   private adjustMoodValue(mood: Mood, amount: number): void {
     let sign;
     if (mood === Mood.Neutral) {
