@@ -50,10 +50,6 @@ export class DiscordClient extends EventEmitter implements Client {
     messages.forEach((message: MessageType) => this.sendMessage(message));
   }
 
-  public sendReaction(emoji: string, message?: discord.Message): void {
-    this.logger.log('Should send', emoji, 'to', message.id);
-  }
-
   public setPresence(data: discord.PresenceData): void {
     this.client.user.setPresence(data);
   }

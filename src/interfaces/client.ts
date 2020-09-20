@@ -6,7 +6,6 @@ import { MessageType } from '../types';
 export interface Client extends EventEmitter {
   connect(token: string): void;
   disconnect(): void;
-
   isConnected(): boolean;
 
   findChannelById(channelId: string): Channel;
@@ -14,6 +13,6 @@ export interface Client extends EventEmitter {
   getUserInformation(): User;
 
   queueMessages(messages: MessageType[]): void;
-  sendReaction(emoji: string, message?: Message): void;
+
   setPresence(data: PresenceData): void;
 }
