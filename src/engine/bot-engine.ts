@@ -108,7 +108,10 @@ export class BotEngine implements Engine {
 
   private onDequeueCatch(err: Error): void {
     if (err instanceof HandledResponseError) {
-      this.logger.log('Response handled, ignoring');
+      if (this.logMessages) {
+        this.logger.log('Response handled, ignoring');
+      }
+
       return;
     }
 
