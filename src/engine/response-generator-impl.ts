@@ -1,6 +1,6 @@
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 import { Logger } from '../interfaces/logger';
-import { Mood, MoodEngine } from '../interfaces/mood-engine';
+import { MoodEngine } from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { randomNumber } from '../utils';
 

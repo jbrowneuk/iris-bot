@@ -13,9 +13,20 @@ export interface Personality {
    */
   destroy?(): void;
 
-  /** Called on every addressed (i.e. `@bot message`) message */
+  /**
+   * Called on every addressed (i.e. `@bot message`) message
+   *
+   * @param message the raw message object from the server
+   * @param addressedMessage the text after the address
+   * @returns (Promise<MessageType>) a promise containing the text or rich embed
+   */
   onAddressed(message: Message, addressedMessage: string): Promise<MessageType>;
 
-  /** Called on every ambient (i.e. non-addressed) message */
+  /**
+   * Called on every ambient (i.e. non-addressed) message
+   *
+   * @param message the raw message object from the server
+   * @returns (Promise<MessageType>) a promise containing the text or rich embed
+   */
   onMessage(message: Message): Promise<MessageType>;
 }
