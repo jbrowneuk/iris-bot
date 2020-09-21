@@ -11,6 +11,7 @@ import { HugBot } from './personality/hug-bot';
 import { MoodControl } from './personality/mood-control';
 import { MoodEngineImpl } from './personality/mood-engine-impl';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
+import { SimpleInteractions } from './personality/simple-interactions';
 
 // Initialise foundation
 const logger = new LoggerImpl();
@@ -52,6 +53,7 @@ engine.addPersonality(new GameElements(dependencies));
 engine.addPersonality(new HugBot());
 engine.addPersonality(new BlogRoll(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
+engine.addPersonality(new SimpleInteractions(dependencies));
 
 // Start bot
 engine.initialise();
