@@ -5,6 +5,7 @@ import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Logger } from '../interfaces/logger';
 import { BlogRoll } from './blog-roll';
 
 const testOutputFile = 'blog-roll.test.json';
@@ -44,18 +45,20 @@ class TestableBlogRoll extends BlogRoll {
 }
 
 describe('Blog roll', () => {
+  let mockClient: IMock<Client>;
+  let mockLogger: IMock<Logger>;
   let mockDependencies: DependencyContainer;
   let personality: TestableBlogRoll;
-  let mockClient: IMock<Client>;
 
   beforeEach(() => {
     mockClient = Mock.ofType<Client>();
+    mockLogger = Mock.ofType<Logger>();
 
     mockDependencies = {
       client: mockClient.object,
       database: null,
       engine: null,
-      logger: console,
+      logger: mockLogger.object,
       responses: null,
       settings: null
     };
