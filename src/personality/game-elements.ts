@@ -1,10 +1,14 @@
 import * as discord from 'discord.js';
+
+import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 
 /**
  * Game elements engine – adds features such as rolling dice, flipping coins, etc.
  */
 export class GameElements implements Personality {
+  constructor(private dependencies: DependencyContainer) {}
+
   public onAddressed(
     message: discord.Message,
     addressedMessage: string
@@ -13,21 +17,17 @@ export class GameElements implements Personality {
   }
 
   public onMessage(message: discord.Message): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let response = this.flipCoin(message);
-      if (response !== null) {
-        resolve(response);
-        return;
-      }
+    let response = this.flipCoin(message);
+    if (response !== null) {
+      return response;
+    }
 
-      response = this.rollDice(message);
-      if (response !== null) {
-        resolve(response);
-        return;
-      }
+    response = this.rollDice(message);
+    if (response !== null) {
+      return response;
+    }
 
-      resolve(null);
-    });
+    return Promise.resolve(null);
   }
 
   /**
@@ -35,12 +35,14 @@ export class GameElements implements Personality {
    *
    * @param message the message object related to this call
    */
-  private flipCoin(message: discord.Message): string {
-    if (message.content.startsWith('+flip')) {
-      return Math.random() > 0.5 ? 'heads' : 'tails';
+  private flipCoin(message: discord.Message): Promise<string> {
+    if (!message.content.startsWith('+flip')) {
+      return null;
     }
 
-    return null;
+    const coinSide = Math.random() > 0.5 ? 'Heads' : 'Tails';
+    const phrase = `flipCoin${coinSide}`;
+    return this.dependencies.responses.generateResponse(phrase);
   }
 
   /**
@@ -48,7 +50,7 @@ export class GameElements implements Personality {
    *
    * @param message the message object related to this call
    */
-  private rollDice(message: discord.Message): string {
+  private rollDice(message: discord.Message): Promise<string> {
     const rollCommand = '+roll';
     if (
       !message.content.startsWith(rollCommand) ||
@@ -62,7 +64,7 @@ export class GameElements implements Personality {
       return null;
     }
 
-    return dice.join('\n');
+    return Promise.resolve(dice.join('\n'));
   }
 
   /**

@@ -48,7 +48,7 @@ const dependencies: DependencyContainer = {
 
 // Initialise personality
 engine.addPersonality(new BasicIntelligence());
-engine.addPersonality(new GameElements());
+engine.addPersonality(new GameElements(dependencies));
 engine.addPersonality(new HugBot());
 engine.addPersonality(new BlogRoll(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
