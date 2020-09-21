@@ -1,3 +1,6 @@
+/**
+ * Moodlet 'direction' qualifier
+ */
 export enum Mood {
   Positive = 'happy',
   Neutral = 'none',

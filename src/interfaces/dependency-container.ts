@@ -16,9 +16,7 @@ export interface DependencyContainer {
   /** Bot engine */
   engine: Engine;
 
-  /**
-   * Logger
-   */
+  /** Logger */
   logger: Logger;
 
   /** Response generator */
