@@ -1,6 +1,7 @@
 import { DiscordClient } from './client/discord-client';
 import { BotEngine } from './engine/bot-engine';
 import { LoggerImpl } from './engine/logger-impl';
+import { MoodEngineImpl } from './engine/mood-engine-impl';
 import { SettingsManager } from './engine/settings-manager';
 import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
@@ -9,7 +10,6 @@ import { BlogRoll } from './personality/blog-roll';
 import { GameElements } from './personality/game-elements';
 import { HugBot } from './personality/hug-bot';
 import { MoodControl } from './personality/mood-control';
-import { MoodEngineImpl } from './personality/mood-engine-impl';
 import { ResponseGeneratorImpl } from './personality/response-generator-impl';
 import { SimpleInteractions } from './personality/simple-interactions';
 
