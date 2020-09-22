@@ -18,7 +18,7 @@ describe('Game elements', () => {
       client: null,
       database: null,
       engine: null,
-      logger: console,
+      logger: null,
       responses: mockResponses.object,
       settings: null
     };
@@ -43,49 +43,6 @@ describe('Game elements', () => {
     core.onMessage(message.object).then((result: string) => {
       expect(result).toBeNull();
       done();
-    });
-  });
-
-  describe('coin flip', () => {
-    let message: IMock<Message>;
-    let core: GameElements;
-
-    const addressedMessage = 'flip a coin';
-    const heads = 'flipCoinHeads';
-    const tails = 'flipCoinTails';
-
-    beforeEach(() => {
-      message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => `bot ${addressedMessage}`);
-
-      core = new GameElements(mockDependencies);
-    });
-
-    it('should flip a coin when +flip command is issued', done => {
-      const possibleResults = [heads, tails];
-
-      core.onAddressed(message.object, addressedMessage).then((result: string) => {
-        expect(possibleResults).toContain(result);
-        done();
-      });
-    });
-
-    it('should get heads when +flip command is issued and result greater than 0.5', done => {
-      spyOn(Math, 'random').and.returnValue(0.6);
-
-      core.onAddressed(message.object, addressedMessage).then((result: string) => {
-        expect(result).toBe(heads);
-        done();
-      });
-    });
-
-    it('should get tails when +flip command is issued and result less than 0.5', done => {
-      spyOn(Math, 'random').and.returnValue(0.4);
-
-      core.onAddressed(message.object, addressedMessage).then((result: string) => {
-        expect(result).toBe(tails);
-        done();
-      });
     });
   });
 

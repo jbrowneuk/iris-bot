@@ -38,30 +38,72 @@ describe('Simple interactions', () => {
     });
   });
 
-  it('should handle an addressed message with the high five commands', async done => {
-    const knownCommands = ['highfive', 'high five', '^5'];
-    const expectedResponse = 'highFive';
+  describe('Coin flip interaction', () => {
+    let message: IMock<Message>;
 
-    for (const command of knownCommands) {
-      const message = Mock.ofType<Message>();
-      message
-        .setup(m => m.react(It.isAny()))
-        .returns(() => Promise.resolve(null));
+    const addressedMessage = 'flip a coin';
+    const heads = 'flipCoinHeads';
+    const tails = 'flipCoinTails';
 
-      const response = await personality.onAddressed(message.object, command);
+    beforeEach(() => {
+      message = Mock.ofType<Message>();
+      message.setup(m => m.content).returns(() => `bot ${addressedMessage}`);
+    });
 
-      expect(response).toBe(expectedResponse);
-      message.verify(m => m.react(It.isValue('✋')), Times.once());
-    }
+    it('should flip a coin when +flip command is issued', done => {
+      const possibleResults = [heads, tails];
 
-    done();
+      personality.onAddressed(message.object, addressedMessage).then((result: string) => {
+        expect(possibleResults).toContain(result);
+        done();
+      });
+    });
+
+    it('should get heads when +flip command is issued and result greater than 0.5', done => {
+      spyOn(Math, 'random').and.returnValue(0.6);
+
+      personality.onAddressed(message.object, addressedMessage).then((result: string) => {
+        expect(result).toBe(heads);
+        done();
+      });
+    });
+
+    it('should get tails when +flip command is issued and result less than 0.5', done => {
+      spyOn(Math, 'random').and.returnValue(0.4);
+
+      personality.onAddressed(message.object, addressedMessage).then((result: string) => {
+        expect(result).toBe(tails);
+        done();
+      });
+    });
   });
 
-  it('should not handle an addressed message without the high five commands', done => {
-    const message = Mock.ofType<Message>();
-    personality.onAddressed(message.object, 'anything').then(response => {
-      expect(response).toBeNull();
+  describe('High five interaction', () => {
+    it('should handle an addressed message with the high five commands', async done => {
+      const knownCommands = ['highfive', 'high five', '^5'];
+      const expectedResponse = 'highFive';
+  
+      for (const command of knownCommands) {
+        const message = Mock.ofType<Message>();
+        message
+          .setup(m => m.react(It.isAny()))
+          .returns(() => Promise.resolve(null));
+  
+        const response = await personality.onAddressed(message.object, command);
+  
+        expect(response).toBe(expectedResponse);
+        message.verify(m => m.react(It.isValue('✋')), Times.once());
+      }
+  
       done();
+    });
+  
+    it('should not handle an addressed message without the high five commands', done => {
+      const message = Mock.ofType<Message>();
+      personality.onAddressed(message.object, 'anything').then(response => {
+        expect(response).toBeNull();
+        done();
+      });
     });
   });
 });
