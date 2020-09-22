@@ -209,4 +209,13 @@ INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you cho
 INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','That die you told me to roll doesn’t exist.');
 INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','I assumed that you typo’ed that die. That number of sides doesn’t exist.');
 --
+-- phrase: dieRollLimit
+-- used when there's too many die to roll
+--
+INSERT INTO "responses" VALUES ('dieRollLimit','none','I think it’s best I stop rolling—for now.');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','There’s far too many things to do here.');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','**I’m bored now**');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','`error: user ''{£user}'' request limit exceeded`');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','If I were a machine, I’d totally spout some cryptic text about there being too many dice to roll');
+--
 COMMIT;

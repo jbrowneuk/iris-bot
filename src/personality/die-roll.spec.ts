@@ -10,6 +10,8 @@ describe('Die Roll', () => {
   let mockDependencies: DependencyContainer;
 
   beforeEach(() => {
+    spyOn(Math, 'random').and.returnValue(1);
+
     mockResponses = Mock.ofType<ResponseGenerator>();
     mockResponses
       .setup(r => r.generateResponse(It.isAny()))
@@ -45,10 +47,6 @@ describe('Die Roll', () => {
       expect(result).toBeNull();
       done();
     });
-  });
-
-  beforeEach(() => {
-    spyOn(Math, 'random').and.returnValue(1);
   });
 
   function runTest(addressedMessage: string): Promise<string> {
@@ -159,6 +157,16 @@ describe('Die Roll', () => {
 
     runTest(addressedMessage).then((result: string) => {
       expect(result).toContain('dieRollCorrectionCount');
+      done();
+    });
+  });
+
+  it('should stop rolling dice when threshold of 25 reached', done => {
+    const addressedMessage = 'roll 5d20 5d20 5d20 5d20 5d20 5d20';
+
+    runTest(addressedMessage).then((result: string) => {
+      expect(result).toContain('Rolling a *20-sided* die *5* times: 20');
+      expect(result).toContain('dieRollLimit');
       done();
     });
   });

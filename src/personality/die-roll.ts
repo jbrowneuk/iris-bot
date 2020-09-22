@@ -3,10 +3,14 @@ import { Message } from 'discord.js';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 
+const maximumRolls = 25;
+
 /**
  * Dice rolling feature
  */
 export class DieRoll implements Personality {
+  private totalDiceRolled: number;
+
   constructor(private dependencies: DependencyContainer) {}
 
   public onAddressed(
@@ -39,9 +43,14 @@ export class DieRoll implements Personality {
       return null;
     }
 
+    this.totalDiceRolled = 0;
     const dice = this.parseDice(messageContent.substr(rollCommand.length + 1));
     if (dice.length === 0) {
       return this.dependencies.responses.generateResponse('dieRollFail');
+    }
+
+    if (this.totalDiceRolled > maximumRolls) {
+      dice.push(this.dependencies.responses.generateResponse('dieRollLimit'));
     }
 
     return this.generateDiceResponse(dice);
@@ -92,7 +101,7 @@ export class DieRoll implements Personality {
    * @param rollInfo a string containing a potential die format
    */
   private handleSingleDieRoll(rollInfo: string): Promise<string> {
-    if (!rollInfo.includes('d')) {
+    if (!rollInfo.includes('d') || this.totalDiceRolled > maximumRolls) {
       return null;
     }
 
@@ -125,6 +134,7 @@ export class DieRoll implements Personality {
       numberSides = 6;
     }
 
+    this.totalDiceRolled += numberDice;
     const rollResult = this.calculateDieRoll(numberDice, numberSides);
     return Promise.all([correctionDice, correctionSides, rollResult])
       .then(([dice, sides, result]) => {
