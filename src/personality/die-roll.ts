@@ -41,10 +41,34 @@ export class DieRoll implements Personality {
 
     const dice = this.parseDice(messageContent.substr(rollCommand.length + 1));
     if (dice.length === 0) {
-      return null;
+      return this.dependencies.responses.generateResponse('dieRollFail');
     }
 
-    return Promise.resolve(dice.join('\n'));
+    return this.generateDiceResponse(dice);
+  }
+
+  /**
+   * Joins the dice responses into a single message
+   *
+   * @param dice array of dice roll result promises
+   */
+  private generateDiceResponse(dice: Array<Promise<string>>): Promise<string> {
+    let outputStr = '';
+
+    const newLine = () => outputStr.length > 0 ? '\n' : '';
+
+    return dice.reduce((prev, curr) => {
+      return prev.then(text => {
+        if (text !== null) {
+          outputStr += newLine() + text;
+        }
+
+        return curr;
+      });
+    }, Promise.resolve(null))
+      .then(value => {
+        return outputStr + newLine() + value;
+      });
   }
 
   /**
@@ -52,13 +76,13 @@ export class DieRoll implements Personality {
    *
    * @param input the raw message string with the command removed
    */
-  private parseDice(input: string): string[] {
+  private parseDice(input: string): Array<Promise<string>> {
     const potentialBits = input.toLowerCase().split(' ');
     const bitsParsed = potentialBits.map((bit: string) =>
       this.handleSingleDieRoll(bit)
     );
 
-    return bitsParsed.filter((bit: string) => bit.length > 0);
+    return bitsParsed.filter(bit => bit !== null);
   }
 
   /**
@@ -67,9 +91,9 @@ export class DieRoll implements Personality {
    *
    * @param rollInfo a string containing a potential die format
    */
-  private handleSingleDieRoll(rollInfo: string): string {
+  private handleSingleDieRoll(rollInfo: string): Promise<string> {
     if (!rollInfo.includes('d')) {
-      return '';
+      return null;
     }
 
     const split = rollInfo.split('d', 2);
@@ -77,10 +101,11 @@ export class DieRoll implements Personality {
     let numberSides = this.parseDieBit(split[1]);
 
     if (numberDice < 0 && numberSides < 0) {
-      return `Ignoring ${rollInfo}`;
+      return this.dependencies.responses.generateResponse('dieRollParseFail')
+        .then(response => response.replace('{£bit}', rollInfo));
     }
 
-    if (numberDice < 1 || numberDice > 10) {
+    if (numberDice < 0 || numberDice > 10) {
       numberDice = 1;
     }
 
@@ -88,7 +113,7 @@ export class DieRoll implements Personality {
       numberSides = 6;
     }
 
-    return this.calculateDieRoll(numberDice, numberSides);
+    return Promise.resolve(this.calculateDieRoll(numberDice, numberSides));
   }
 
   /**
@@ -121,6 +146,7 @@ export class DieRoll implements Personality {
       rolls.push(Math.ceil(Math.random() * sides));
     }
 
-    return `Rolling a ${sides}-sided die ${amount} times: ${rolls.join(', ')}`;
+    const plural = amount !== 1 ? 's': '';
+    return `Rolling a *${sides}-sided* die *${amount}* time${plural}: ${rolls.join(', ')}`;
   }
 }

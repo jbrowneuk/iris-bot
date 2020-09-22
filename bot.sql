@@ -1,3 +1,5 @@
+BEGIN TRANSACTION;
+
 -- -----------------------------------------------------------------------------
 -- Bot SQLite database transaction for fast initialisation
 -- -----------------------------------------------------------------------------
@@ -5,7 +7,7 @@
 -- Domain of J community - i.e. the personality of Skye. The major areas are
 -- commented to allow for customisation for your community.
 -- -----------------------------------------------------------------------------
-BEGIN TRANSACTION;
+
 -- -----------------------------------------------------------------------------
 -- Responses table
 -- ---------------
@@ -76,7 +78,7 @@ INSERT INTO "responses" VALUES ('mood','none','Nothing out of the ordinary here.
 INSERT INTO "responses" VALUES ('mood','none','There’s only a feeling of quiet zen.');
 INSERT INTO "responses" VALUES ('mood','happy','Doing pretty good!');
 INSERT INTO "responses" VALUES ('mood','happy','Feeling fine :slightly_smiling_face:');
-INSERT INTO "responses" VALUES ('mood','happy','Alright, thanks.');
+INSERT INTO "responses" VALUES ('mood','happy','I’m alright, thanks.');
 INSERT INTO "responses" VALUES ('mood','sad','Not great.');
 INSERT INTO "responses" VALUES ('mood','sad','Been better.');
 INSERT INTO "responses" VALUES ('mood','sad','Don’t worry about me.');
@@ -161,5 +163,29 @@ INSERT INTO "responses" VALUES ('flipCoinTails','happy','Aw, tails.');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','Aw, bummer.');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','I hope you didn’t bet on that one.\nTails');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','Tails. This ain’t going well.');
+--
+-- phrase: dieRollFail
+-- used when dice roll feature could not parse any die
+--
+INSERT INTO "responses" VALUES ('dieRollFail','none','I got *“die roll failure”*. Good job breaking it, hero.');
+INSERT INTO "responses" VALUES ('dieRollFail','none','I, uh, *can’t actually do that*.');
+INSERT INTO "responses" VALUES ('dieRollFail','none','You know, that’s not going by the rules of this game…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Uh…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Try again ^_^');
+INSERT INTO "responses" VALUES ('dieRollFail','none','try again ^^');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Would you mind rephrasing that?');
+INSERT INTO "responses" VALUES ('dieRollFail','none','I can’t do that; it’s against the rules…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','*rolls {£user} around the room*');
+--
+-- phrase: dieRollParseFail
+-- used when dice roll feature cannot parse a single die
+--
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','{£user}
+{£user}!
+{£user} {£user} {£user} {£user} {£user} {£user} {£user} {£user} {£user}.
+No. Just no.');
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','A *{£bit}* is not a type of die, numbnuts.');
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','In your warped little mind, a die you told me to roll may exist.
+In reality, however, it does not.');
 --
 COMMIT;
