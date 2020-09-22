@@ -1,4 +1,4 @@
-import * as discord from 'discord.js';
+import { Message } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
@@ -10,23 +10,23 @@ export class GameElements implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
   public onAddressed(
-    message: discord.Message,
+    message: Message,
     addressedMessage: string
   ): Promise<string> {
+    let response = this.flipCoin(addressedMessage);
+    if (response !== null) {
+      return response;
+    }
+
+    response = this.rollDice(addressedMessage);
+    if (response !== null) {
+      return response;
+    }
+
     return Promise.resolve(null);
   }
 
-  public onMessage(message: discord.Message): Promise<string> {
-    let response = this.flipCoin(message);
-    if (response !== null) {
-      return response;
-    }
-
-    response = this.rollDice(message);
-    if (response !== null) {
-      return response;
-    }
-
+  public onMessage(message: Message): Promise<string> {
     return Promise.resolve(null);
   }
 
@@ -35,8 +35,9 @@ export class GameElements implements Personality {
    *
    * @param message the message object related to this call
    */
-  private flipCoin(message: discord.Message): Promise<string> {
-    if (!message.content.startsWith('+flip')) {
+  private flipCoin(messageContent: string): Promise<string> {
+    const command = 'flip a coin';
+    if (!messageContent.startsWith(command)) {
       return null;
     }
 
@@ -50,16 +51,16 @@ export class GameElements implements Personality {
    *
    * @param message the message object related to this call
    */
-  private rollDice(message: discord.Message): Promise<string> {
-    const rollCommand = '+roll';
+  private rollDice(messageContent: string): Promise<string> {
+    const rollCommand = 'roll';
     if (
-      !message.content.startsWith(rollCommand) ||
-      message.content.charAt(rollCommand.length) !== ' '
+      !messageContent.startsWith(rollCommand) ||
+      messageContent.charAt(rollCommand.length) !== ' '
     ) {
       return null;
     }
 
-    const dice = this.parseDice(message.content.substr(rollCommand.length + 1));
+    const dice = this.parseDice(messageContent.substr(rollCommand.length + 1));
     if (dice.length === 0) {
       return null;
     }
