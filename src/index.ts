@@ -8,7 +8,7 @@ import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
 import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
-import { GameElements } from './personality/game-elements';
+import { DieRoll } from './personality/die-roll';
 import { HugBot } from './personality/hug-bot';
 import { MoodControl } from './personality/mood-control';
 import { SimpleInteractions } from './personality/simple-interactions';
@@ -49,7 +49,7 @@ const dependencies: DependencyContainer = {
 
 // Initialise personality
 engine.addPersonality(new BasicIntelligence());
-engine.addPersonality(new GameElements(dependencies));
+engine.addPersonality(new DieRoll(dependencies));
 engine.addPersonality(new HugBot());
 engine.addPersonality(new BlogRoll(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));

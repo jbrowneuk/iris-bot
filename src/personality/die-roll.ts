@@ -6,7 +6,7 @@ import { Personality } from '../interfaces/personality';
 /**
  * Game elements engine – adds features such as rolling dice, flipping coins, etc.
  */
-export class GameElements implements Personality {
+export class DieRoll implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
   public onAddressed(
