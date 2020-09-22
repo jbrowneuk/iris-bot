@@ -1,4 +1,6 @@
 import * as discord from 'discord.js';
+
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { Personality } from '../interfaces/personality';
 
 export class HugBot implements Personality {
@@ -10,7 +12,7 @@ export class HugBot implements Personality {
   }
 
   public onMessage(message: discord.Message): Promise<string> {
-    return this.commandWrapper(message, message.content, '!', '');
+    return this.commandWrapper(message, message.content, COMMAND_PREFIX, '');
   }
 
   private commandWrapper(

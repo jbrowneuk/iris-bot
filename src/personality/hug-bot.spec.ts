@@ -1,5 +1,7 @@
 import { Message, User } from 'discord.js';
 import { IMock, Mock } from 'typemoq';
+
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { HugBot } from './hug-bot';
 
 describe('Hugbot', () => {
@@ -18,7 +20,7 @@ describe('Hugbot', () => {
   });
 
   it('should give an item to a user', () => {
-    const command = '!cmd';
+    const command = `${COMMAND_PREFIX}cmd`;
     const item = 'spoopy';
     const text = `${command} ${userToAddress}`;
     message.setup(m => m.content).returns(() => text);
@@ -31,8 +33,8 @@ describe('Hugbot', () => {
     expect(response).toBe(`Gives a ${item} to ${userToAddress} from <@${authorId}>`);
   });
 
-  it('should hug on !hug command', (done: DoneFn) => {
-    message.setup(m => m.content).returns(() => `!hug ${userToAddress}`);
+  it('should hug on command', (done: DoneFn) => {
+    message.setup(m => m.content).returns(() => `${COMMAND_PREFIX}hug ${userToAddress}`);
 
     const core = new HugBot();
 
@@ -54,8 +56,8 @@ describe('Hugbot', () => {
     });
   });
 
-  it('should give a cake with emoji on !cake command', (done: DoneFn) => {
-    message.setup(m => m.content).returns(() => `!cake ${userToAddress}`);
+  it('should give a cake with emoji on command', (done: DoneFn) => {
+    message.setup(m => m.content).returns(() => `${COMMAND_PREFIX}cake ${userToAddress}`);
 
     const core = new HugBot();
 
