@@ -6,19 +6,14 @@ import { Personality } from '../interfaces/personality';
 /**
  * Game elements engine – adds features such as rolling dice, flipping coins, etc.
  */
-export class GameElements implements Personality {
+export class DieRoll implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
   public onAddressed(
     message: Message,
     addressedMessage: string
   ): Promise<string> {
-    let response = this.flipCoin(addressedMessage);
-    if (response !== null) {
-      return response;
-    }
-
-    response = this.rollDice(addressedMessage);
+    const response = this.rollDice(addressedMessage);
     if (response !== null) {
       return response;
     }
@@ -28,22 +23,6 @@ export class GameElements implements Personality {
 
   public onMessage(message: Message): Promise<string> {
     return Promise.resolve(null);
-  }
-
-  /**
-   * Flips a coin and returns 'heads' or 'tails' as a message
-   *
-   * @param message the message object related to this call
-   */
-  private flipCoin(messageContent: string): Promise<string> {
-    const command = 'flip a coin';
-    if (!messageContent.startsWith(command)) {
-      return null;
-    }
-
-    const coinSide = Math.random() > 0.5 ? 'Heads' : 'Tails';
-    const phrase = `flipCoin${coinSide}`;
-    return this.dependencies.responses.generateResponse(phrase);
   }
 
   /**
