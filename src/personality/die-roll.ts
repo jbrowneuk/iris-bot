@@ -4,7 +4,7 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 
 /**
- * Game elements engine – adds features such as rolling dice, flipping coins, etc.
+ * Dice rolling feature
  */
 export class DieRoll implements Personality {
   constructor(private dependencies: DependencyContainer) {}
@@ -97,27 +97,52 @@ export class DieRoll implements Personality {
     }
 
     const split = rollInfo.split('d', 2);
+    const hasNumberDice = split[0].length > 0;
     let numberDice = this.parseDieBit(split[0]);
     let numberSides = this.parseDieBit(split[1]);
 
-    if (numberDice < 0 && numberSides < 0) {
+    if (hasNumberDice && numberDice < 0 && numberSides < 0) {
       return this.dependencies.responses.generateResponse('dieRollParseFail')
         .then(response => response.replace('{£bit}', rollInfo));
     }
 
+    let correctionDice: Promise<string> = null;
     if (numberDice < 0 || numberDice > 10) {
+      if (hasNumberDice) {
+        const cachedCount = `${numberDice}`;
+        correctionDice = this.dependencies.responses.generateResponse('dieRollCorrectionCount')
+          .then(response => response.replace('{rolls}', cachedCount));
+      }
+
       numberDice = 1;
     }
 
+    let correctionSides: Promise<string> = null;
     if (numberSides < 4 || numberSides > 100) {
+      const cachedSides = `${numberSides}`;
+      correctionSides = this.dependencies.responses.generateResponse('dieRollCorrectionSides')
+        .then(response => response.replace('{£die}', cachedSides));
       numberSides = 6;
     }
 
-    return Promise.resolve(this.calculateDieRoll(numberDice, numberSides));
+    const rollResult = this.calculateDieRoll(numberDice, numberSides);
+    return Promise.all([correctionDice, correctionSides, rollResult])
+      .then(([dice, sides, result]) => {
+        let outputPrefixes = '';
+        if (dice !== null) {
+          outputPrefixes = `${dice}\n`;
+        }
+
+        if (sides !== null) {
+          outputPrefixes += `${sides}\n`;
+        }
+
+        return outputPrefixes + result;
+      });
   }
 
   /**
-   * Conveneience method to parse a number from text. Returns -1 is parse unsuccessful
+   * Convenience method to parse a number from text. Returns -1 is parse unsuccessful
    *
    * @param bit a potential number
    */

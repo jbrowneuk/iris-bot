@@ -188,4 +188,25 @@ INSERT INTO "responses" VALUES ('dieRollParseFail','none','A *{£bit}* is not a 
 INSERT INTO "responses" VALUES ('dieRollParseFail','none','In your warped little mind, a die you told me to roll may exist.
 In reality, however, it does not.');
 --
+-- phrase: dieRollCorrectionCount
+-- used when dice roll feature needs to correct the number of dice being rolled
+--
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}” rolls?
+*sigh* I was rather hoping you, *of all people*, would be more understanding.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}” rolls?
+*sigh* and here I was thinking we had some kind of *intelligence* in this channel.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','I’m not liking how you told me to roll that die.');
+--
+-- phrase: dieRollCorrectionSides
+-- used when dice roll feature needs to correct the number of sides to a die
+--
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','A **{£die}**? Is this some kind of joke?');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','*A {£die}?* You serious?');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','All bow before {£user} and their almighty {£die} which I shall not roll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist. Troll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist, troll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','That die you told me to roll doesn’t exist.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','I assumed that you typo’ed that die. That number of sides doesn’t exist.');
+--
 COMMIT;

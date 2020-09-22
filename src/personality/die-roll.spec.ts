@@ -81,12 +81,8 @@ describe('Die Roll', () => {
     const addressedMessage = 'roll 4d6 5d8';
 
     runTest(addressedMessage).then((result: string) => {
-      expect(
-        result.includes('Rolling a *6-sided* die *4* times: 6, 6, 6, 6')
-      ).toBe(true);
-      expect(
-        result.includes('Rolling a *8-sided* die *5* times: 8, 8, 8, 8')
-      ).toBe(true);
+      expect(result).toContain('Rolling a *6-sided* die *4* times: 6, 6, 6, 6');
+      expect(result).toContain('Rolling a *8-sided* die *5* times: 8, 8, 8, 8');
       done();
     });
   });
@@ -103,8 +99,15 @@ describe('Die Roll', () => {
   it('should roll default number of dice when <count> is greater than a threshold', done => {
     const addressedMessage = 'roll 999d6';
 
+    // Set up response generator to use provided test string
+    mockResponses.reset();
+    mockResponses
+      .setup(r => r.generateResponse(It.isAny()))
+      .returns(() => Promise.resolve('bad = {rolls}'));
+
     runTest(addressedMessage).then((result: string) => {
-      expect(result).toBe('Rolling a *6-sided* die *1* time: 6');
+      expect(result).toContain('bad = 999');
+      expect(result).toContain('Rolling a *6-sided* die *1* time: 6');
       done();
     });
   });
@@ -112,8 +115,15 @@ describe('Die Roll', () => {
   it('should roll die with default number of sides when <sides> is greater than a threshold', done => {
     const addressedMessage = 'roll 1d999';
 
+    // Set up response generator to use provided test string
+    mockResponses.reset();
+    mockResponses
+      .setup(r => r.generateResponse(It.isAny()))
+      .returns(() => Promise.resolve('bad = {£die}'));
+
     runTest(addressedMessage).then((result: string) => {
-      expect(result).toBe('Rolling a *6-sided* die *1* time: 6');
+      expect(result).toContain('bad = 999');
+      expect(result).toContain('Rolling a *6-sided* die *1* time: 6');
       done();
     });
   });
@@ -129,7 +139,6 @@ describe('Die Roll', () => {
 
   it('should respond with error if non-die strings containing the letter d are given', done => {
     const badString = 'badstr';
-    const phrase = 'dieRollParseFail';
     const addressedMessage = 'roll ' + badString;
     const responseMessage = 'bad: {£bit}';
 
@@ -141,6 +150,15 @@ describe('Die Roll', () => {
 
     runTest(addressedMessage).then((result: string) => {
       expect(result).toBe('bad: ' + badString);
+      done();
+    });
+  });
+
+  it('should correct number of dice if not numeric', done => {
+    const addressedMessage = 'roll fogd20';
+
+    runTest(addressedMessage).then((result: string) => {
+      expect(result).toContain('dieRollCorrectionCount');
       done();
     });
   });
