@@ -3,10 +3,14 @@ import { Message } from 'discord.js';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 
+const maximumRolls = 25;
+
 /**
- * Game elements engine – adds features such as rolling dice, flipping coins, etc.
+ * Dice rolling feature
  */
 export class DieRoll implements Personality {
+  private totalDiceRolled: number;
+
   constructor(private dependencies: DependencyContainer) {}
 
   public onAddressed(
@@ -39,12 +43,41 @@ export class DieRoll implements Personality {
       return null;
     }
 
+    this.totalDiceRolled = 0;
     const dice = this.parseDice(messageContent.substr(rollCommand.length + 1));
     if (dice.length === 0) {
-      return null;
+      return this.dependencies.responses.generateResponse('dieRollFail');
     }
 
-    return Promise.resolve(dice.join('\n'));
+    if (this.totalDiceRolled > maximumRolls) {
+      dice.push(this.dependencies.responses.generateResponse('dieRollLimit'));
+    }
+
+    return this.generateDiceResponse(dice);
+  }
+
+  /**
+   * Joins the dice responses into a single message
+   *
+   * @param dice array of dice roll result promises
+   */
+  private generateDiceResponse(dice: Array<Promise<string>>): Promise<string> {
+    let outputStr = '';
+
+    const newLine = () => outputStr.length > 0 ? '\n' : '';
+
+    return dice.reduce((prev, curr) => {
+      return prev.then(text => {
+        if (text !== null) {
+          outputStr += newLine() + text;
+        }
+
+        return curr;
+      });
+    }, Promise.resolve(null))
+      .then(value => {
+        return outputStr + newLine() + value;
+      });
   }
 
   /**
@@ -52,13 +85,13 @@ export class DieRoll implements Personality {
    *
    * @param input the raw message string with the command removed
    */
-  private parseDice(input: string): string[] {
+  private parseDice(input: string): Array<Promise<string>> {
     const potentialBits = input.toLowerCase().split(' ');
     const bitsParsed = potentialBits.map((bit: string) =>
       this.handleSingleDieRoll(bit)
     );
 
-    return bitsParsed.filter((bit: string) => bit.length > 0);
+    return bitsParsed.filter(bit => bit !== null);
   }
 
   /**
@@ -67,32 +100,59 @@ export class DieRoll implements Personality {
    *
    * @param rollInfo a string containing a potential die format
    */
-  private handleSingleDieRoll(rollInfo: string): string {
-    if (!rollInfo.includes('d')) {
-      return '';
+  private handleSingleDieRoll(rollInfo: string): Promise<string> {
+    if (!rollInfo.includes('d') || this.totalDiceRolled > maximumRolls) {
+      return null;
     }
 
     const split = rollInfo.split('d', 2);
+    const hasNumberDice = split[0].length > 0;
     let numberDice = this.parseDieBit(split[0]);
     let numberSides = this.parseDieBit(split[1]);
 
-    if (numberDice < 0 && numberSides < 0) {
-      return `Ignoring ${rollInfo}`;
+    if (hasNumberDice && numberDice < 0 && numberSides < 0) {
+      return this.dependencies.responses.generateResponse('dieRollParseFail')
+        .then(response => response.replace('{£bit}', rollInfo));
     }
 
-    if (numberDice < 1 || numberDice > 10) {
+    let correctionDice: Promise<string> = null;
+    if (numberDice < 0 || numberDice > 10) {
+      if (hasNumberDice) {
+        const cachedCount = `${numberDice}`;
+        correctionDice = this.dependencies.responses.generateResponse('dieRollCorrectionCount')
+          .then(response => response.replace(/\{£rolls}/g, cachedCount));
+      }
+
       numberDice = 1;
     }
 
+    let correctionSides: Promise<string> = null;
     if (numberSides < 4 || numberSides > 100) {
+      const cachedSides = `d${numberSides}`;
+      correctionSides = this.dependencies.responses.generateResponse('dieRollCorrectionSides')
+        .then(response => response.replace(/\{£die\}/g, cachedSides));
       numberSides = 6;
     }
 
-    return this.calculateDieRoll(numberDice, numberSides);
+    this.totalDiceRolled += numberDice;
+    const rollResult = this.calculateDieRoll(numberDice, numberSides);
+    return Promise.all([correctionDice, correctionSides, rollResult])
+      .then(([dice, sides, result]) => {
+        let outputPrefixes = '';
+        if (dice !== null) {
+          outputPrefixes = `${dice}\n`;
+        }
+
+        if (sides !== null) {
+          outputPrefixes += `${sides}\n`;
+        }
+
+        return outputPrefixes + result;
+      });
   }
 
   /**
-   * Conveneience method to parse a number from text. Returns -1 is parse unsuccessful
+   * Convenience method to parse a number from text. Returns -1 is parse unsuccessful
    *
    * @param bit a potential number
    */
@@ -121,6 +181,14 @@ export class DieRoll implements Personality {
       rolls.push(Math.ceil(Math.random() * sides));
     }
 
-    return `Rolling a ${sides}-sided die ${amount} times: ${rolls.join(', ')}`;
+    const sumRolls = rolls.reduce((prev, curr) => prev + curr, 0);
+    const averageValue = sumRolls / amount;
+
+    // Produce textual summary
+    const dieRollTitle = `Rolling a *${sides}-sided* die`;
+    const plural = amount !== 1 ? 's': '';
+    const rollAmount = `*${amount}* time${plural}`;
+    const rollSummary = `total: ${sumRolls}, average: ${averageValue}`
+    return `${dieRollTitle} ${rollAmount}: ${rolls.join(', ')} (${rollSummary})`;
   }
 }

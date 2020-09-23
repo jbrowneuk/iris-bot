@@ -1,3 +1,5 @@
+BEGIN TRANSACTION;
+
 -- -----------------------------------------------------------------------------
 -- Bot SQLite database transaction for fast initialisation
 -- -----------------------------------------------------------------------------
@@ -5,7 +7,7 @@
 -- Domain of J community - i.e. the personality of Skye. The major areas are
 -- commented to allow for customisation for your community.
 -- -----------------------------------------------------------------------------
-BEGIN TRANSACTION;
+
 -- -----------------------------------------------------------------------------
 -- Responses table
 -- ---------------
@@ -76,7 +78,7 @@ INSERT INTO "responses" VALUES ('mood','none','Nothing out of the ordinary here.
 INSERT INTO "responses" VALUES ('mood','none','There’s only a feeling of quiet zen.');
 INSERT INTO "responses" VALUES ('mood','happy','Doing pretty good!');
 INSERT INTO "responses" VALUES ('mood','happy','Feeling fine :slightly_smiling_face:');
-INSERT INTO "responses" VALUES ('mood','happy','Alright, thanks.');
+INSERT INTO "responses" VALUES ('mood','happy','I’m alright, thanks.');
 INSERT INTO "responses" VALUES ('mood','sad','Not great.');
 INSERT INTO "responses" VALUES ('mood','sad','Been better.');
 INSERT INTO "responses" VALUES ('mood','sad','Don’t worry about me.');
@@ -161,5 +163,60 @@ INSERT INTO "responses" VALUES ('flipCoinTails','happy','Aw, tails.');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','Aw, bummer.');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','I hope you didn’t bet on that one.\nTails');
 INSERT INTO "responses" VALUES ('flipCoinTails','sad','Tails. This ain’t going well.');
+--
+-- phrase: dieRollFail
+-- used when dice roll feature could not parse any die
+--
+INSERT INTO "responses" VALUES ('dieRollFail','none','I got *“die roll failure”*. Good job breaking it, hero.');
+INSERT INTO "responses" VALUES ('dieRollFail','none','I, uh, *can’t actually do that*.');
+INSERT INTO "responses" VALUES ('dieRollFail','none','You know, that’s not going by the rules of this game…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Uh…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Try again ^_^');
+INSERT INTO "responses" VALUES ('dieRollFail','none','try again ^^');
+INSERT INTO "responses" VALUES ('dieRollFail','none','Would you mind rephrasing that?');
+INSERT INTO "responses" VALUES ('dieRollFail','none','I can’t do that; it’s against the rules…');
+INSERT INTO "responses" VALUES ('dieRollFail','none','*rolls {£user} around the room*');
+--
+-- phrase: dieRollParseFail
+-- used when dice roll feature cannot parse a single die
+--
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','{£user}
+{£user}!
+{£user} {£user} {£user} {£user} {£user} {£user} {£user} {£user} {£user}.
+No. Just no.');
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','A *{£bit}* is not a type of die, numbnuts.');
+INSERT INTO "responses" VALUES ('dieRollParseFail','none','In your warped little mind, a die you told me to roll may exist.
+In reality, however, it does not.');
+--
+-- phrase: dieRollCorrectionCount
+-- used when dice roll feature needs to correct the number of dice being rolled
+--
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}” rolls?
+*sigh* I was rather hoping you, *of all people*, would be more understanding.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}” rolls?
+*sigh* and here I was thinking we had some kind of *intelligence* in this channel.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','I’m not liking how many times you told me to roll that die.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','{£rolls} is far too many for a simple person such as myself..');
+--
+-- phrase: dieRollCorrectionSides
+-- used when dice roll feature needs to correct the number of sides to a die
+--
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','A **{£die}**? Is this some kind of joke?');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','*A {£die}?* You serious?');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','All bow before {£user} and their almighty {£die} which I shall not roll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist. Troll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','The die you chose for a roll couldn’t physically exist, troll.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','That die you told me to roll doesn’t exist.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionSides','none','I assumed that you typo’ed that die. That number of sides doesn’t exist.');
+--
+-- phrase: dieRollLimit
+-- used when there's too many die to roll
+--
+INSERT INTO "responses" VALUES ('dieRollLimit','none','I think it’s best I stop rolling—for now.');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','There’s far too many things to do here.');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','**I’m bored now**');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','`error: user ''{£user}'' request limit exceeded`');
+INSERT INTO "responses" VALUES ('dieRollLimit','none','If I were a machine, I’d totally spout some cryptic text about there being too many dice to roll');
 --
 COMMIT;
