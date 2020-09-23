@@ -101,7 +101,7 @@ describe('Die Roll', () => {
     mockResponses.reset();
     mockResponses
       .setup(r => r.generateResponse(It.isAny()))
-      .returns(() => Promise.resolve('bad = {rolls}'));
+      .returns(() => Promise.resolve('bad = {£rolls}'));
 
     runTest(addressedMessage).then((result: string) => {
       expect(result).toContain('bad = 999');
@@ -120,7 +120,7 @@ describe('Die Roll', () => {
       .returns(() => Promise.resolve('bad = {£die}'));
 
     runTest(addressedMessage).then((result: string) => {
-      expect(result).toContain('bad = 999');
+      expect(result).toContain('bad = d999');
       expect(result).toContain('Rolling a *6-sided* die *1* time: 6');
       done();
     });

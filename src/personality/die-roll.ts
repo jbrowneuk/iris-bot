@@ -120,7 +120,7 @@ export class DieRoll implements Personality {
       if (hasNumberDice) {
         const cachedCount = `${numberDice}`;
         correctionDice = this.dependencies.responses.generateResponse('dieRollCorrectionCount')
-          .then(response => response.replace('{rolls}', cachedCount));
+          .then(response => response.replace(/\{£rolls}/g, cachedCount));
       }
 
       numberDice = 1;
@@ -128,9 +128,9 @@ export class DieRoll implements Personality {
 
     let correctionSides: Promise<string> = null;
     if (numberSides < 4 || numberSides > 100) {
-      const cachedSides = `${numberSides}`;
+      const cachedSides = `d${numberSides}`;
       correctionSides = this.dependencies.responses.generateResponse('dieRollCorrectionSides')
-        .then(response => response.replace('{£die}', cachedSides));
+        .then(response => response.replace(/\{£die\}/g, cachedSides));
       numberSides = 6;
     }
 
