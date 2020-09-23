@@ -195,7 +195,8 @@ INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}”
 *sigh* I was rather hoping you, *of all people*, would be more understanding.');
 INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','“{£rolls}” rolls?
 *sigh* and here I was thinking we had some kind of *intelligence* in this channel.');
-INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','I’m not liking how you told me to roll that die.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','I’m not liking how many times you told me to roll that die.');
+INSERT INTO "responses" VALUES ('dieRollCorrectionCount','none','{£rolls} is far too many for a simple person such as myself..');
 --
 -- phrase: dieRollCorrectionSides
 -- used when dice roll feature needs to correct the number of sides to a die
