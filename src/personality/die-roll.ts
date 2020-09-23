@@ -181,7 +181,14 @@ export class DieRoll implements Personality {
       rolls.push(Math.ceil(Math.random() * sides));
     }
 
+    const sumRolls = rolls.reduce((prev, curr) => prev + curr, 0);
+    const averageValue = sumRolls / amount;
+
+    // Produce textual summary
+    const dieRollTitle = `Rolling a *${sides}-sided* die`;
     const plural = amount !== 1 ? 's': '';
-    return `Rolling a *${sides}-sided* die *${amount}* time${plural}: ${rolls.join(', ')}`;
+    const rollAmount = `*${amount}* time${plural}`;
+    const rollSummary = `total: ${sumRolls}, average: ${averageValue}`
+    return `${dieRollTitle} ${rollAmount}: ${rolls.join(', ')} (${rollSummary})`;
   }
 }

@@ -70,7 +70,7 @@ describe('Die Roll', () => {
     const addressedMessage = 'roll 4d6';
 
     runTest(addressedMessage).then((result: string) => {
-      expect(result).toBe('Rolling a *6-sided* die *4* times: 6, 6, 6, 6');
+      expect(result).toContain('Rolling a *6-sided* die *4* times: 6, 6, 6, 6');
       done();
     });
   });
@@ -89,7 +89,7 @@ describe('Die Roll', () => {
     const addressedMessage = 'roll d6';
 
     runTest(addressedMessage).then((result: string) => {
-      expect(result).toBe('Rolling a *6-sided* die *1* time: 6');
+      expect(result).toContain('Rolling a *6-sided* die *1* time: 6');
       done();
     });
   });
@@ -167,6 +167,16 @@ describe('Die Roll', () => {
     runTest(addressedMessage).then((result: string) => {
       expect(result).toContain('Rolling a *20-sided* die *5* times: 20');
       expect(result).toContain('dieRollLimit');
+      done();
+    });
+  });
+
+  it('should calculate roll summary', done => {
+    const addressedMessage = 'roll 5d20';
+
+    runTest(addressedMessage).then((result: string) => {
+      expect(result).toContain('Rolling a *20-sided* die *5* times: 20, 20, 20, 20, 20');
+      expect(result).toContain('(total: 100, average: 20)');
       done();
     });
   });
