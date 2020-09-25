@@ -3,10 +3,11 @@
   "version": "0.0.1",
   "description": "Discord chatbot",
   "scripts": {
+    "prebuild": "node src/scripts/prebuild.js",
     "build": "tsc",
     "test": "jasmine-ts",
     "coverage": "nyc npm test",
-    "develop": "ts-node-dev --project tsconfig.json ./src/index.ts",
+    "develop": "npm run prebuild && ts-node-dev --project tsconfig.json ./src/index.ts",
     "lint": "tslint --project tsconfig.json --config tslint.json",
     "lint:fix": "prettier --config ./.prettierrc --write ./src/**/*.ts",
     "pr-check": "npm run build && npm run test && npm run lint",

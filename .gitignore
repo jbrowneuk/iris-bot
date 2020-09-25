@@ -67,3 +67,4 @@ dist
 config.json
 blog-roll.test.json
 blog-roll.json
+src/git-commit.ts
