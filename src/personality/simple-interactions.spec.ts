@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
+import { GIT_COMMIT } from '../git-commit';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { SimpleInteractions } from './simple-interactions';
@@ -28,11 +29,20 @@ describe('Simple interactions', () => {
     personality = new SimpleInteractions(mockDeps);
   });
 
-  it('should not handle a non-addressed message', done => {
+  it('should not handle a non-addressed message without known command', done => {
     const message = Mock.ofType<Message>();
     message.setup(m => m.content).returns(() => 'anything');
 
     personality.onMessage(message.object).then((result: string) => {
+      expect(result).toBe(null);
+      done();
+    });
+  });
+
+  it('should not handle an addressed message without known command', done => {
+    const message = Mock.ofType<Message>();
+
+    personality.onAddressed(message.object, 'anything').then((result: string) => {
       expect(result).toBe(null);
       done();
     });
@@ -102,6 +112,18 @@ describe('Simple interactions', () => {
       const message = Mock.ofType<Message>();
       personality.onAddressed(message.object, 'anything').then(response => {
         expect(response).toBeNull();
+        done();
+      });
+    });
+  });
+
+  describe('Build information', () => {
+    it('should output current git commit', done => {
+      const message = Mock.ofType<Message>();
+      message.setup(m => m.content).returns(() => '+buildInfo');
+
+      personality.onMessage(message.object).then(response => {
+        expect(response).toContain(`\`${GIT_COMMIT}\``);
         done();
       });
     });
