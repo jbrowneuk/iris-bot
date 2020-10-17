@@ -219,4 +219,20 @@ INSERT INTO "responses" VALUES ('dieRollLimit','none','**I’m bored now**');
 INSERT INTO "responses" VALUES ('dieRollLimit','none','`error: user ''{£user}'' request limit exceeded`');
 INSERT INTO "responses" VALUES ('dieRollLimit','none','If I were a machine, I’d totally spout some cryptic text about there being too many dice to roll');
 --
+
+-- -----------------------------------------------------------------------------
+-- Call-response table
+-- -------------------
+-- Used to create canned responses to specific messages
+-- `call` is message text to look for
+-- `response` is the response to the message text
+-- -----------------------------------------------------------------------------
+CREATE TABLE "call_response" (
+	"call"	TEXT,
+	"response"	TEXT
+)
+--
+INSERT INTO "call_response" VALUES ('hello','hi');
+
+--
 COMMIT;
