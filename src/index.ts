@@ -8,6 +8,7 @@ import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
 import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
+import { CallResponse } from './personality/call-response';
 import { DieRoll } from './personality/die-roll';
 import { HugBot } from './personality/hug-bot';
 import { MoodControl } from './personality/mood-control';
@@ -54,6 +55,7 @@ engine.addPersonality(new HugBot());
 engine.addPersonality(new BlogRoll(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
 engine.addPersonality(new SimpleInteractions(dependencies));
+engine.addPersonality(new CallResponse(dependencies));
 
 // Start bot
 engine.initialise();
