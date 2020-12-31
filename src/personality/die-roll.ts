@@ -64,18 +64,19 @@ export class DieRoll implements Personality {
   private generateDiceResponse(dice: Array<Promise<string>>): Promise<string> {
     let outputStr = '';
 
-    const newLine = () => outputStr.length > 0 ? '\n' : '';
+    const newLine = () => (outputStr.length > 0 ? '\n' : '');
 
-    return dice.reduce((prev, curr) => {
-      return prev.then(text => {
-        if (text !== null) {
-          outputStr += newLine() + text;
-        }
+    return dice
+      .reduce((prev, curr) => {
+        return prev.then((text) => {
+          if (text !== null) {
+            outputStr += newLine() + text;
+          }
 
-        return curr;
-      });
-    }, Promise.resolve(null))
-      .then(value => {
+          return curr;
+        });
+      }, Promise.resolve(null))
+      .then((value) => {
         return outputStr + newLine() + value;
       });
   }
@@ -91,7 +92,7 @@ export class DieRoll implements Personality {
       this.handleSingleDieRoll(bit)
     );
 
-    return bitsParsed.filter(bit => bit !== null);
+    return bitsParsed.filter((bit) => bit !== null);
   }
 
   /**
@@ -111,16 +112,18 @@ export class DieRoll implements Personality {
     let numberSides = this.parseDieBit(split[1]);
 
     if (hasNumberDice && numberDice < 0 && numberSides < 0) {
-      return this.dependencies.responses.generateResponse('dieRollParseFail')
-        .then(response => response.replace('{£bit}', rollInfo));
+      return this.dependencies.responses
+        .generateResponse('dieRollParseFail')
+        .then((response) => response.replace('{£bit}', rollInfo));
     }
 
     let correctionDice: Promise<string> = null;
     if (numberDice < 0 || numberDice > 10) {
       if (hasNumberDice) {
         const cachedCount = `${numberDice}`;
-        correctionDice = this.dependencies.responses.generateResponse('dieRollCorrectionCount')
-          .then(response => response.replace(/\{£rolls}/g, cachedCount));
+        correctionDice = this.dependencies.responses
+          .generateResponse('dieRollCorrectionCount')
+          .then((response) => response.replace(/\{£rolls}/g, cachedCount));
       }
 
       numberDice = 1;
@@ -129,15 +132,16 @@ export class DieRoll implements Personality {
     let correctionSides: Promise<string> = null;
     if (numberSides < 4 || numberSides > 100) {
       const cachedSides = `d${numberSides}`;
-      correctionSides = this.dependencies.responses.generateResponse('dieRollCorrectionSides')
-        .then(response => response.replace(/\{£die\}/g, cachedSides));
+      correctionSides = this.dependencies.responses
+        .generateResponse('dieRollCorrectionSides')
+        .then((response) => response.replace(/\{£die\}/g, cachedSides));
       numberSides = 6;
     }
 
     this.totalDiceRolled += numberDice;
     const rollResult = this.calculateDieRoll(numberDice, numberSides);
-    return Promise.all([correctionDice, correctionSides, rollResult])
-      .then(([dice, sides, result]) => {
+    return Promise.all([correctionDice, correctionSides, rollResult]).then(
+      ([dice, sides, result]) => {
         let outputPrefixes = '';
         if (dice !== null) {
           outputPrefixes = `${dice}\n`;
@@ -148,7 +152,8 @@ export class DieRoll implements Personality {
         }
 
         return outputPrefixes + result;
-      });
+      }
+    );
   }
 
   /**
@@ -186,9 +191,11 @@ export class DieRoll implements Personality {
 
     // Produce textual summary
     const dieRollTitle = `Rolling a *${sides}-sided* die`;
-    const plural = amount !== 1 ? 's': '';
+    const plural = amount !== 1 ? 's' : '';
     const rollAmount = `*${amount}* time${plural}`;
-    const rollSummary = `total: ${sumRolls}, average: ${averageValue}`
-    return `${dieRollTitle} ${rollAmount}: ${rolls.join(', ')} (${rollSummary})`;
+    const rollSummary = `total: ${sumRolls}, average: ${averageValue}`;
+    return `${dieRollTitle} ${rollAmount}: ${rolls.join(
+      ', '
+    )} (${rollSummary})`;
   }
 }

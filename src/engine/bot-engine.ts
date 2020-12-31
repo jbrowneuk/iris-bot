@@ -30,7 +30,7 @@ export class BotEngine implements Engine {
   }
 
   public initialise(): void {
-    this.personalityConstructs.forEach(personality => {
+    this.personalityConstructs.forEach((personality) => {
       if (typeof personality.initialise === 'function') {
         personality.initialise();
       }
@@ -38,7 +38,7 @@ export class BotEngine implements Engine {
   }
 
   public destroy(): void {
-    this.personalityConstructs.forEach(personality => {
+    this.personalityConstructs.forEach((personality) => {
       if (typeof personality.destroy === 'function') {
         personality.destroy();
       }
@@ -88,22 +88,27 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Array<Promise<MessageType>>): Promise<MessageType> {
+  private dequeuePromises(
+    funcs: Array<Promise<MessageType>>
+  ): Promise<MessageType> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
-    return funcs.reduce((prev: Promise<MessageType>, curr: Promise<MessageType>) => {
-      if (!prev) {
-        return null;
-      }
-
-      return prev.then((result: MessageType) => {
-        if (result !== null) {
-          this.client.queueMessages([result]);
-          return Promise.reject(new HandledResponseError());
+    return funcs.reduce(
+      (prev: Promise<MessageType>, curr: Promise<MessageType>) => {
+        if (!prev) {
+          return null;
         }
 
-        return curr;
-      });
-    }, Promise.resolve(null));
+        return prev.then((result: MessageType) => {
+          if (result !== null) {
+            this.client.queueMessages([result]);
+            return Promise.reject(new HandledResponseError());
+          }
+
+          return curr;
+        });
+      },
+      Promise.resolve(null)
+    );
   }
 
   private onDequeueCatch(err: Error): void {
@@ -153,7 +158,7 @@ export class BotEngine implements Engine {
       c.onAddressed(message, addressedMessage)
     );
     this.dequeuePromises(funcs)
-      .then(response => {
+      .then((response) => {
         if (response !== null) {
           return;
         }

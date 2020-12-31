@@ -1,4 +1,9 @@
-import { getValueStartedWith, isPunctuation, randomFloat, randomInteger } from './utils';
+import {
+  getValueStartedWith,
+  isPunctuation,
+  randomFloat,
+  randomInteger
+} from './utils';
 
 describe('utilities - test whether character is in a regex', () => {
   it('should match specific punctuation', () => {
@@ -62,17 +67,17 @@ describe('utilities - random number generation', () => {
     it('should return a random float between min and max', () => {
       const minValue = 1;
       const maxValue = 2;
-  
+
       const actualValue = randomFloat(minValue, maxValue);
-  
+
       expect(actualValue).toBeCloseTo(1.5, Number.EPSILON);
     });
 
     it('should return a random float between zero and param', () => {
       const maxValue = 7;
-  
+
       const actualValue = randomFloat(maxValue);
-  
+
       expect(actualValue).toBeCloseTo(3.5, Number.EPSILON);
     });
   });
@@ -81,17 +86,17 @@ describe('utilities - random number generation', () => {
     it('should return a floored random integer between min and max', () => {
       const minValue = 1;
       const maxValue = 2;
-  
+
       const actualValue = randomInteger(minValue, maxValue);
-  
+
       expect(actualValue).toBe(1);
     });
 
     it('should return a floored random integer between zero and param', () => {
       const maxValue = 7;
-  
+
       const actualValue = randomInteger(maxValue);
-  
+
       expect(actualValue).toBeCloseTo(3, Number.EPSILON);
     });
   });

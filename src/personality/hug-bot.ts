@@ -37,7 +37,14 @@ export class HugBot implements Personality {
       send(this.response(message, text, `${prefix}burger${suffix}`, '🍔'));
       send(this.response(message, text, `${prefix}beer${suffix}`, '🍺'));
       send(this.response(message, text, `${prefix}cookie${suffix}`, '🍪'));
-      send(this.response(message, text, `${prefix}something healthy${suffix}`, '🥗'));
+      send(
+        this.response(
+          message,
+          text,
+          `${prefix}something healthy${suffix}`,
+          '🥗'
+        )
+      );
 
       resolve(sentMessage);
     });
@@ -56,7 +63,10 @@ export class HugBot implements Personality {
     const item = itemOverride ? itemOverride : command;
     const bits = text.substr(command.length + 1).split(' ');
     const addressedBitIndex = 0;
-    if (bits[addressedBitIndex].startsWith('<@') && bits[addressedBitIndex].endsWith('>')) {
+    if (
+      bits[addressedBitIndex].startsWith('<@') &&
+      bits[addressedBitIndex].endsWith('>')
+    ) {
       return `Gives a ${item} to ${bits[addressedBitIndex]} from <@${message.author.id}>`;
     }
 

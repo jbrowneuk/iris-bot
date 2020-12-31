@@ -62,7 +62,7 @@ export class SqliteWrapper implements Database {
             return `${logic}${op.field}${comparisonOperator}`;
           })
           .join('');
-      vals = filter.where.map(op => op.value);
+      vals = filter.where.map((op) => op.value);
     } else {
       where = '';
       vals = [];

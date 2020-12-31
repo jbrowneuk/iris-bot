@@ -1,4 +1,9 @@
-import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
+import {
+  Mood,
+  MoodEngine,
+  MoodletDelta,
+  MoodletSize
+} from '../interfaces/mood-engine';
 
 const maxMood = 100;
 
@@ -34,7 +39,7 @@ export class MoodEngineImpl implements MoodEngine {
     return {
       delta: moodSize / totalMinutes,
       sizeRepresentation: size
-    }
+    };
   }
 
   public addMoodlet(mood: Mood, delta: MoodletDelta): void {

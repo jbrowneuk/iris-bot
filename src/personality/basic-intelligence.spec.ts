@@ -5,7 +5,7 @@ import { BasicIntelligence } from './basic-intelligence';
 describe('basic intelligence', () => {
   it('should not handle an addressed message', (done: DoneFn) => {
     const message = Mock.ofType<Message>();
-    message.setup(m => m.content).returns(() => 'anything');
+    message.setup((m) => m.content).returns(() => 'anything');
     const core = new BasicIntelligence();
 
     core.onAddressed(message.object, 'anything').then((result: string) => {
@@ -16,7 +16,7 @@ describe('basic intelligence', () => {
 
   it('should handle an ambient message with the echo command', (done: DoneFn) => {
     const message = Mock.ofType<Message>();
-    message.setup(m => m.content).returns(() => '+echo');
+    message.setup((m) => m.content).returns(() => '+echo');
     const core = new BasicIntelligence();
 
     core.onMessage(message.object).then((result: string) => {

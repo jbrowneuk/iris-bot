@@ -18,7 +18,10 @@ describe('Logger implementation', () => {
 
     logger.error(message, params);
 
-    mockConsole.verify(c => c.error(It.isValue(message), It.isValue(params)), Times.once());
+    mockConsole.verify(
+      (c) => c.error(It.isValue(message), It.isValue(params)),
+      Times.once()
+    );
   });
 
   it('should pass log to underlying implementation', () => {
@@ -27,6 +30,9 @@ describe('Logger implementation', () => {
 
     logger.log(message, params);
 
-    mockConsole.verify(c => c.log(It.isValue(message), It.isValue(params)), Times.once());
+    mockConsole.verify(
+      (c) => c.log(It.isValue(message), It.isValue(params)),
+      Times.once()
+    );
   });
 });

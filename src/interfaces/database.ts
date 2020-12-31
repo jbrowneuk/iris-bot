@@ -39,5 +39,8 @@ export interface Database {
    * @param collectionName the collection to get
    * @param filter a filter for results
    */
-  getRecordsFromCollection(collectionName: string, filter: QueryFilter): Promise<any[]>;
+  getRecordsFromCollection(
+    collectionName: string,
+    filter: QueryFilter
+  ): Promise<any[]>;
 }

@@ -10,27 +10,32 @@ import { Personality } from '../interfaces/personality';
  * Generates canned responses to messaages
  */
 export class CallResponse implements Personality {
-
   constructor(private dependencies: DependencyContainer) {}
 
   private get database(): Database {
     return this.dependencies.database;
   }
 
-  public onAddressed(message: Message, addressedMessage: string): Promise<string> {
+  public onAddressed(
+    message: Message,
+    addressedMessage: string
+  ): Promise<string> {
     return Promise.resolve(null);
   }
 
   public onMessage(message: Message): Promise<string> {
     const filter = {
-      where: [{
-        field: 'call',
-        value: message.content
-      }]
+      where: [
+        {
+          field: 'call',
+          value: message.content
+        }
+      ]
     };
 
-    return this.database.getRecordsFromCollection('call_response', filter)
-      .then(messagePairs => {
+    return this.database
+      .getRecordsFromCollection('call_response', filter)
+      .then((messagePairs) => {
         if (!messagePairs || messagePairs.length === 0) {
           return null;
         }

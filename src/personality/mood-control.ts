@@ -1,7 +1,12 @@
 import { ActivityType, Message } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
+import {
+  Mood,
+  MoodEngine,
+  MoodletDelta,
+  MoodletSize
+} from '../interfaces/mood-engine';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith, randomFloat, randomInteger } from '../utils';
 
@@ -86,7 +91,10 @@ export class MoodControl implements Personality {
     message: Message,
     addressedMessage: string
   ): Promise<string> {
-    const startsWithCommand = getValueStartedWith(addressedMessage, moodSummaryCommands);
+    const startsWithCommand = getValueStartedWith(
+      addressedMessage,
+      moodSummaryCommands
+    );
     if (!startsWithCommand) {
       return Promise.resolve(null);
     }
@@ -112,7 +120,7 @@ export class MoodControl implements Personality {
   }
 
   protected beginActivity(): void {
-    const positiveActs = activities.filter(a => a.moodlet === Mood.Positive); // TODO passive & active
+    const positiveActs = activities.filter((a) => a.moodlet === Mood.Positive); // TODO passive & active
     const activityChoice = randomInteger(0, positiveActs.length);
     this.activity = positiveActs[activityChoice];
 
@@ -131,7 +139,10 @@ export class MoodControl implements Personality {
     // Set presence
     if (this.activity.activityType !== null) {
       const presence = {
-        activity: { name: this.activity.name, type: this.activity.activityType }
+        activity: {
+          name: this.activity.name,
+          type: this.activity.activityType
+        }
       };
       this.dependencies.client.setPresence(presence);
     }

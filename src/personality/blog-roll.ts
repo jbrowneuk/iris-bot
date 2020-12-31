@@ -68,15 +68,15 @@ export class BlogRoll implements Personality {
   protected fetchJournal(): void {
     nodeFetch
       .default(`${siteRoot}${apiPath}`)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           throw new Error('Unable to fetch API');
         }
 
         return response.json();
       })
-      .then(rawData => this.handlePostResponse(rawData))
-      .catch(e => this.dependencies.logger.error(e));
+      .then((rawData) => this.handlePostResponse(rawData))
+      .catch((e) => this.dependencies.logger.error(e));
   }
 
   /**
@@ -125,7 +125,7 @@ export class BlogRoll implements Personality {
       this.settingsFilePath,
       JSON.stringify(settingsObj),
       settingsFileEnc,
-      err => {
+      (err) => {
         if (err) {
           return this.dependencies.logger.error(err);
         }
