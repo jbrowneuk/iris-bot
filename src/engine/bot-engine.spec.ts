@@ -21,11 +21,11 @@ describe('Bot engine', () => {
     client = Mock.ofType<Client>();
     responseGenerator = Mock.ofType<ResponseGenerator>();
     responseGenerator
-      .setup(m => m.generateResponse(It.isAnyString()))
+      .setup((m) => m.generateResponse(It.isAnyString()))
       .returns((phrase: string) => Promise.resolve(phrase));
     settings = Mock.ofType<Settings>();
     settings
-      .setup(s => s.getSettings())
+      .setup((s) => s.getSettings())
       .returns(() => ({ token: 'bot-token' }));
   });
 
@@ -40,7 +40,7 @@ describe('Bot engine', () => {
   });
 
   it('should connect on run', () => {
-    client.setup(m => m.connect(It.isAnyString()));
+    client.setup((m) => m.connect(It.isAnyString()));
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
@@ -50,11 +50,11 @@ describe('Bot engine', () => {
 
     engine.run();
 
-    client.verify(m => m.connect(It.isAnyString()), Times.once());
+    client.verify((m) => m.connect(It.isAnyString()), Times.once());
   });
 
   it('should initialise event listeners on run', () => {
-    client.setup(m => m.on(It.isAnyString(), It.isAny()));
+    client.setup((m) => m.on(It.isAnyString(), It.isAny()));
     const engine = new BotEngine(
       client.object,
       responseGenerator.object,
@@ -66,11 +66,11 @@ describe('Bot engine', () => {
 
     // Connected and message
     client.verify(
-      m => m.on(It.isValue(LifecycleEvents.CONNECTED), It.isAny()),
+      (m) => m.on(It.isValue(LifecycleEvents.CONNECTED), It.isAny()),
       Times.once()
     );
     client.verify(
-      m => m.on(It.isValue(LifecycleEvents.MESSAGE), It.isAny()),
+      (m) => m.on(It.isValue(LifecycleEvents.MESSAGE), It.isAny()),
       Times.once()
     );
   });
@@ -87,7 +87,7 @@ describe('Bot engine', () => {
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup((m) => m.on(It.isAnyString(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -95,7 +95,7 @@ describe('Bot engine', () => {
     engine.run();
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === LifecycleEvents.CONNECTED
+      (cb) => cb.evt === LifecycleEvents.CONNECTED
     );
     relatedHandler.cb.call(client);
 
@@ -114,7 +114,7 @@ describe('Bot engine', () => {
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
-      .setup(m => m.on(It.isAnyString(), It.isAny()))
+      .setup((m) => m.on(It.isAnyString(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
@@ -122,7 +122,7 @@ describe('Bot engine', () => {
     engine.run();
 
     const relatedHandler = callbacks.find(
-      cb => cb.evt === LifecycleEvents.MESSAGE
+      (cb) => cb.evt === LifecycleEvents.MESSAGE
     );
     relatedHandler.cb.call(client);
 
@@ -147,8 +147,15 @@ describe('Bot engine', () => {
   });
 
   it('should run initialise on personality constructs if implemented', () => {
-    const coreNoInit: Personality = { onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
-    const coreWithInit: Personality = { initialise: () => null, onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
+    const coreNoInit: Personality = {
+      onAddressed: () => Promise.resolve(null),
+      onMessage: () => Promise.resolve(null)
+    };
+    const coreWithInit: Personality = {
+      initialise: () => null,
+      onAddressed: () => Promise.resolve(null),
+      onMessage: () => Promise.resolve(null)
+    };
     const initSpy = spyOn(coreWithInit, 'initialise');
 
     const engine = new BotEngine(
@@ -168,8 +175,15 @@ describe('Bot engine', () => {
   });
 
   it('should run destroy on personality constructs if implemented', () => {
-    const coreNoInit: Personality = { onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
-    const coreWithDestroy: Personality = { destroy: () => null, onAddressed: () => Promise.resolve(null), onMessage: () => Promise.resolve(null) };
+    const coreNoInit: Personality = {
+      onAddressed: () => Promise.resolve(null),
+      onMessage: () => Promise.resolve(null)
+    };
+    const coreWithDestroy: Personality = {
+      destroy: () => null,
+      onAddressed: () => Promise.resolve(null),
+      onMessage: () => Promise.resolve(null)
+    };
     const destroySpy = spyOn(coreWithDestroy, 'destroy');
 
     const engine = new BotEngine(
@@ -244,7 +258,7 @@ describe('Bot engine', () => {
 
     setTimeout(() => {
       client.verify(
-        c => c.queueMessages(It.isValue([mockMessage])),
+        (c) => c.queueMessages(It.isValue([mockMessage])),
         Times.once()
       );
       done();
@@ -270,7 +284,7 @@ describe('Bot engine', () => {
       .then(() => fail('should not get here'))
       .catch((err: any) => {
         expect(err).toBe(failureMessage);
-        client.verify(c => c.queueMessages(It.isAny()), Times.never());
+        client.verify((c) => c.queueMessages(It.isAny()), Times.never());
         done();
       });
   });
@@ -291,7 +305,7 @@ describe('Bot engine', () => {
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore
-      .setup(m => m.onMessage(It.isAny()))
+      .setup((m) => m.onMessage(It.isAny()))
       .returns(() => Promise.resolve(null));
     untypedEngine.personalityConstructs = [mockPersonalityCore.object];
 
@@ -331,12 +345,12 @@ describe('Bot engine', () => {
     ];
 
     const mockUserInfo = Mock.ofType<discord.User>();
-    mockUserInfo.setup(m => m.username).returns(() => MOCK_USERNAME);
-    mockUserInfo.setup(m => m.id).returns(() => MOCK_ID);
+    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
 
     messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
       client
-        .setup(m => m.getUserInformation())
+        .setup((m) => m.getUserInformation())
         .returns(() => mockUserInfo.object);
       const mockMessage = {
         content: kvp.input,
@@ -357,19 +371,19 @@ describe('Bot engine', () => {
     );
     const untypedEngine = engine as any;
     const mockUserInfo = Mock.ofType<discord.User>();
-    mockUserInfo.setup(m => m.username).returns(() => MOCK_USERNAME);
-    mockUserInfo.setup(m => m.id).returns(() => MOCK_ID);
+    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
 
     client
-        .setup(m => m.getUserInformation())
-        .returns(() => mockUserInfo.object);
-      const mockMessage = {
-        content: `${overridenUsername}, hello`,
-        guild: { members: { resolve: () => ({ nickname: overridenUsername }) } }
-      };
+      .setup((m) => m.getUserInformation())
+      .returns(() => mockUserInfo.object);
+    const mockMessage = {
+      content: `${overridenUsername}, hello`,
+      guild: { members: { resolve: () => ({ nickname: overridenUsername }) } }
+    };
 
-      const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
-      expect(actualResult).toBe('hello');
+    const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
+    expect(actualResult).toBe('hello');
   });
 
   it('should queue addressed messages from personality cores', () => {
@@ -389,7 +403,7 @@ describe('Bot engine', () => {
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore
-      .setup(m => m.onAddressed(It.isAny(), It.isAnyString()))
+      .setup((m) => m.onAddressed(It.isAny(), It.isAnyString()))
       .returns(() => Promise.resolve(null));
     untypedEngine.personalityConstructs = [mockPersonalityCore.object];
 

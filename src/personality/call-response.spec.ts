@@ -22,9 +22,9 @@ describe('basic intelligence', () => {
 
     personality = new CallResponse(mockDependencies);
   });
-  it('should not handle an addressed message', done => {
+  it('should not handle an addressed message', (done) => {
     const message = Mock.ofType<Message>();
-    message.setup(m => m.content).returns(() => 'anything');
+    message.setup((m) => m.content).returns(() => 'anything');
 
     personality
       .onAddressed(message.object, 'anything')
@@ -41,7 +41,7 @@ describe('basic intelligence', () => {
     beforeEach(() => {
       // Set up db mock to return value
       mockDatabase
-        .setup(d => d.getRecordsFromCollection(It.isAnyString(), It.isAny()))
+        .setup((d) => d.getRecordsFromCollection(It.isAnyString(), It.isAny()))
         .returns((db, filter) => {
           if (!filter || filter.where.length === 0) {
             return Promise.resolve(null);
@@ -53,9 +53,9 @@ describe('basic intelligence', () => {
         });
     });
 
-    it('should handle message with matching response', done => {
+    it('should handle message with matching response', (done) => {
       const message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => mockCall);
+      message.setup((m) => m.content).returns(() => mockCall);
 
       personality.onMessage(message.object).then((result: string) => {
         expect(result).toBe(mockResponse);
@@ -63,9 +63,9 @@ describe('basic intelligence', () => {
       });
     });
 
-    it('should not handle message if no matching response', done => {
+    it('should not handle message if no matching response', (done) => {
       const message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => 'anything');
+      message.setup((m) => m.content).returns(() => 'anything');
 
       personality.onMessage(message.object).then((result: string) => {
         expect(result).toBeNull();

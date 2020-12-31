@@ -57,7 +57,7 @@ export class SimpleInteractions implements Personality {
       return null;
     }
 
-    message.react('✋').catch(e => this.dependencies.logger.error(e));
+    message.react('✋').catch((e) => this.dependencies.logger.error(e));
     return this.dependencies.responses.generateResponse('highFive');
   }
 

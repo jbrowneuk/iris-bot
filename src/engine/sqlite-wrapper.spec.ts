@@ -12,7 +12,7 @@ describe('SQLite wrapper', () => {
 
     mockSqlite = Mock.ofType<sqlite.Database>();
     mockSqlite
-      .setup(m => m.prepare(It.isAnyString()))
+      .setup((m) => m.prepare(It.isAnyString()))
       .returns(() => mockStatement.object);
   });
 
@@ -103,7 +103,7 @@ describe('SQLite wrapper', () => {
   it('should handle error returned from getting a collection', (done: DoneFn) => {
     const expectedError = 'ERROR';
     mockStatement
-      .setup(m => m.all(It.isAny(), It.isAny()))
+      .setup((m) => m.all(It.isAny(), It.isAny()))
       .callback((filter: any, cb: (err: any) => void) => {
         cb(new Error(expectedError));
       });
@@ -124,7 +124,7 @@ describe('SQLite wrapper', () => {
     const expectedCollection = 'myCollection';
     const mockRows = [{ id: 0 }, { id: 1 }];
     mockStatement
-      .setup(m => m.all(It.isAny(), It.isAny()))
+      .setup((m) => m.all(It.isAny(), It.isAny()))
       .callback((filter: any, cb: (err: any, rows: any[]) => void) => {
         cb(null, mockRows);
       });
@@ -136,13 +136,13 @@ describe('SQLite wrapper', () => {
       .getRecordsFromCollection(expectedCollection, {})
       .then((records: any[]) => {
         mockSqlite.verify(
-          m => m.prepare(It.isValue(`SELECT * FROM ${expectedCollection}`)),
+          (m) => m.prepare(It.isValue(`SELECT * FROM ${expectedCollection}`)),
           Times.once()
         );
         expect(records).toEqual(mockRows);
         done();
       })
-      .catch(err => fail(err));
+      .catch((err) => fail(err));
   });
 
   it('should correctly build SQL statement when filter has been applied', (done: DoneFn) => {
@@ -153,7 +153,7 @@ describe('SQLite wrapper', () => {
       ]
     };
     mockStatement
-      .setup(m => m.all(It.isAny(), It.isAny()))
+      .setup((m) => m.all(It.isAny(), It.isAny()))
       .callback((f: any, cb: (err: any, rows: any[]) => void) => {
         cb(null, []);
       });
@@ -165,11 +165,11 @@ describe('SQLite wrapper', () => {
       .getRecordsFromCollection('col', filter)
       .then((records: any[]) => {
         mockSqlite.verify(
-          m => m.prepare(It.isValue(`SELECT * FROM col WHERE a=? AND b=?`)),
+          (m) => m.prepare(It.isValue(`SELECT * FROM col WHERE a=? AND b=?`)),
           Times.once()
         );
         done();
       })
-      .catch(err => fail(err));
+      .catch((err) => fail(err));
   });
 });

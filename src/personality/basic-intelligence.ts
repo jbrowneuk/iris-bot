@@ -6,14 +6,16 @@ import { Personality } from '../interfaces/personality';
  * implement your own personality implementations from
  */
 export class BasicIntelligence implements Personality {
-
   /**
    * Called whenever the bot is addressed using one of the attention grabber phrases
    *
    * @param message the message object related to this call
    * @param addressedMessage the substring of the message text after the attention grabber
    */
-  public onAddressed(message: discord.Message, addressedMessage: string): Promise<string> {
+  public onAddressed(
+    message: discord.Message,
+    addressedMessage: string
+  ): Promise<string> {
     return Promise.resolve(null);
   }
 

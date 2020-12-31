@@ -54,7 +54,7 @@ export function randomFloat(min: number, max?: number): number {
     maximum = min;
   }
 
-  return (Math.random() * (maximum - minimum)) + minimum;
+  return Math.random() * (maximum - minimum) + minimum;
 }
 
 /**

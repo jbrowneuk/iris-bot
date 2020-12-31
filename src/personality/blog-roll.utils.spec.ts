@@ -22,10 +22,10 @@ describe('Blog roll utilities', () => {
         { date: new Date(2020, 8, 1, 14), expectedString: 'September' },
         { date: new Date(2020, 9, 1, 14), expectedString: 'October' },
         { date: new Date(2020, 10, 1, 14), expectedString: 'November' },
-        { date: new Date(2020, 11, 1, 14), expectedString: 'December' },
+        { date: new Date(2020, 11, 1, 14), expectedString: 'December' }
       ];
 
-      dates.forEach(test => {
+      dates.forEach((test) => {
         const formatted = formatTimestamp(test.date.getTime() / 1000);
         expect(formatted).toBe(`1 ${test.expectedString} 2020`);
       });

@@ -3,7 +3,12 @@ import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
+import {
+  Mood,
+  MoodEngine,
+  MoodletDelta,
+  MoodletSize
+} from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import * as utils from '../utils';
 import { BotActivity, MoodControl, moodSummaryCommands } from './mood-control';
@@ -70,7 +75,9 @@ describe('Mood control', () => {
     mockClient = Mock.ofType<Client>();
     mockMoodEngine = Mock.ofType<MoodEngine>();
     mockResponses = Mock.ofType<ResponseGenerator>();
-    mockResponses.setup(r => r.generateResponse(It.isAny())).returns(() => Promise.resolve(mockResponse));
+    mockResponses
+      .setup((r) => r.generateResponse(It.isAny()))
+      .returns(() => Promise.resolve(mockResponse));
 
     mockDependencies = {
       client: mockClient.object,
@@ -100,11 +107,11 @@ describe('Mood control', () => {
   });
 
   describe('onMessage interaction', () => {
-    it('should return promise resolving to null', done => {
+    it('should return promise resolving to null', (done) => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup(m => m.content).returns(() => 'any message');
+      mockMessage.setup((m) => m.content).returns(() => 'any message');
 
-      moodControl.onMessage(mockMessage.object).then(value => {
+      moodControl.onMessage(mockMessage.object).then((value) => {
         expect(value).toBeNull();
         done();
       });
@@ -112,20 +119,20 @@ describe('Mood control', () => {
   });
 
   describe('onAddressed interaction', () => {
-    moodSummaryCommands.forEach(command => {
-      it(`should respond to “${command}” when addressed`, done => {
-        moodControl.onAddressed(null, command).then(response => {
+    moodSummaryCommands.forEach((command) => {
+      it(`should respond to “${command}” when addressed`, (done) => {
+        moodControl.onAddressed(null, command).then((response) => {
           expect(response).toBe(mockResponse);
           done();
-        })
+        });
       });
     });
 
-    it('should return promise resolving to null if no interaction', done => {
-      moodControl.onAddressed(null, 'nothing').then(response => {
+    it('should return promise resolving to null if no interaction', (done) => {
+      moodControl.onAddressed(null, 'nothing').then((response) => {
         expect(response).toBeNull();
         done();
-      })
+      });
     });
   });
 
@@ -135,7 +142,7 @@ describe('Mood control', () => {
       spyOn(utils, 'randomInteger').and.callFake((min, max) => min);
 
       mockMoodEngine
-        .setup(s => s.calculateDelta(It.isAny(), It.isAny()))
+        .setup((s) => s.calculateDelta(It.isAny(), It.isAny()))
         .returns(() => ({ sizeRepresentation: null, delta: 1 }));
     });
 
@@ -169,7 +176,7 @@ describe('Mood control', () => {
       moodControl.runBeginActivity();
 
       expect(moodControl.currentActivityDetails.activity).toBeTruthy();
-      mockClient.verify(m => m.setPresence(It.isAny()), Times.once());
+      mockClient.verify((m) => m.setPresence(It.isAny()), Times.once());
     });
   });
 
@@ -181,7 +188,7 @@ describe('Mood control', () => {
       moodControl.runSustainActivity();
 
       mockMoodEngine.verify(
-        m =>
+        (m) =>
           m.addMoodlet(
             It.isValue(expectedActivity.activity.moodlet),
             It.isValue(expectedActivity.delta)
@@ -198,7 +205,7 @@ describe('Mood control', () => {
 
       const actualActivity = moodControl.currentActivityDetails;
       expect(actualActivity.activity).toBeNull();
-      mockClient.verify(m => m.setPresence(It.isValue({})), Times.once());
+      mockClient.verify((m) => m.setPresence(It.isValue({})), Times.once());
     });
   });
 
@@ -231,7 +238,7 @@ describe('Mood control', () => {
 
       moodControl.runActivityUpdate();
 
-      mockMoodEngine.verify(m => m.neutraliseMood(), Times.once());
+      mockMoodEngine.verify((m) => m.neutraliseMood(), Times.once());
       expect().nothing();
     });
   });
