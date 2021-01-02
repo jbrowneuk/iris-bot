@@ -16,7 +16,7 @@ import { SimpleInteractions } from './personality/simple-interactions';
 
 // Initialise foundation
 const logger = new LoggerImpl();
-const database = new SqliteWrapper();
+const database = new SqliteWrapper(logger);
 database.connect().then(() => {
   logger.log('Database connected');
 });

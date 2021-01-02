@@ -1,13 +1,14 @@
 import * as sqlite from 'sqlite3';
 
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
+import { Logger } from '../interfaces/logger';
 
 const databaseFile = './bot.sqlite';
 
 export class SqliteWrapper implements Database {
   private db: sqlite.Database;
 
-  constructor() {
+  constructor(private logger: Logger) {
     this.db = null;
   }
 
@@ -16,15 +17,25 @@ export class SqliteWrapper implements Database {
       return Promise.reject(new Error('Connection already established'));
     }
 
-    this.db = new sqlite.Database(databaseFile);
-    return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      this.db = new sqlite.Database(databaseFile, (err) => {
+        if (err) {
+          reject(err);
+        }
+
+        this.logger.log('Connected to database');
+        resolve();
+      });
+    });
   }
 
   public disconnect(): Promise<void> {
     if (this.db === null) {
+      this.logger.error('Database already disconnected');
       return Promise.resolve();
     }
 
+    this.logger.log('Disconnecting from database');
     return new Promise((resolve, reject) => {
       this.db.close((err: Error) => {
         if (err) {
@@ -71,7 +82,7 @@ export class SqliteWrapper implements Database {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM ${collectionName}${where}`;
       const statement = this.db.prepare(sql);
-      statement.all(vals, (err: Error, rows: any) => {
+      statement.all(vals, (err: Error, rows: any[]) => {
         statement.finalize();
 
         if (err) {
