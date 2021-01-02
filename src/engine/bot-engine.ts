@@ -43,6 +43,8 @@ export class BotEngine implements Engine {
         personality.destroy();
       }
     });
+
+    this.client.disconnect();
   }
 
   public run(): void {
@@ -58,7 +60,7 @@ export class BotEngine implements Engine {
   }
 
   private onConnected(): void {
-    this.logger.log('Connected');
+    this.logger.log('Connected to Discord services');
   }
 
   private onMessage(message: discord.Message): void {

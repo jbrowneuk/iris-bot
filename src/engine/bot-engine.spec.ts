@@ -202,6 +202,19 @@ describe('Bot engine', () => {
     expect(destroySpy).toHaveBeenCalled();
   });
 
+  it('should disconnect on destroy', () => {
+    const engine = new BotEngine(
+      client.object,
+      responseGenerator.object,
+      settings.object,
+      console
+    );
+
+    engine.destroy();
+
+    client.verify((c) => c.disconnect(), Times.once());
+  });
+
   it('should handle ambient messages when message received', () => {
     const engine = new BotEngine(
       client.object,
