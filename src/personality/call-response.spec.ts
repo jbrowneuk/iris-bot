@@ -22,16 +22,41 @@ describe('basic intelligence', () => {
 
     personality = new CallResponse(mockDependencies);
   });
-  it('should not handle an addressed message', (done) => {
-    const message = Mock.ofType<Message>();
-    message.setup((m) => m.content).returns(() => 'anything');
 
-    personality
-      .onAddressed(message.object, 'anything')
-      .then((result: string) => {
+  describe('addressed message handling', () => {
+    const mockCallPrefix = '{£me} ';
+    const mockCallText = 'echo';
+    const mockCallFullText = mockCallPrefix + mockCallText;
+    const mockResponse = 'ohce';
+
+    beforeEach(() => {
+      // Set up db mock to return value
+      mockDatabase
+        .setup((d) => d.getRecordsFromCollection(It.isAnyString(), It.isAny()))
+        .returns((db, filter) => {
+          if (!filter || filter.where.length === 0) {
+            return Promise.resolve(null);
+          }
+
+          const filterWhere = filter.where[0];
+          const response = filterWhere.value === mockCallFullText ? mockResponse : null;
+          return Promise.resolve([{ response }]);
+        });
+    });
+
+    it('should handle message with matching response', (done) => {
+      personality.onAddressed(null, mockCallText).then((result: string) => {
+        expect(result).toBe(mockResponse);
+        done();
+      });
+    });
+
+    it('should not handle message if no matching response', (done) => {
+      personality.onAddressed(null, 'anything').then((result: string) => {
         expect(result).toBeNull();
         done();
       });
+    });
   });
 
   describe('ambient message handling', () => {

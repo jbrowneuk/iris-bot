@@ -20,15 +20,20 @@ export class CallResponse implements Personality {
     message: Message,
     addressedMessage: string
   ): Promise<string> {
-    return Promise.resolve(null);
+    const callString = `{£me} ${addressedMessage}`;
+    return this.generateResponseIfFound(callString);
   }
 
   public onMessage(message: Message): Promise<string> {
+    return this.generateResponseIfFound(message.content);
+  }
+
+  private generateResponseIfFound(call: string): Promise<string> {
     const filter = {
       where: [
         {
           field: 'call',
-          value: message.content
+          value: call
         }
       ]
     };
