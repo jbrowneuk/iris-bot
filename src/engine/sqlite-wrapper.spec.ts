@@ -55,15 +55,17 @@ describe('SQLite wrapper', () => {
       .catch(() => fail('Should not get here'));
   });
 
-  it('should reject when trying to disconnect if not connected', (done: DoneFn) => {
+  it('should not reject when trying to disconnect if not connected', (done: DoneFn) => {
     const testObject = new SqliteWrapper();
 
     testObject
       .disconnect()
-      .then(() => fail('Should not get here'))
-      .catch((err: Error) => {
-        expect(err).toBeTruthy();
+      .then(() => {
+        expect().nothing();
         done();
+      })
+      .catch(() => {
+        fail('Throwing when disconnecting twice');
       });
   });
 
