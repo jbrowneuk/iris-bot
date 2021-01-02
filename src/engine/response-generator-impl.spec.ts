@@ -3,10 +3,7 @@ import { IMock, It, Mock } from 'typemoq';
 import { Database } from '../interfaces/database';
 import { Logger } from '../interfaces/logger';
 import { Mood, MoodEngine } from '../interfaces/mood-engine';
-import {
-  NoResponseText,
-  ResponseGeneratorImpl
-} from './response-generator-impl';
+import { NoResponseText, ResponseGeneratorImpl } from './response-generator-impl';
 
 const mockDbRows = [{ text: 'a' }, { text: 'b' }, { text: 'c' }];
 
@@ -49,7 +46,7 @@ describe('response generator', () => {
   it('should return a generic string if no rows are returned from the database', (done: DoneFn) => {
     database
       .setup((m) => m.getRecordsFromCollection(It.isAnyString(), It.isAny()))
-      .returns((collection: string) => Promise.resolve([]));
+      .returns(() => Promise.resolve([]));
 
     responseGenerator.generateResponse('phrase').then((response: string) => {
       expect(response).not.toBe('');

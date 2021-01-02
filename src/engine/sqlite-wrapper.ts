@@ -22,7 +22,6 @@ export class SqliteWrapper implements Database {
 
   public disconnect(): Promise<void> {
     if (this.db === null) {
-      console.error('Connection not established');
       return Promise.resolve();
     }
 

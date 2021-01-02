@@ -255,18 +255,16 @@ describe('Discord client wrapper', () => {
   });
 
   it('should set presence data', () => {
-    const mockUser = {
-      setPresence: (_: any) => null
-    };
-    const presenceSpy = spyOn(mockUser, 'setPresence');
-    discordMock
-      .setup((m) => m.user)
-      .returns(() => mockUser as discord.ClientUser);
+    const mockUser = Mock.ofType<discord.ClientUser>();
+    discordMock.setup((m) => m.user).returns(() => mockUser.object);
     const mockPresence = { activity: {} };
     (client as any).client = discordMock.object; // This is set when connected
 
     client.setPresence(mockPresence);
 
-    expect(presenceSpy).toHaveBeenCalledWith(mockPresence);
+    mockUser.verify(
+      (u) => u.setPresence(It.isValue(mockPresence)),
+      Times.once()
+    );
   });
 });

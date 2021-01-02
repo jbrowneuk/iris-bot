@@ -2,7 +2,7 @@ import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 import { Logger } from '../interfaces/logger';
 import { MoodEngine } from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import { randomNumber } from '../utils';
+import { randomInteger } from '../utils';
 
 const collectionName = 'responses';
 
@@ -49,7 +49,7 @@ export class ResponseGeneratorImpl implements ResponseGenerator {
       return NoResponseText;
     }
 
-    const choice = randomNumber(responses.length);
+    const choice = randomInteger(responses.length);
     return responses[choice].text;
   }
 }
