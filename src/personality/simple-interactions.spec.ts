@@ -131,7 +131,8 @@ describe('Simple interactions', () => {
       message.setup((m) => m.content).returns(() => '+buildInfo');
 
       personality.onMessage(message.object).then((response) => {
-        expect(response).toContain(`\`${GIT_COMMIT}\``);
+        expect(response).toContain(GIT_COMMIT.commit);
+        expect(response).toContain(GIT_COMMIT.refs);
         done();
       });
     });

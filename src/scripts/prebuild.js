@@ -15,9 +15,14 @@ const outputFile = join(__dirname, '..', 'git-commit.ts');
  * @param {string} data data from the git command
  */
 function writeGitInfo(data) {
-  const formattedData = `export const GIT_COMMIT = '${data}';`;
+  const json = JSON.stringify(data);
 
-  writeFile(outputFile, formattedData, err => {
+  // Format to make eslint happy :D
+  const formatRegex = /"(\w+)":"([\w\d-]+)"/g;
+  const formattedOutput = json.replace(formatRegex, "$1: '$2'");
+  const outputData = `export const GIT_COMMIT = ${formattedOutput};`;
+
+  writeFile(outputFile, outputData, (err) => {
     if (err) {
       process.exitCode = 1;
       return console.error(err);
@@ -25,28 +30,37 @@ function writeGitInfo(data) {
   });
 }
 
-// Get the revision of HEAD using rev-parse
-const revParse = spawn('git', ['rev-parse', '--short', 'HEAD']);
+let gitInfo = {
+  commit: '',
+  date: '',
+  refs: ''
+};
 
-let gitCommit = null;
-revParse.stdout.on('data', data => {
-  gitCommit = `${data}`.trim();
+// Get the details of HEAD using log
+const revParse = spawn('git', ['log', '-n', '1', '--pretty=%h|%as|%D']);
+revParse.stdout.on('data', (data) => {
+  const rawOutput = `${data}`.trim();
+  const parts = rawOutput.split('|', 3);
+  gitInfo.commit = parts[0];
+  gitInfo.date = parts[1];
+  const refs = parts[2] || 'unknown';
+  gitInfo.refs = refs.replace('HEAD -> ', ''); // HEAD is a given
 });
 
-revParse.stderr.on('data', data => {
+revParse.stderr.on('data', () => {
   console.error(error);
   process.exitCode = 1;
 });
 
-revParse.on('error', data => {
+revParse.on('error', () => {
   console.error(error);
   process.exitCode = 1;
 });
 
-revParse.on('close', code => {
+revParse.on('close', (code) => {
   if (code !== 0) {
     return console.error(`Command exited with code ${code}`);
   }
 
-  writeGitInfo(gitCommit || 'unknown');
+  writeGitInfo(gitInfo || 'unknown');
 });

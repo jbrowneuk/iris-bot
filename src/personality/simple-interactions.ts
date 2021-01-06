@@ -69,7 +69,7 @@ export class SimpleInteractions implements Personality {
 
     const formattedOutput = `Your bot is running the iris-bot framework.
 https://github.com/jbrowneuk/iris-bot
-Version \`${GIT_COMMIT}\`
+Commit \`${GIT_COMMIT.commit}\` (from \`${GIT_COMMIT.refs}\` on ${GIT_COMMIT.date})
 Node ${process.version} (${process.platform} ${process.arch})`;
     return Promise.resolve(formattedOutput);
   }
