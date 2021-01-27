@@ -3,9 +3,10 @@ import * as fs from 'fs';
 import { Settings } from '../interfaces/settings';
 
 const defaultPath = './config.json';
+const encoding = 'utf8';
 
 export class SettingsManager implements Settings {
-  private settingsData: { [key: string]: any };
+  protected settingsData: { [key: string]: any };
 
   /**
    * Initialises an instance of the SettingsManager class, loading from file if
@@ -13,13 +14,13 @@ export class SettingsManager implements Settings {
    *
    * @param path the path to the config file. Pass null to not load anything
    */
-  constructor(path: string = defaultPath) {
+  constructor(protected path: string = defaultPath) {
     this.settingsData = {};
     if (path === null) {
       return;
     }
 
-    this.initialiseFromFile(path);
+    this.initialiseFromFile();
   }
 
   public getSettings(): { [key: string]: any } {
@@ -30,8 +31,24 @@ export class SettingsManager implements Settings {
     return this.settingsData[key] || null;
   }
 
-  private initialiseFromFile(path: string): void {
-    const raw = fs.readFileSync(path, { encoding: 'utf8' });
+  setValueForKey<T>(key: string, value: T): void {
+    this.settingsData[key] = value;
+    this.saveToFile();
+  }
+
+  private initialiseFromFile(): void {
+    const raw = fs.readFileSync(this.path, { encoding });
     this.settingsData = JSON.parse(raw);
+  }
+
+  private saveToFile(): void {
+    fs.writeFile(
+      this.path,
+      JSON.stringify(this.settingsData),
+      encoding,
+      (err) => {
+        err && console.error(err);
+      }
+    );
   }
 }
