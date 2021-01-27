@@ -3,8 +3,17 @@ import * as fs from 'fs';
 import { SettingsManager } from './settings-manager';
 
 class TestableSettingsManager extends SettingsManager {
-  public get FilePath(): string { return this.path; }
-  public set FilePath(value: string) { this.path = value; }
+  constructor(path: string) {
+    super(console, path);
+  }
+
+  public get FilePath(): string {
+    return this.path;
+  }
+
+  public set FilePath(value: string) {
+    this.path = value;
+  }
 
   public mockOutSettings(mockSettings: { [key: string]: any }): void {
     this.settingsData = mockSettings;

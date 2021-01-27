@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 
+import { Logger } from '../interfaces/logger';
 import { Settings } from '../interfaces/settings';
 
 const defaultPath = './config.json';
@@ -14,7 +15,7 @@ export class SettingsManager implements Settings {
    *
    * @param path the path to the config file. Pass null to not load anything
    */
-  constructor(protected path: string = defaultPath) {
+  constructor(private logger: Logger, protected path: string = defaultPath) {
     this.settingsData = {};
     if (path === null) {
       return;
@@ -47,7 +48,7 @@ export class SettingsManager implements Settings {
       JSON.stringify(this.settingsData),
       encoding,
       (err) => {
-        err && console.error(err);
+        err && this.logger.error(err);
       }
     );
   }
