@@ -35,7 +35,7 @@ process.on('SIGINT', destroyHandler);
 const client = new DiscordClient(logger);
 const moodEngine = new MoodEngineImpl();
 const responses = new ResponseGeneratorImpl(database, logger, moodEngine);
-const settings = new SettingsManager();
+const settings = new SettingsManager(logger);
 const engine = new BotEngine(client, responses, settings, logger);
 
 // Construct dependency container
