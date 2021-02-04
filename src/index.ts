@@ -14,6 +14,8 @@ import { HugBot } from './personality/hug-bot';
 import { MoodControl } from './personality/mood-control';
 import { SimpleInteractions } from './personality/simple-interactions';
 
+import * as nodeCleanup from 'node-cleanup';
+
 // Initialise foundation
 const logger = new LoggerImpl();
 const database = new SqliteWrapper(logger);
@@ -28,8 +30,7 @@ function destroyHandler(): void {
   database.disconnect();
 }
 
-process.on('beforeExit', destroyHandler);
-process.on('SIGINT', destroyHandler);
+nodeCleanup(destroyHandler);
 
 // Initialise bot core
 const client = new DiscordClient(logger);
