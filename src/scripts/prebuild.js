@@ -17,7 +17,7 @@ const outputFile = join(__dirname, '..', 'git-commit.ts');
 function writeGitInfo(data) {
   const json = JSON.stringify(data);
 
-  // Format to make eslint happy :D
+  // Format resulting file to make eslint happy :D
   const formatRegex = /"(\w+)":"([\w\d-]+)"/g;
   const formattedOutput = json.replace(formatRegex, "$1: '$2'");
   const outputData = `export const GIT_COMMIT = ${formattedOutput};`;
@@ -37,14 +37,23 @@ let gitInfo = {
 };
 
 // Get the details of HEAD using log
-const revParse = spawn('git', ['log', '-n', '1', '--pretty=%h|%as|%D']);
+const revSplitToken = '|';
+const format = `--pretty=%h${revSplitToken}%ai${revSplitToken}%D`;
+const revParse = spawn('git', ['log', '-n', '1', format]);
 revParse.stdout.on('data', (data) => {
   const rawOutput = `${data}`.trim();
-  const parts = rawOutput.split('|', 3);
+  const parts = rawOutput.split(revSplitToken, 3);
   gitInfo.commit = parts[0];
   gitInfo.date = parts[1];
-  const refs = parts[2] || 'unknown';
-  gitInfo.refs = refs.replace('HEAD -> ', ''); // HEAD is a given
+  const rawRefs = parts[2] || 'unknown';
+
+  // Remove origin branches and HEAD pointer
+  const refSplitToken = ', ';
+  const refs = rawRefs
+    .replace('HEAD -> ', '')
+    .split(refSplitToken)
+    .filter((bit) => !bit.startsWith('origin/'))
+  gitInfo.refs = refs.join(refSplitToken);
 });
 
 revParse.stderr.on('data', () => {
