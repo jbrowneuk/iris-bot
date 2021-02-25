@@ -52,10 +52,10 @@ describe('Animal Image API', () => {
     });
 
     supportedApis.forEach((apiName) => {
-      it(`should call ${apiName} api when +${apiName} invoked`, (done) => {
-        const messageText = `+${apiName}`;
+      it(`should call ${apiName.url} api when +${apiName.name} invoked`, (done) => {
+        const messageText = `+${apiName.name}`;
         const mockSuccessResponse = {
-          json: () => Promise.resolve({ link: apiName }),
+          json: () => Promise.resolve({ link: apiName.url }),
           ok: true
         };
 
@@ -65,14 +65,14 @@ describe('Animal Image API', () => {
         message.setup((m) => m.content).returns(() => messageText);
 
         personality.onMessage(message.object).then((responseUrl) => {
-          expect(responseUrl).toBe(apiName);
+          expect(responseUrl).toBe(apiName.url);
           expect(fetchSpy).toHaveBeenCalled();
           done();
         });
       });
 
-      it(`should handle API error for ${apiName}`, (done) => {
-        const messageText = `+${apiName}`;
+      it(`should handle API error for ${apiName.name}`, (done) => {
+        const messageText = `+${apiName.name}`;
         fetchSpy.and.returnValue(Promise.resolve({ ok: false }));
 
         const message = Mock.ofType<Message>();
@@ -85,8 +85,8 @@ describe('Animal Image API', () => {
         });
       });
 
-      it(`should handle parsing error for ${apiName}`, (done) => {
-        const messageText = `+${apiName}`;
+      it(`should handle parsing error for ${apiName.name}`, (done) => {
+        const messageText = `+${apiName.name}`;
         fetchSpy.and.returnValue(Promise.reject());
 
         const message = Mock.ofType<Message>();

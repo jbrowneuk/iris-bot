@@ -4,10 +4,17 @@ import * as nodeFetch from 'node-fetch';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { getValueStartedWith } from '../utils';
 
-const imageApiBase = 'https://some-random-api.ml/img/';
-export const supportedApis = ['fox', 'panda', 'red_panda', 'koala', 'birb'];
+const randomApiBaseUrl = 'https://some-random-api.ml/img/';
+const imageApiBaseUrl = 'https://jbrowne.io/api/image/?query=';
+export const supportedApis = [
+  { name: 'fox', url: `${randomApiBaseUrl}fox` },
+  { name: 'panda', url: `${randomApiBaseUrl}panda` },
+  { name: 'red panda', url: `${randomApiBaseUrl}red_panda` },
+  { name: 'koala', url: `${randomApiBaseUrl}koala` },
+  { name: 'bird', url: `${randomApiBaseUrl}birb` },
+  { name: 'hyena', url: `${imageApiBaseUrl}hyena` }
+];
 
 export class FoxBot implements Personality {
   constructor(private dependencies: DependencyContainer) {}
@@ -25,13 +32,15 @@ export class FoxBot implements Personality {
     }
 
     const apiReq = message.content.substring(1).trim();
-    const apiEndpoint = getValueStartedWith(apiReq, supportedApis);
+    const apiEndpoint = supportedApis.find((api) =>
+      api.name.startsWith(apiReq)
+    );
     if (!apiEndpoint) {
       return Promise.resolve(null);
     }
 
     return nodeFetch
-      .default(`${imageApiBase}${apiEndpoint}`)
+      .default(apiEndpoint.url)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Unable to fetch API');
