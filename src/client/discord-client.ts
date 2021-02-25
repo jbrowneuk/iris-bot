@@ -80,12 +80,19 @@ export class DiscordClient extends EventEmitter implements Client {
       return;
     }
 
-    if (typeof message === 'string' && message.length === 0) {
-      return;
-    }
+    if (typeof message === 'string') {
+      if (message.length === 0) {
+        return;
+      }
 
-    if (typeof message === 'string' && this.lastMessage.author) {
-      message = message.replace(/\{£user\}/g, this.lastMessage.author.username);
+      if (this.lastMessage.author) {
+        message = message.replace(
+          /\{£user\}/g,
+          this.lastMessage.author.username
+        );
+      }
+
+      message = message.replace(/\{£me\}/g, this.client.user.username);
     }
 
     this.lastMessage.channel.send(message);
