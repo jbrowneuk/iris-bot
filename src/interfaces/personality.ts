@@ -29,4 +29,12 @@ export interface Personality {
    * @returns (Promise<MessageType>) a promise containing the text or rich embed
    */
   onMessage(message: Message): Promise<MessageType>;
+
+  /**
+   * If this optional method is implemented, it will be called when a user asks
+   * for help with this specific instance
+   *
+   * @param message the raw message object from the server
+   */
+  onHelp?(message: Message): Promise<MessageType>;
 }
