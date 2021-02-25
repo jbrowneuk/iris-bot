@@ -6,7 +6,8 @@ import { Client } from '../interfaces/client';
 import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
-import { BotEngine } from './bot-engine';
+import { MessageType } from '../types';
+import { BotEngine, helpCommand } from './bot-engine';
 import { HandledResponseError } from './handled-response-error';
 
 const MOCK_USERNAME = 'bot';
@@ -16,9 +17,21 @@ describe('Bot engine', () => {
   let client: IMock<Client>;
   let responseGenerator: IMock<ResponseGenerator>;
   let settings: IMock<Settings>;
+  let mockUserInfo: IMock<discord.User>;
+
+  let engine: BotEngine;
+  let untypedEngine: any;
 
   beforeEach(() => {
+    mockUserInfo = Mock.ofType<discord.User>();
+    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
+
     client = Mock.ofType<Client>();
+    client
+      .setup((c) => c.getUserInformation())
+      .returns(() => mockUserInfo.object);
+
     responseGenerator = Mock.ofType<ResponseGenerator>();
     responseGenerator
       .setup((m) => m.generateResponse(It.isAnyString()))
@@ -27,26 +40,22 @@ describe('Bot engine', () => {
     settings
       .setup((s) => s.getSettings())
       .returns(() => ({ token: 'bot-token' }));
-  });
 
-  it('should construct', () => {
-    const engine = new BotEngine(
+    engine = new BotEngine(
       client.object,
       responseGenerator.object,
       settings.object,
       console
     );
+    untypedEngine = engine;
+  });
+
+  it('should construct', () => {
     expect(engine).toBeTruthy();
   });
 
   it('should connect on run', () => {
     client.setup((m) => m.connect(It.isAnyString()));
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
 
     engine.run();
 
@@ -55,12 +64,6 @@ describe('Bot engine', () => {
 
   it('should initialise event listeners on run', () => {
     client.setup((m) => m.on(It.isAnyString(), It.isAny()));
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
 
     engine.run();
 
@@ -76,13 +79,6 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onConnected');
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
@@ -103,13 +99,6 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
     spyOn(untypedEngine, 'onMessage');
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
@@ -130,13 +119,6 @@ describe('Bot engine', () => {
   });
 
   it('should add personality construct', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
     const mockCore = Mock.ofType<Personality>();
 
     expect(untypedEngine.personalityConstructs.length).toBe(0);
@@ -157,13 +139,6 @@ describe('Bot engine', () => {
       onMessage: () => Promise.resolve(null)
     };
     const initSpy = spyOn(coreWithInit, 'initialise');
-
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
 
     engine.addPersonality(coreNoInit);
     engine.addPersonality(coreWithInit);
@@ -186,13 +161,6 @@ describe('Bot engine', () => {
     };
     const destroySpy = spyOn(coreWithDestroy, 'destroy');
 
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-
     engine.addPersonality(coreNoInit);
     engine.addPersonality(coreWithDestroy);
     engine.destroy();
@@ -203,27 +171,12 @@ describe('Bot engine', () => {
   });
 
   it('should disconnect on destroy', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-
     engine.destroy();
 
     client.verify((c) => c.disconnect(), Times.once());
   });
 
   it('should handle ambient messages when message received', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
-
     spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue(null);
     spyOn(untypedEngine, 'handleAmbientMessage');
 
@@ -233,14 +186,6 @@ describe('Bot engine', () => {
   });
 
   it('should handle addressed messages when message received', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
-
     spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue('test');
     spyOn(untypedEngine, 'handleAddressedMessage');
 
@@ -255,13 +200,6 @@ describe('Bot engine', () => {
       Promise.resolve(mockMessage),
       Promise.resolve(null)
     ];
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
 
     untypedEngine
       .dequeuePromises(fakeMessageFns)
@@ -284,13 +222,6 @@ describe('Bot engine', () => {
       Promise.reject(failureMessage),
       Promise.resolve(null)
     ];
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
 
     untypedEngine
       .dequeuePromises(fakeMessageFns)
@@ -305,13 +236,6 @@ describe('Bot engine', () => {
   it('should queue messages from personality cores', () => {
     let queuedPromises = [];
     const mockMessage = { content: 'lol hello' };
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
       queuedPromises = arg;
       return Promise.resolve(null);
@@ -329,14 +253,6 @@ describe('Bot engine', () => {
   });
 
   it('should detect when being addressed', () => {
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
-
     interface InputOutputPair {
       input: string;
       expectedOutput: string;
@@ -357,10 +273,6 @@ describe('Bot engine', () => {
       { input: `@${MOCK_USERNAME} 12345`, expectedOutput: '12345' }
     ];
 
-    const mockUserInfo = Mock.ofType<discord.User>();
-    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
-    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
-
     messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
       client
         .setup((m) => m.getUserInformation())
@@ -376,16 +288,6 @@ describe('Bot engine', () => {
 
   it('should detect if addressed and username overriden in guild', () => {
     const overridenUsername = 'totally_not_a_bot';
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
-    const mockUserInfo = Mock.ofType<discord.User>();
-    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
-    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
 
     client
       .setup((m) => m.getUserInformation())
@@ -403,13 +305,6 @@ describe('Bot engine', () => {
     let queuedPromises = [];
     const messageText = 'lol hello';
     const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
-    const engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
-    const untypedEngine = engine as any;
     spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
       queuedPromises = arg;
       return Promise.resolve(null);
@@ -424,5 +319,105 @@ describe('Bot engine', () => {
 
     expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
     expect(queuedPromises.length).toBe(1);
+  });
+
+  describe('help functionality', () => {
+    const helpText = 'I’m helping';
+    const coreWithHelp: Personality = {
+      onAddressed: () => Promise.resolve(null),
+      onMessage: () => Promise.resolve(null),
+      onHelp: () => Promise.resolve(helpText)
+    };
+
+    let mockMessage: IMock<discord.Message>;
+    let messageQueue: MessageType[];
+
+    beforeEach(() => {
+      const mockGuild = Mock.ofType<discord.Guild>();
+      mockGuild
+        .setup((g) => g.members)
+        .returns(
+          () =>
+            ({
+              resolve: (): any => undefined
+            } as any)
+        );
+
+      mockMessage = Mock.ofType<discord.Message>();
+      mockMessage.setup((msg) => msg.guild).returns(() => mockGuild.object);
+
+      messageQueue = [];
+      client
+        .setup((c) => c.queueMessages(It.isAny()))
+        .callback((messages) => messageQueue.push(...messages));
+    });
+
+    it('should respond with help and plugin summary if no personality core supplied and core loaded', () => {
+      const messageText = `${MOCK_USERNAME} ${helpCommand}`;
+      engine.addPersonality(coreWithHelp);
+
+      mockMessage.setup((msg) => msg.content).returns(() => messageText);
+      untypedEngine.onMessage(mockMessage.object);
+
+      expect(messageQueue.length).toBe(2);
+
+      // Summary text
+      expect(typeof messageQueue[0]).toBe('string');
+      expect(messageQueue[0]).toContain(helpCommand);
+
+      // Embed
+      const embed = messageQueue[1] as discord.MessageEmbed;
+      expect(embed.fields.length).toBe(1);
+      expect(embed.fields[0].name).toBe('Help topics');
+    });
+
+    it('should respond with help and no topics if no personality core supplied and no cores loaded', () => {
+      const messageText = `${MOCK_USERNAME} ${helpCommand}`;
+
+      mockMessage.setup((msg) => msg.content).returns(() => messageText);
+      untypedEngine.onMessage(mockMessage.object);
+
+      expect(messageQueue.length).toBe(2);
+
+      // Summary text
+      expect(typeof messageQueue[0]).toBe('string');
+      expect(messageQueue[0]).toContain(helpCommand);
+
+      // Embed
+      const embed = messageQueue[1] as discord.MessageEmbed;
+      expect(embed.fields.length).toBe(1);
+      expect(embed.fields[0].name).toBe('Help topics');
+      expect(embed.fields[0].value).toBe('No topics');
+    });
+
+    it('should respond with plugin help if personality core supplied and loaded', (done) => {
+      const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
+
+      engine.addPersonality(coreWithHelp);
+
+      mockMessage.setup((msg) => msg.content).returns(() => messageText);
+      untypedEngine.onMessage(mockMessage.object);
+
+      setTimeout(() => {
+        expect(messageQueue.length).toBe(1);
+        expect(typeof messageQueue[0]).toBe('string');
+        expect(messageQueue[0]).toBe(helpText);
+        done();
+      });
+    });
+
+    it('should respond with generic text if personality core supplied but not loaded', (done) => {
+      const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
+
+      mockMessage.setup((msg) => msg.content).returns(() => messageText);
+      untypedEngine.onMessage(mockMessage.object);
+
+      setTimeout(() => {
+        expect(messageQueue.length).toBe(1);
+        expect(typeof messageQueue[0]).toBe('string');
+        expect(messageQueue[0]).toBe('No help for that!');
+        done();
+      });
+    });
   });
 });

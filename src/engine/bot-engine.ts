@@ -11,6 +11,8 @@ import { MessageType } from '../types';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { HandledResponseError } from './handled-response-error';
 
+export const helpCommand = '+help';
+
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
   private logMessages: boolean;
@@ -140,6 +142,11 @@ export class BotEngine implements Engine {
       this.logger.log('Message:', addressedMessage);
     }
 
+    if (addressedMessage.startsWith(helpCommand)) {
+      this.handleHelp(message, addressedMessage);
+      return;
+    }
+
     if (addressedMessage.length === 0) {
       this.responses
         .generateResponse('addressedNoCommand')
@@ -240,5 +247,41 @@ export class BotEngine implements Engine {
     }
 
     return botInfo.username;
+  }
+
+  private handleHelp(message: discord.Message, rawText: string): void {
+    message.react('🆗');
+    const safeRawText = rawText.trim();
+    if (safeRawText === helpCommand) {
+      const coresWithHelp = this.personalityConstructs.filter((core) => {
+        return typeof core.onHelp === 'function';
+      });
+
+      const coreNames = coresWithHelp.map((core) => `${core.constructor.name}`);
+
+      const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
+      const messageEmbed = new discord.MessageEmbed();
+      const topics = coreNames.length
+        ? '`' + coreNames.join('`\n`') + '`'
+        : 'No topics';
+      messageEmbed.addField('Help topics', topics);
+      return this.client.queueMessages([responseText, messageEmbed]);
+    }
+
+    const bits = safeRawText.split(' ');
+    const commandPosition = bits.indexOf(helpCommand) + 1;
+    const commandBits = bits.slice(commandPosition);
+    const helpingCore = this.personalityConstructs.find(
+      (core) =>
+        core.constructor.name.toUpperCase() === commandBits[0].toUpperCase()
+    );
+
+    if (!helpingCore) {
+      return this.client.queueMessages(['No help for that!']);
+    }
+
+    helpingCore.onHelp(message).then((response) => {
+      this.client.queueMessages([response]);
+    });
   }
 }
