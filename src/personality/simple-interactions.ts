@@ -5,6 +5,10 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith } from '../utils';
 
+export const helpText = `The Simple Interactions plugin provides responses for flipping coins and high fives.
+Using \`{£me} high five\` or \`{£me} ^5\` will give you a virtual high five.
+Using \`{£me} flip a coin\` will flip a virtual coin.`;
+
 export class SimpleInteractions implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
@@ -32,6 +36,10 @@ export class SimpleInteractions implements Personality {
     }
 
     return Promise.resolve(null);
+  }
+
+  onHelp(): Promise<string> {
+    return Promise.resolve(helpText);
   }
 
   /**
