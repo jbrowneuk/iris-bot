@@ -5,6 +5,9 @@ import { Personality } from '../interfaces/personality';
 
 const maximumRolls = 25;
 
+export const helpText = `This plugin helps you roll virtual dice. Ask me to roll a die in the format \`<number of die>d<number of sides>\`.
+You can combine die rolls of different types by separating them with a space; for example, \`{£me} roll 4d6 5d20\``;
+
 /**
  * Dice rolling feature
  */
@@ -25,8 +28,12 @@ export class DieRoll implements Personality {
     return Promise.resolve(null);
   }
 
-  public onMessage(message: Message): Promise<string> {
+  public onMessage(): Promise<string> {
     return Promise.resolve(null);
+  }
+
+  public onHelp(): Promise<string> {
+    return Promise.resolve(helpText);
   }
 
   /**

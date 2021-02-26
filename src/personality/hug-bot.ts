@@ -3,6 +3,20 @@ import * as discord from 'discord.js';
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { Personality } from '../interfaces/personality';
 
+const activities = [
+  { request: 'hug', response: 'hug' },
+  { request: 'cake', response: '🎂' },
+  { request: 'pizza', response: '🍕' },
+  { request: 'burger', response: '🍔' },
+  { request: 'beer', response: '🍺' },
+  { request: 'cookie', response: '🍪' },
+  { request: 'salad', response: '🥗' },
+  { request: 'stiff drink', response: '🥃' }
+];
+
+export const helpText = `This plugin lets you send things to people! Ask me to \`give a *item* to @name\` or use \`${COMMAND_PREFIX}*item* @name\`.
+Items available: \`${activities.map((i) => i.request).join('`, `')}\`.`;
+
 export class HugBot implements Personality {
   public onAddressed(
     message: discord.Message,
@@ -13,6 +27,10 @@ export class HugBot implements Personality {
 
   public onMessage(message: discord.Message): Promise<string> {
     return this.commandWrapper(message, message.content, COMMAND_PREFIX, '');
+  }
+
+  public onHelp(): Promise<string> {
+    return Promise.resolve(helpText);
   }
 
   private commandWrapper(
@@ -31,20 +49,16 @@ export class HugBot implements Personality {
         sentMessage = messageText;
       };
 
-      send(this.response(message, text, `${prefix}hug${suffix}`, 'hug'));
-      send(this.response(message, text, `${prefix}cake${suffix}`, '🎂'));
-      send(this.response(message, text, `${prefix}pizza${suffix}`, '🍕'));
-      send(this.response(message, text, `${prefix}burger${suffix}`, '🍔'));
-      send(this.response(message, text, `${prefix}beer${suffix}`, '🍺'));
-      send(this.response(message, text, `${prefix}cookie${suffix}`, '🍪'));
-      send(
-        this.response(
-          message,
-          text,
-          `${prefix}something healthy${suffix}`,
-          '🥗'
-        )
-      );
+      for (const activity of activities) {
+        send(
+          this.response(
+            message,
+            text,
+            `${prefix}${activity.request}${suffix}`,
+            activity.response
+          )
+        );
+      }
 
       resolve(sentMessage);
     });
