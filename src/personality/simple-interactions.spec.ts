@@ -4,7 +4,7 @@ import { IMock, It, Mock, Times } from 'typemoq';
 import { GIT_COMMIT } from '../git-commit';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import { SimpleInteractions } from './simple-interactions';
+import { helpText, SimpleInteractions } from './simple-interactions';
 
 describe('Simple interactions', () => {
   let mockDeps: DependencyContainer;
@@ -133,6 +133,15 @@ describe('Simple interactions', () => {
       personality.onMessage(message.object).then((response) => {
         expect(response).toContain(GIT_COMMIT.commit);
         expect(response).toContain(GIT_COMMIT.refs);
+        done();
+      });
+    });
+  });
+
+  describe('Help text', () => {
+    it('should respond with help text', (done) => {
+      personality.onHelp().then((response) => {
+        expect(response).toEqual(helpText);
         done();
       });
     });
