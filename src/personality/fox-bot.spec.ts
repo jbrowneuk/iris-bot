@@ -5,7 +5,7 @@ import { IMock, It, Mock } from 'typemoq';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import { FoxBot, supportedApis } from './fox-bot';
+import { FoxBot, helpText, supportedApis } from './fox-bot';
 
 describe('Animal Image API', () => {
   let mockLogger: IMock<Logger>;
@@ -34,10 +34,7 @@ describe('Animal Image API', () => {
 
   describe('onAddressed', () => {
     it('should resolve to null', (done) => {
-      const message = Mock.ofType<Message>();
-      message.setup((m) => m.content).returns(() => 'anything');
-
-      personality.onAddressed(message.object, 'anything').then((value) => {
+      personality.onAddressed().then((value) => {
         expect(value).toBeNull();
         done();
       });
@@ -97,6 +94,15 @@ describe('Animal Image API', () => {
           expect(fetchSpy).toHaveBeenCalled();
           done();
         });
+      });
+    });
+  });
+
+  describe('Help text', () => {
+    it('should respond with help text', (done) => {
+      personality.onHelp().then((response) => {
+        expect(response).toEqual(helpText);
+        done();
       });
     });
   });

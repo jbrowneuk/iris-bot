@@ -2,7 +2,7 @@ import { Message, User } from 'discord.js';
 import { IMock, Mock } from 'typemoq';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
-import { HugBot } from './hug-bot';
+import { helpText, HugBot } from './hug-bot';
 
 describe('Hugbot', () => {
   const authorId = 'AUTHID';
@@ -93,5 +93,15 @@ describe('Hugbot', () => {
         );
         done();
       });
+  });
+
+  describe('Help text', () => {
+    it('should respond with help text', (done) => {
+      const core = new HugBot();
+      core.onHelp().then((response) => {
+        expect(response).toEqual(helpText);
+        done();
+      });
+    });
   });
 });

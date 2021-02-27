@@ -3,7 +3,7 @@ import { IMock, It, Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import { DieRoll } from './die-roll';
+import { DieRoll, helpText } from './die-roll';
 
 describe('Die Roll', () => {
   let mockResponses: IMock<ResponseGenerator>;
@@ -39,11 +39,9 @@ describe('Die Roll', () => {
   });
 
   it('should not handle a non-command', (done) => {
-    const message = Mock.ofType<Message>();
-    message.setup((m) => m.content).returns(() => 'anything');
     const core = new DieRoll(mockDependencies);
 
-    core.onMessage(message.object).then((result: string) => {
+    core.onMessage().then((result: string) => {
       expect(result).toBeNull();
       done();
     });
@@ -180,6 +178,16 @@ describe('Die Roll', () => {
       );
       expect(result).toContain('(total: 100, average: 20)');
       done();
+    });
+  });
+
+  describe('Help text', () => {
+    it('should respond with help text', (done) => {
+      const core = new DieRoll(mockDependencies);
+      core.onHelp().then((response) => {
+        expect(response).toEqual(helpText);
+        done();
+      });
     });
   });
 });

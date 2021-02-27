@@ -10,19 +10,21 @@ const imageApiBaseUrl = 'https://jbrowne.io/api/image/?query=';
 export const supportedApis = [
   { name: 'fox', url: `${randomApiBaseUrl}fox` },
   { name: 'panda', url: `${randomApiBaseUrl}panda` },
-  { name: 'red panda', url: `${randomApiBaseUrl}red_panda` },
+  { name: 'redpanda', url: `${randomApiBaseUrl}red_panda` },
   { name: 'koala', url: `${randomApiBaseUrl}koala` },
   { name: 'bird', url: `${randomApiBaseUrl}birb` },
   { name: 'hyena', url: `${imageApiBaseUrl}hyena` }
 ];
 
+export const helpText = `This plugin pulls random animal pictures from the internet.
+Animals you can search for are \`+${supportedApis
+  .map((i) => i.name)
+  .join('`, `+')}\`.`;
+
 export class FoxBot implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
-  onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<MessageType> {
+  onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);
   }
 
@@ -53,5 +55,9 @@ export class FoxBot implements Personality {
         this.dependencies.logger.error(e);
         return this.dependencies.responses.generateResponse('apiError');
       });
+  }
+
+  onHelp(): Promise<MessageType> {
+    return Promise.resolve(helpText);
   }
 }
