@@ -29,6 +29,7 @@ const embedSuccessColor = 0x0080ff;
 
 // Commands
 export const statusCommand = '+MCSTATUS';
+export const setCommand = '+MCSET';
 
 export class McServer implements Personality {
   protected servers: Map<string, ServerInformation>;
@@ -69,6 +70,34 @@ export class McServer implements Personality {
         });
     }
 
+    if (messageText.startsWith(setCommand)) {
+      const bits = messageText.split(' ');
+      if (bits.length === 1) {
+        embed.setColor(embedErrorColor);
+        embed.setDescription('Usage: `+mcset my.server.address`');
+        embed.addField(
+          'Description',
+          'Associates a Minecraft server with this Discord server'
+        );
+        return Promise.resolve(embed);
+      }
+
+      const serverUrl = bits[1].toLowerCase();
+      const details: ServerInformation = {
+        url: serverUrl,
+        channelId: null,
+        lastKnownOnline: false
+      };
+      this.servers.set(discordServerId, details);
+      const name = message.guild.name;
+      embed.setColor(embedSuccessColor);
+      embed.setDescription('Saved the server to this Discord.');
+      embed.addField('Settings', `${name} 🔗 ${serverUrl}`);
+
+      // TODO: need to save here if we want to persist
+      return Promise.resolve(embed);
+    }
+
     return Promise.resolve(null);
   }
 
@@ -81,7 +110,7 @@ export class McServer implements Personality {
       .status(url)
       .then((response: ServerResponse) => {
         // Handle Aternos servers
-        if (response.version.match(/\d+\.\d+\.\d+/g) === null) {
+        if (response && response.version.match(/\d+\.\d+\.\d+/g) === null) {
           return null;
         }
 
