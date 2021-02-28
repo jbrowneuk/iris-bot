@@ -1,5 +1,6 @@
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
 
+import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
@@ -28,6 +29,7 @@ const embedErrorColor = 0xff8000;
 const embedSuccessColor = 0x0080ff;
 export const noAssociationCopy =
   'No Minecraft server associated with this Discord';
+const updateMinutes = 5;
 
 // Commands
 export const statusCommand = '+MCSTATUS';
@@ -38,8 +40,23 @@ export class McServer implements Personality {
   protected servers: Map<string, ServerInformation>;
   protected timerInterval: number | NodeJS.Timer;
 
-  constructor() {
+  constructor(private dependencies: DependencyContainer) {
     this.servers = new Map<string, ServerInformation>();
+  }
+
+  public initialise(): void {
+    const updateInterval = updateMinutes * 60 * 1000;
+    this.timerInterval = setInterval(
+      this.fetchStatuses.bind(this),
+      updateInterval
+    );
+  }
+
+  public destroy(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval as number);
+      this.timerInterval = null;
+    }
   }
 
   public onAddressed(): Promise<MessageType> {
@@ -121,8 +138,37 @@ export class McServer implements Personality {
     return Promise.resolve(null);
   }
 
-  onHelp(): Promise<MessageType> {
+  public onHelp(): Promise<MessageType> {
     return Promise.resolve(null);
+  }
+
+  protected fetchStatuses(): void {
+    this.servers.forEach((serverDetails) => {
+      this.getServerStatus(serverDetails.url).then((status) => {
+        const isOnline = status && status !== null;
+        if (serverDetails.lastKnownOnline === isOnline) {
+          return;
+        }
+
+        serverDetails.lastKnownOnline = isOnline;
+
+        // Control posting to channel
+        if (!serverDetails.channelId) {
+          return;
+        }
+
+        const channel = this.dependencies.client.findChannelById(
+          serverDetails.channelId
+        ) as TextChannel;
+
+        if (!channel || channel === null) {
+          return;
+        }
+
+        const embed = this.generateServerEmbed(status);
+        channel.send(embed);
+      });
+    });
   }
 
   private getServerStatus(url: string): Promise<ServerResponse> {
@@ -138,7 +184,7 @@ export class McServer implements Personality {
       })
       .catch(
         (error: Error): ServerResponse => {
-          console.error('Server unreachable:', error);
+          this.dependencies.logger.error('Server unreachable:', error);
           return null;
         }
       );

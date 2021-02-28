@@ -1,13 +1,15 @@
 import { Guild, Message, MessageEmbed, TextChannel } from 'discord.js';
-import { IMock, Mock } from 'typemoq';
+import { IMock, It, Mock } from 'typemoq';
 
+import { Client } from '../interfaces/client';
+import { DependencyContainer } from '../interfaces/dependency-container';
+import { Logger } from '../interfaces/logger';
 import {
     announceCommand, McServer, noAssociationCopy, ServerInformation,
     ServerResponse, setCommand, statusCommand
 } from './mc-server';
 
 import util = require('minecraft-server-util');
-
 class TestableMcServer extends McServer {
   public setMockServer(discordId: string, info: ServerInformation): void {
     this.servers.set(discordId, info);
@@ -15,6 +17,14 @@ class TestableMcServer extends McServer {
 
   public getServers(): Map<string, ServerInformation> {
     return this.servers;
+  }
+
+  public invokeFetch(): void {
+    this.fetchStatuses();
+  }
+
+  public hasTimer(): boolean {
+    return this.timerInterval && this.timerInterval > 0;
   }
 }
 
@@ -32,8 +42,10 @@ const MOCK_RUNNING_STATUS: ServerResponse = {
 describe('Minecraft server utilities', () => {
   let mockGuild: IMock<Guild>;
   let mockChannel: IMock<TextChannel>;
+  let mockClient: IMock<Client>;
   let personality: TestableMcServer;
   let mockServerInfo: ServerInformation;
+  let mockDependencies: DependencyContainer;
 
   beforeEach(() => {
     mockGuild = Mock.ofType<Guild>();
@@ -43,13 +55,29 @@ describe('Minecraft server utilities', () => {
     mockChannel.setup((m) => m.id).returns(() => MOCK_CHANNEL_ID);
     mockChannel.setup((m) => m.name).returns(() => MOCK_CHANNEL_NAME);
 
+    mockClient = Mock.ofType<Client>();
+
     mockServerInfo = {
       url: 'localhost',
       channelId: null,
       lastKnownOnline: false
     };
 
-    personality = new TestableMcServer();
+    const mockLogger = Mock.ofType<Logger>();
+    mockDependencies = {
+      client: mockClient.object,
+      database: null,
+      engine: null,
+      logger: mockLogger.object,
+      responses: null,
+      settings: null
+    };
+
+    personality = new TestableMcServer(mockDependencies);
+  });
+
+  afterEach(() => {
+    personality.destroy();
   });
 
   describe(`${statusCommand} messages`, () => {
@@ -197,6 +225,89 @@ describe('Minecraft server utilities', () => {
         const storedServers = personality.getServers();
         const currentGuild = storedServers.get(MOCK_GUILD_ID);
         expect(currentGuild.channelId).toBe(MOCK_CHANNEL_ID);
+        done();
+      });
+    });
+  });
+
+  describe('Automatic status update', () => {
+    it('should set update timer on initialise', () => {
+      personality.initialise();
+      expect(personality.hasTimer()).toBe(true);
+    });
+
+    it('should fetch server status for known servers', (done) => {
+      const statusUpdateHandler = spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+      );
+
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(statusUpdateHandler).toHaveBeenCalledWith(mockServerInfo.url);
+        done();
+      });
+    });
+
+    it('should post status to channel if server comes online', (done) => {
+      let embed: MessageEmbed;
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+      );
+      mockClient
+        .setup((m) => m.findChannelById(It.isAny()))
+        .returns(() => mockChannel.object);
+      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+
+      mockServerInfo.channelId = MOCK_CHANNEL_ID;
+      mockServerInfo.lastKnownOnline = false;
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(embed).toBeTruthy();
+        expect(embed.description).toContain('Your server is online');
+        done();
+      });
+    });
+
+    it('should post status to channel if server goes offline', (done) => {
+      let embed: MessageEmbed;
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<any>(null));
+      mockClient
+        .setup((m) => m.findChannelById(It.isAny()))
+        .returns(() => mockChannel.object);
+      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+
+      mockServerInfo.channelId = MOCK_CHANNEL_ID;
+      mockServerInfo.lastKnownOnline = true;
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(embed).toBeTruthy();
+        expect(embed.description).toContain('Your server is offline');
+        done();
+      });
+    });
+
+    it('should post offline status to channel if server becomes unreachable', (done) => {
+      let embed: MessageEmbed;
+      spyOn(util, 'status').and.callFake(() => Promise.reject(null));
+      mockClient
+        .setup((m) => m.findChannelById(It.isAny()))
+        .returns(() => mockChannel.object);
+      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+
+      mockServerInfo.channelId = MOCK_CHANNEL_ID;
+      mockServerInfo.lastKnownOnline = true;
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(embed).toBeTruthy();
+        expect(embed.description).toContain('Your server is offline');
         done();
       });
     });
