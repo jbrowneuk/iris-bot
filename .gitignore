@@ -67,4 +67,5 @@ dist
 config.json
 blog-roll.test.json
 blog-roll.json
+mc-servers.json
 src/git-commit.ts
