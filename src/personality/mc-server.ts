@@ -1,4 +1,5 @@
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
+import * as fs from 'fs';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
@@ -30,6 +31,8 @@ const embedSuccessColor = 0x0080ff;
 export const noAssociationCopy =
   'No Minecraft server associated with this Discord';
 const updateMinutes = 5;
+const defaultSettingsFile = 'mc-servers.json';
+const settingsFileEnc = 'utf-8';
 
 // Commands
 export const statusCommand = '+MCSTATUS';
@@ -49,6 +52,12 @@ export class McServer implements Personality {
     this.timerInterval = setInterval(
       this.fetchStatuses.bind(this),
       updateInterval
+    );
+
+    fs.readFile(
+      defaultSettingsFile,
+      settingsFileEnc,
+      this.parseServers.bind(this)
     );
   }
 
@@ -112,7 +121,7 @@ export class McServer implements Personality {
       embed.setDescription('Saved the server to this Discord.');
       embed.addField('Settings', `${name} 🔗 ${serverUrl}`);
 
-      // TODO: need to save here if we want to persist
+      this.saveServers();
       return Promise.resolve(embed);
     }
 
@@ -132,6 +141,7 @@ export class McServer implements Personality {
         `Announcing ${serverInfo.url} updates to ${textChannel.name}`
       );
 
+      this.saveServers();
       return Promise.resolve(embed);
     }
 
@@ -204,5 +214,47 @@ export class McServer implements Personality {
     }
 
     return embed;
+  }
+
+  private parseServers(err: NodeJS.ErrnoException, data: string): void {
+    if (err || !data) {
+      let message = 'Unable to read server file';
+      if (err) {
+        message = err.message;
+      }
+
+      return this.dependencies.logger.error(message);
+    }
+
+    const parsed = JSON.parse(data);
+    const keys = Object.keys(parsed);
+    for (const key of keys) {
+      const serverData = parsed[key];
+      const restored: ServerInformation = {
+        url: serverData.url,
+        channelId: serverData.channelId,
+        lastKnownOnline: false
+      };
+
+      this.servers.set(key, restored);
+    }
+  }
+
+  private saveServers(): void {
+    const settingsObj: { [key: string]: ServerInformation } = {};
+    this.servers.forEach((value, key) => {
+      settingsObj[key] = value;
+    });
+
+    fs.writeFile(
+      defaultSettingsFile,
+      JSON.stringify(settingsObj),
+      settingsFileEnc,
+      (err) => {
+        if (err) {
+          return this.dependencies.logger.error(err);
+        }
+      }
+    );
   }
 }

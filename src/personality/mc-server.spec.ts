@@ -1,4 +1,5 @@
 import { Guild, Message, MessageEmbed, TextChannel } from 'discord.js';
+import * as fs from 'fs';
 import { IMock, It, Mock } from 'typemoq';
 
 import { Client } from '../interfaces/client';
@@ -159,6 +160,11 @@ describe('Minecraft server utilities', () => {
   });
 
   describe(`${setCommand} messages`, () => {
+    beforeEach(() => {
+      // Make sure this isn't persisted to file
+      spyOn(fs, 'writeFile');
+    });
+
     it('should return embed with usage instructions if no param provided', (done) => {
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup((m) => m.content).returns(() => setCommand);
@@ -195,6 +201,11 @@ describe('Minecraft server utilities', () => {
   });
 
   describe(`${announceCommand} messages`, () => {
+    beforeEach(() => {
+      // Make sure this isn't persisted to file
+      spyOn(fs, 'writeFile');
+    });
+
     it('should return embed with error if no server associated', (done) => {
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup((m) => m.content).returns(() => announceCommand);
@@ -232,6 +243,8 @@ describe('Minecraft server utilities', () => {
 
   describe('Automatic status update', () => {
     it('should set update timer on initialise', () => {
+      spyOn(fs, 'readFile'); // block settings loading
+
       personality.initialise();
       expect(personality.hasTimer()).toBe(true);
     });
@@ -308,6 +321,63 @@ describe('Minecraft server utilities', () => {
       setTimeout(() => {
         expect(embed).toBeTruthy();
         expect(embed.description).toContain('Your server is offline');
+        done();
+      });
+    });
+  });
+
+  describe('persisting settings', () => {
+    let writeSpy: jasmine.Spy;
+
+    beforeEach(() => {
+      // Make sure this isn't persisted to file
+      writeSpy = spyOn(fs, 'writeFile');
+    });
+
+    it('should load settings on initialise', () => {
+      const fakeReadFile = (
+        path: string,
+        enc: string,
+        cb: (err: any, data: string) => void
+      ) => {
+        expect(path).toBeTruthy();
+        expect(enc).toBeTruthy();
+        cb(null, `{ "${MOCK_GUILD_ID}": { "url": "no", "channelId": null } }`);
+      };
+
+      spyOn(fs, 'readFile').and.callFake(fakeReadFile as any);
+
+      personality.initialise();
+
+      const servers = personality.getServers();
+      expect(servers.get(MOCK_GUILD_ID)).toBeTruthy();
+    });
+
+    it(`should persist settings on ${setCommand}`, (done) => {
+      const mockUrl = 'my-url.is-not-a.real-url';
+
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage
+        .setup((m) => m.content)
+        .returns(() => `${setCommand} ${mockUrl}`);
+      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+
+      personality.onMessage(mockMessage.object).then(() => {
+        expect(writeSpy).toHaveBeenCalled();
+        done();
+      });
+    });
+
+    it(`should persist settings on ${announceCommand}`, (done) => {
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage.setup((m) => m.content).returns(() => announceCommand);
+      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup((m) => m.channel).returns(() => mockChannel.object);
+
+      personality.onMessage(mockMessage.object).then(() => {
+        expect(writeSpy).toHaveBeenCalled();
         done();
       });
     });
