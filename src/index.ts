@@ -1,3 +1,5 @@
+import * as nodeCleanup from 'node-cleanup';
+
 import { DiscordClient } from './client/discord-client';
 import { BotEngine } from './engine/bot-engine';
 import { LoggerImpl } from './engine/logger-impl';
@@ -12,10 +14,9 @@ import { CallResponse } from './personality/call-response';
 import { DieRoll } from './personality/die-roll';
 import { FoxBot } from './personality/fox-bot';
 import { HugBot } from './personality/hug-bot';
+import { McServer } from './personality/mc-server';
 import { MoodControl } from './personality/mood-control';
 import { SimpleInteractions } from './personality/simple-interactions';
-
-import * as nodeCleanup from 'node-cleanup';
 
 // Initialise foundation
 const logger = new LoggerImpl();
@@ -59,6 +60,7 @@ engine.addPersonality(new MoodControl(dependencies, moodEngine));
 engine.addPersonality(new SimpleInteractions(dependencies));
 engine.addPersonality(new CallResponse(dependencies));
 engine.addPersonality(new FoxBot(dependencies));
+engine.addPersonality(new McServer(dependencies));
 
 // Start bot
 engine.initialise();
