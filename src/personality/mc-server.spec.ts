@@ -1,7 +1,10 @@
-import { Guild, Message, MessageEmbed } from 'discord.js';
+import { Guild, Message, MessageEmbed, TextChannel } from 'discord.js';
 import { IMock, Mock } from 'typemoq';
 
-import { McServer, ServerInformation, ServerResponse, setCommand, statusCommand } from './mc-server';
+import {
+    announceCommand, McServer, noAssociationCopy, ServerInformation,
+    ServerResponse, setCommand, statusCommand
+} from './mc-server';
 
 import util = require('minecraft-server-util');
 
@@ -16,11 +19,8 @@ class TestableMcServer extends McServer {
 }
 
 const MOCK_GUILD_ID = 'mockguild';
-const MOCK_SERVER_INFO: ServerInformation = {
-  url: 'localhost',
-  channelId: null,
-  lastKnownOnline: false
-};
+const MOCK_CHANNEL_ID = 'mockchannel';
+const MOCK_CHANNEL_NAME = 'mock channel name';
 
 const MOCK_RUNNING_STATUS: ServerResponse = {
   version: '1.16.2',
@@ -31,11 +31,23 @@ const MOCK_RUNNING_STATUS: ServerResponse = {
 
 describe('Minecraft server utilities', () => {
   let mockGuild: IMock<Guild>;
+  let mockChannel: IMock<TextChannel>;
   let personality: TestableMcServer;
+  let mockServerInfo: ServerInformation;
 
   beforeEach(() => {
     mockGuild = Mock.ofType<Guild>();
     mockGuild.setup((m) => m.id).returns(() => MOCK_GUILD_ID);
+
+    mockChannel = Mock.ofType<TextChannel>();
+    mockChannel.setup((m) => m.id).returns(() => MOCK_CHANNEL_ID);
+    mockChannel.setup((m) => m.name).returns(() => MOCK_CHANNEL_NAME);
+
+    mockServerInfo = {
+      url: 'localhost',
+      channelId: null,
+      lastKnownOnline: false
+    };
 
     personality = new TestableMcServer();
   });
@@ -54,13 +66,13 @@ describe('Minecraft server utilities', () => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('No Minecraft server associated');
+        expect(embed.description).toBe(noAssociationCopy);
         done();
       });
     });
 
     it('should return embed with server info if server associated', (done) => {
-      personality.setMockServer(MOCK_GUILD_ID, MOCK_SERVER_INFO);
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup((m) => m.content).returns(() => statusCommand);
@@ -80,7 +92,7 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should reflect offline status if server offline', (done) => {
-      personality.setMockServer(MOCK_GUILD_ID, MOCK_SERVER_INFO);
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup((m) => m.content).returns(() => statusCommand);
@@ -98,7 +110,7 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should reflect offline status if server offline', (done) => {
-      personality.setMockServer(MOCK_GUILD_ID, MOCK_SERVER_INFO);
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup((m) => m.content).returns(() => statusCommand);
@@ -149,6 +161,42 @@ describe('Minecraft server utilities', () => {
         const servers = personality.getServers();
         expect(servers.has(MOCK_GUILD_ID)).toBeTrue();
         expect(servers.get(MOCK_GUILD_ID).url).toBe(mockUrl);
+        done();
+      });
+    });
+  });
+
+  describe(`${announceCommand} messages`, () => {
+    it('should return embed with error if no server associated', (done) => {
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage.setup((m) => m.content).returns(() => announceCommand);
+      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+
+      personality.onMessage(mockMessage.object).then((response) => {
+        expect(response).toBeTruthy();
+        const embed = response as MessageEmbed;
+        expect(embed.title).toBeTruthy();
+        expect(embed.description).toBe(noAssociationCopy);
+        done();
+      });
+    });
+
+    it('should store channel id for guild if server associated', (done) => {
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage.setup((m) => m.content).returns(() => announceCommand);
+      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup((m) => m.channel).returns(() => mockChannel.object);
+
+      personality.onMessage(mockMessage.object).then((response) => {
+        expect(response).toBeTruthy();
+        const embed = response as MessageEmbed;
+        expect(embed.description).toContain('Announcing');
+
+        const storedServers = personality.getServers();
+        const currentGuild = storedServers.get(MOCK_GUILD_ID);
+        expect(currentGuild.channelId).toBe(MOCK_CHANNEL_ID);
         done();
       });
     });

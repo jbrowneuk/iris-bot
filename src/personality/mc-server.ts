@@ -1,4 +1,4 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
@@ -26,10 +26,13 @@ export interface ServerResponse {
 const embedTitle = 'Server info';
 const embedErrorColor = 0xff8000;
 const embedSuccessColor = 0x0080ff;
+export const noAssociationCopy =
+  'No Minecraft server associated with this Discord';
 
 // Commands
 export const statusCommand = '+MCSTATUS';
 export const setCommand = '+MCSET';
+export const announceCommand = '+MCANNOUNCE';
 
 export class McServer implements Personality {
   protected servers: Map<string, ServerInformation>;
@@ -51,9 +54,7 @@ export class McServer implements Personality {
 
     if (messageText === statusCommand) {
       if (!this.servers.has(discordServerId)) {
-        embed.setDescription(
-          'No Minecraft server associated with this Discord'
-        );
+        embed.setDescription(noAssociationCopy);
         embed.setColor(embedErrorColor);
         return Promise.resolve(embed);
       }
@@ -95,6 +96,25 @@ export class McServer implements Personality {
       embed.addField('Settings', `${name} 🔗 ${serverUrl}`);
 
       // TODO: need to save here if we want to persist
+      return Promise.resolve(embed);
+    }
+
+    if (messageText === announceCommand) {
+      if (!this.servers.has(discordServerId)) {
+        embed.setDescription(noAssociationCopy);
+        embed.setColor(embedErrorColor);
+        return Promise.resolve(embed);
+      }
+
+      const serverInfo = this.servers.get(discordServerId);
+      const textChannel = message.channel as TextChannel;
+      serverInfo.channelId = textChannel.id;
+
+      embed.setColor(embedSuccessColor);
+      embed.setDescription(
+        `Announcing ${serverInfo.url} updates to ${textChannel.name}`
+      );
+
       return Promise.resolve(embed);
     }
 
