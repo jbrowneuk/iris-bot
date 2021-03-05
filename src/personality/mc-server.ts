@@ -5,7 +5,8 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
-import util = require('minecraft-server-util');
+// This has to be const util = require as it breaks the build if not
+const util = require('minecraft-server-util');
 
 export interface ServerInformation {
   url: string;
@@ -208,7 +209,8 @@ export class McServer implements Personality {
     embed.setDescription(`Your server is ${isOnline ? 'online' : 'offline'}`);
 
     if (isOnline) {
-      const players = status.samplePlayers.map((p) => p.name);
+      // Sample players is occasionally not populated
+      const players = (status.samplePlayers || []).map((p) => p.name);
       const playerCount = `${status.onlinePlayers}/${status.maxPlayers} players`;
       embed.addField('Status', `${playerCount}:\n${players.join('\n')}`);
     }
