@@ -5,12 +5,10 @@ import { IMock, It, Mock } from 'typemoq';
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import {
-    announceCommand, McServer, noAssociationCopy, ServerInformation,
-    ServerResponse, setCommand, statusCommand
-} from './mc-server';
+import { announceCommand, McServer, noAssociationCopy, ServerInformation, ServerResponse, setCommand, statusCommand } from './mc-server';
 
 import util = require('minecraft-server-util');
+
 class TestableMcServer extends McServer {
   public setMockServer(discordId: string, info: ServerInformation): void {
     this.servers.set(discordId, info);
