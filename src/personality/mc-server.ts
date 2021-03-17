@@ -120,7 +120,32 @@ export class McServer implements Personality {
   }
 
   protected fetchStatuses(): void {
-    this.servers.forEach(this.fetchStatus.bind(this));
+    this.servers.forEach((serverDetails) => {
+      const preCheckStatus = serverDetails.lastKnownOnline;
+
+      this.fetchStatus(serverDetails).then((response) => {
+        const postCheckStatus = serverDetails.lastKnownOnline;
+        if (preCheckStatus === postCheckStatus) {
+          return;
+        }
+
+        // Control posting to channel
+        if (!serverDetails.channelId) {
+          return;
+        }
+
+        const channel = this.dependencies.client.findChannelById(
+          serverDetails.channelId
+        ) as TextChannel;
+
+        if (!channel || channel === null) {
+          return;
+        }
+
+        const embed = this.generateServerEmbed(response);
+        channel.send(embed);
+      });
+    });
   }
 
   private handleStatusCommand(message: Message): Promise<MessageType> {
@@ -133,10 +158,10 @@ export class McServer implements Personality {
       return Promise.resolve(embed);
     }
 
-    const minecraftServerUrl = this.servers.get(message.guild.id).url;
-    return this.getServerStatus(minecraftServerUrl)
-      .then((response) => this.generateServerEmbed(response))
-      .catch(() => this.generateServerEmbed(null));
+    const minecraftServer = this.servers.get(message.guild.id);
+    return this.fetchStatus(minecraftServer).then(
+      this.generateServerEmbed.bind(this)
+    );
   }
 
   private handleSetCommand(message: Message): Promise<MessageType> {
@@ -193,30 +218,13 @@ export class McServer implements Personality {
     return Promise.resolve(embed);
   }
 
-  private fetchStatus(serverDetails: ServerInformation): void {
-    this.getServerStatus(serverDetails.url).then((status) => {
+  private fetchStatus(
+    serverDetails: ServerInformation
+  ): Promise<ServerResponse> {
+    return this.getServerStatus(serverDetails.url).then((status) => {
       const isOnline = status !== null;
-      if (serverDetails.lastKnownOnline === isOnline) {
-        return;
-      }
-
       serverDetails.lastKnownOnline = isOnline;
-
-      // Control posting to channel
-      if (!serverDetails.channelId) {
-        return;
-      }
-
-      const channel = this.dependencies.client.findChannelById(
-        serverDetails.channelId
-      ) as TextChannel;
-
-      if (!channel || channel === null) {
-        return;
-      }
-
-      const embed = this.generateServerEmbed(status);
-      channel.send(embed);
+      return status;
     });
   }
 

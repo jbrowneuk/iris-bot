@@ -324,6 +324,46 @@ describe('Minecraft server utilities', () => {
         done();
       });
     });
+
+    it('should not post status to channel if server is online and status does not change', (done) => {
+      let embed: MessageEmbed;
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+      );
+      mockClient
+        .setup((m) => m.findChannelById(It.isAny()))
+        .returns(() => mockChannel.object);
+      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+
+      mockServerInfo.channelId = MOCK_CHANNEL_ID;
+      mockServerInfo.lastKnownOnline = true;
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(embed).toBeFalsy();
+        done();
+      });
+    });
+
+    it('should not post status to channel if server is offline and status does not change', (done) => {
+      let embed: MessageEmbed;
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<any>(null));
+      mockClient
+        .setup((m) => m.findChannelById(It.isAny()))
+        .returns(() => mockChannel.object);
+      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+
+      mockServerInfo.channelId = MOCK_CHANNEL_ID;
+      mockServerInfo.lastKnownOnline = false;
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      personality.invokeFetch();
+      setTimeout(() => {
+        expect(embed).toBeFalsy();
+        done();
+      });
+    });
   });
 
   describe('persisting settings', () => {
