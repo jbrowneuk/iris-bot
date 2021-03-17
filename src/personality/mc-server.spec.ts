@@ -5,7 +5,9 @@ import { IMock, It, Mock } from 'typemoq';
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import { announceCommand, McServer, noAssociationCopy, ServerInformation, ServerResponse, setCommand, statusCommand } from './mc-server';
+import {
+    announceCommand, linkServerCopy, McServer, noAssociationCopy, ServerInformation, ServerResponse, setCommand, statusCommand
+} from './mc-server';
 
 import util = require('minecraft-server-util');
 
@@ -188,7 +190,7 @@ describe('Minecraft server utilities', () => {
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.description).toBe('Saved the server to this Discord.');
+        expect(embed.description).toBe(linkServerCopy);
 
         const servers = personality.getServers();
         expect(servers.has(MOCK_GUILD_ID)).toBeTrue();
@@ -333,6 +335,8 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should load settings on initialise', () => {
+      const mockUrl = 'mock-url';
+      const mockChannelId = 'mock-id';
       const fakeReadFile = (
         path: string,
         enc: string,
@@ -340,7 +344,10 @@ describe('Minecraft server utilities', () => {
       ) => {
         expect(path).toBeTruthy();
         expect(enc).toBeTruthy();
-        cb(null, `{ "${MOCK_GUILD_ID}": { "url": "no", "channelId": null } }`);
+        cb(
+          null,
+          `{ "${MOCK_GUILD_ID}": { "url": "${mockUrl}", "channelId": "${mockChannelId}" } }`
+        );
       };
 
       spyOn(fs, 'readFile').and.callFake(fakeReadFile as any);
@@ -348,7 +355,11 @@ describe('Minecraft server utilities', () => {
       personality.initialise();
 
       const servers = personality.getServers();
-      expect(servers.get(MOCK_GUILD_ID)).toBeTruthy();
+      const serverInfo = servers.get(MOCK_GUILD_ID);
+      expect(serverInfo).toBeTruthy();
+      expect(serverInfo.url).toBe(mockUrl);
+      expect(serverInfo.channelId).toBe(mockChannelId);
+      expect(serverInfo.lastKnownOnline).toBe(false);
     });
 
     it(`should persist settings on ${setCommand}`, (done) => {
@@ -391,9 +402,12 @@ describe('Minecraft server utilities', () => {
   });
 
   describe('Help messages', () => {
-    it('should resolve to null', (done) => {
+    it('should resolve to embed', (done) => {
       personality.onHelp().then((response) => {
-        expect(response).toBeNull();
+        expect(response).not.toBeNull();
+        const embed = response as MessageEmbed;
+        expect(embed.fields.length).toBe(3);
+
         done();
       });
     });
