@@ -1,3 +1,9 @@
+Release 0.1.5 changes:
+a28148d7de315e2b9dc4fd02f01bd24b9a48f8ee Improve robustness of Minecraft Server status
+ca1bc119432bf0e4f0c2ad66656b718debb4dd51 Refactor fetch status code
+f9367905be3b25a6f84880e93668bd9a72b78bd0 Add script to generate changelog
+05d71910d4868c10b1fb3842d7fe0505bf011314 Prepare release 0.1.5
+
 Release 0.1.4 changes:
 ab03b1da16dcf7b93e6a59fd0cc9acfe92093ade Fix problematic build due to import issue
 16dcd125b44b9505fde007ea267ea64e1a4b5df4 Bump sqlite3 dependency
