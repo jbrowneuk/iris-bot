@@ -451,5 +451,19 @@ describe('Minecraft server utilities', () => {
         done();
       });
     });
+
+    it('should only contain <url> for set command help', (done) => {
+      personality.onHelp().then((response) => {
+        expect(response).not.toBeNull();
+        const embed = response as MessageEmbed;
+
+        embed.fields.forEach((field) => {
+          const isSetCommand = field.name.includes(setCommand);
+          expect(field.name.includes('<url>')).toBe(isSetCommand);
+        });
+
+        done();
+      });
+    });
   });
 });

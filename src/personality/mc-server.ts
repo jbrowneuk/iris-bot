@@ -106,12 +106,12 @@ export class McServer implements Personality {
       false
     );
     embed.addField(
-      `Command: ${statusCommand} <url>`,
+      `Command: ${statusCommand}`,
       'Checks the status of the associated Minecraft server.',
       false
     );
     embed.addField(
-      `Command: ${announceCommand} <url>`,
+      `Command: ${announceCommand}`,
       'Makes the bot announce status changes of the associated Minecraft server to this channel.',
       false
     );
