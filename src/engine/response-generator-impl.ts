@@ -1,6 +1,6 @@
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 import { Logger } from '../interfaces/logger';
-import { MoodEngine } from '../interfaces/mood-engine';
+import { Mood, MoodEngine } from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { randomInteger } from '../utils';
 
@@ -39,6 +39,19 @@ export class ResponseGeneratorImpl implements ResponseGenerator {
         }
       ]
     };
+
+    if (mood !== Mood.Neutral) {
+      filter.where.push({
+        field: 'type',
+        value: phrase,
+        logic: QueryLogic.Or
+      });
+      filter.where.push({
+        field: 'mood',
+        value: Mood.Neutral,
+        logic: QueryLogic.And
+      });
+    }
 
     const responses = await this.database.getRecordsFromCollection(
       collectionName,
