@@ -228,12 +228,13 @@ export class McServer implements Personality {
     });
   }
 
-  private getServerStatus(url: string): Promise<ServerResponse> {
+  protected getServerStatus(url: string): Promise<ServerResponse> {
     return util
       .status(url)
       .then((response: ServerResponse) => {
-        // Handle Aternos servers
-        if (response && response.version.match(/\d+\.\d+\.\d+/g) === null) {
+        // Handle Aternos/Exaroton servers
+        const versionRegex = /\b\d+(\.\d+){1,2}\b/;
+        if (response && response.version.match(versionRegex) === null) {
           return null;
         }
 
@@ -252,7 +253,9 @@ export class McServer implements Personality {
     const embed = new MessageEmbed();
     embed.setTitle(embedTitle);
     embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
-    embed.setDescription(`Your server is ${isOnline ? 'online' : 'offline'}`);
+    const statusText = `Status: ${isOnline ? 'online' : 'offline'}`;
+    const versionText = status && status.version ? `\nRunning: ${status.version}` : '';
+    embed.setDescription(`${statusText}${versionText}`);
 
     if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
       // Sample players is occasionally not populated
