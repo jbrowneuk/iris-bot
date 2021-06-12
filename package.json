@@ -29,7 +29,7 @@
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
     "discord.js": "12.5.1",
-    "minecraft-server-util": "^3.4.2",
+    "minecraft-server-util": "^3.5.0",
     "node-cleanup": "^2.1.2",
     "node-fetch": "2.6.1",
     "sqlite3": "^5.0.2"
