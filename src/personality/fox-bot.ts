@@ -6,14 +6,16 @@ import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
 const randomApiBaseUrl = 'https://some-random-api.ml/img/';
-const imageApiBaseUrl = 'https://jbrowne.io/api/image/?query=';
+const siteBaseUrl = 'https://jbrowne.io/api/image/';
+const imageApiBaseUrl = `${siteBaseUrl}?query=`;
 export const supportedApis = [
   { name: 'fox', url: `${randomApiBaseUrl}fox` },
   { name: 'panda', url: `${randomApiBaseUrl}panda` },
   { name: 'redpanda', url: `${randomApiBaseUrl}red_panda` },
   { name: 'koala', url: `${randomApiBaseUrl}koala` },
   { name: 'bird', url: `${randomApiBaseUrl}birb` },
-  { name: 'hyena', url: `${imageApiBaseUrl}hyena` }
+  { name: 'hyena', url: `${imageApiBaseUrl}hyena` },
+  { name: 'cat', url: `${siteBaseUrl}catapi.php` }
 ];
 
 export const helpText = `This plugin pulls random animal pictures from the internet.
