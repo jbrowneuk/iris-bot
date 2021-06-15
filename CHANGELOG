@@ -1,3 +1,14 @@
+Release 0.1.7 changes:
+054e2cda02f1cccedefa77654e3c53cb9c6432fb Implement cat picture API route
+15b54a5796f4b767444075bda9aec1b615116143 Bump dependencies with security vulnerabilities
+6a8ab80dd99fdf4a7283320206dffa3e8e617212 Implement server status for initial release servers
+a2e75c5beb96c823a31dc6a1a87d15f817123c74 Parse release version to include in response text
+
+Release 0.1.6 changes:
+b05f8827b83ae4bec387e0e4402fc853357a048b Remove URL from help text
+d3d95157ab15c038e774962a1f9d10ee2da64277 Implement returning of neutral phrases if mood is not neutral
+3ca1ddbc003bc6d997b9ff4c40c3bbf21c4584cd Prepare release 0.1.6
+
 Release 0.1.5 changes:
 a28148d7de315e2b9dc4fd02f01bd24b9a48f8ee Improve robustness of Minecraft Server status
 ca1bc119432bf0e4f0c2ad66656b718debb4dd51 Refactor fetch status code
