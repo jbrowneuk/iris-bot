@@ -423,6 +423,30 @@ describe('Minecraft server utilities', () => {
         done();
       });
     });
+
+    it('should extract correct version if server is reporting three part version', (done) => {
+      const semVer = '1.16.2';
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion(semVer))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response.version).toBe(semVer);
+        done();
+      });
+    });
+
+    it('should extract correct version if server is reporting three part version with custom software', (done) => {
+      const semVer = '1.16.2';
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion(`Paper ${semVer}`))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response.version).toBe(semVer);
+        done();
+      });
+    });
   });
 
   describe('persisting settings', () => {

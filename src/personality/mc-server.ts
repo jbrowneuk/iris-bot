@@ -232,13 +232,23 @@ export class McServer implements Personality {
     return util
       .status(url)
       .then((response: ServerResponse) => {
-        // Handle Aternos/Exaroton servers
-        const versionRegex = /\b\d+(\.\d+){1,2}\b/;
-        if (response && response.version.match(versionRegex) === null) {
+        if (!response || !response.version) {
           return null;
         }
 
-        return response;
+        // Handle Aternos/Exaroton servers
+        const versionRegex = /\b\d+(\.\d+){1,2}\b/;
+        const matches = response.version.match(versionRegex);
+        if (matches === null || matches.length === 0) {
+          return null;
+        }
+
+        return {
+          version: matches[0],
+          onlinePlayers: response.onlinePlayers,
+          maxPlayers: response.maxPlayers,
+          samplePlayers: response.samplePlayers
+        };
       })
       .catch(
         (error: Error): ServerResponse => {
@@ -253,8 +263,9 @@ export class McServer implements Personality {
     const embed = new MessageEmbed();
     embed.setTitle(embedTitle);
     embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
-    const statusText = `Status: ${isOnline ? 'online' : 'offline'}`;
-    const versionText = status && status.version ? `\nRunning: ${status.version}` : '';
+    const statusText = `Status: **${isOnline ? 'online' : 'offline'}**`;
+    const versionText =
+      status && status.version ? `\nRunning: **${status.version}**` : '';
     embed.setDescription(`${statusText}${versionText}`);
 
     if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
