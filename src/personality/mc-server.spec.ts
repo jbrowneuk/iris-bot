@@ -27,6 +27,10 @@ class TestableMcServer extends McServer {
   public hasTimer(): boolean {
     return this.timerInterval && this.timerInterval > 0;
   }
+
+  public invokeGetServerStatus() {
+    return this.getServerStatus('localhost');
+  }
 }
 
 const MOCK_GUILD_ID = 'mockguild';
@@ -115,7 +119,7 @@ describe('Minecraft server utilities', () => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('Your server is online');
+        expect(embed.description).toContain('online');
         done();
       });
     });
@@ -133,12 +137,12 @@ describe('Minecraft server utilities', () => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('Your server is offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
 
-    it('should reflect offline status if server offline', (done) => {
+    it('should reflect online status if server offline', (done) => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
@@ -153,7 +157,7 @@ describe('Minecraft server utilities', () => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('Your server is');
+        expect(embed.description).toContain('online');
         done();
       });
     });
@@ -280,7 +284,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('Your server is online');
+        expect(embed.description).toContain('online');
         done();
       });
     });
@@ -300,7 +304,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('Your server is offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
@@ -320,7 +324,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('Your server is offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
@@ -361,6 +365,85 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeFalsy();
+        done();
+      });
+    });
+  });
+
+  describe('server status handling', () => {
+    function mapVersion(version: string): ServerResponse {
+      return {
+        version,
+        onlinePlayers: 1,
+        maxPlayers: 5,
+        samplePlayers: [{ name: 'bob-bobertson' }]
+      };
+    }
+
+    it('should provide valid status if server is reporting two part version', (done) => {
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion('1.17'))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response).toBeTruthy();
+        done();
+      });
+    });
+
+    it('should provide valid status if server is reporting three part version', (done) => {
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion('1.16.5'))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response).toBeTruthy();
+        done();
+      });
+    });
+
+    it('should provide valid status if server is reporting three part version with custom software', (done) => {
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion('Paper 1.16.2'))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response).toBeTruthy();
+        done();
+      });
+    });
+
+    it('should provide null status if server is reporting Exaroton-style sleeping text', (done) => {
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion('§9◉ Sleeping'))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response).toBeNull();
+        done();
+      });
+    });
+
+    it('should extract correct version if server is reporting three part version', (done) => {
+      const semVer = '1.16.2';
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion(semVer))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response.version).toBe(semVer);
+        done();
+      });
+    });
+
+    it('should extract correct version if server is reporting three part version with custom software', (done) => {
+      const semVer = '1.16.2';
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<any>(mapVersion(`Paper ${semVer}`))
+      );
+
+      personality.invokeGetServerStatus().then((response) => {
+        expect(response.version).toBe(semVer);
         done();
       });
     });
