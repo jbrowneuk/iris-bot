@@ -1,7 +1,71 @@
 import { announceCommand, setCommand, statusCommand } from '../constants/mc-server';
+import { ServerResponse } from '../interfaces/mc-server';
 import * as embeds from './mc-server';
 
 describe('Embed formatting for Minecraft server utilities', () => {
+  describe('generateServerEmbed', () => {
+    const serverUrl = 'url.here';
+    const serverVersion = '1.2.3';
+
+    const onlineWithPlayers: ServerResponse = {
+      version: serverVersion,
+      onlinePlayers: 2,
+      maxPlayers: 4,
+      samplePlayers: [{ name: 'a' }, { name: 'b' }]
+    };
+
+    const onlineNoPlayers: ServerResponse = {
+      version: serverVersion,
+      onlinePlayers: 0,
+      maxPlayers: 4,
+      samplePlayers: []
+    };
+
+    const onlinePlayersEmbed = embeds.generateServerEmbed(
+      serverUrl,
+      onlineWithPlayers
+    );
+
+    const onlineEmptyEmbed = embeds.generateServerEmbed(
+      serverUrl,
+      onlineNoPlayers
+    );
+
+    const offlineEmbed = embeds.generateServerEmbed(serverUrl, null);
+
+    it('should have status in title', () => {
+      expect(onlinePlayersEmbed.title).toContain('online');
+      expect(onlineEmptyEmbed.title).toContain('online');
+      expect(offlineEmbed.title).toContain('offline');
+    });
+
+    it('should have server address in description', () => {
+      expect(onlinePlayersEmbed.description).toContain(serverUrl);
+      expect(onlineEmptyEmbed.description).toContain(serverUrl);
+      expect(offlineEmbed.description).toContain(serverUrl);
+    });
+
+    it('should contain version in description if online', () => {
+      expect(onlinePlayersEmbed.description).toContain(serverVersion);
+      expect(onlineEmptyEmbed.description).toContain(serverVersion);
+      expect(offlineEmbed.description).toBe(`Address: **${serverUrl}**`);
+    });
+
+    it('should show players in field if online and has players', () => {
+      expect(onlinePlayersEmbed.fields.length).toBeGreaterThan(0);
+
+      const playersField = onlinePlayersEmbed.fields[0];
+      expect(playersField.name).toBe(
+        `Players (${onlineWithPlayers.onlinePlayers})`
+      );
+      onlineWithPlayers.samplePlayers.forEach((player) => {
+        expect(playersField.value).toContain(player.name);
+      });
+
+      expect(onlineEmptyEmbed.fields.length).toBe(0);
+    });
+  });
+
   describe('generateHelpEmbed', () => {
     it('should contain help text for commands', () => {
       const embed = embeds.generateHelpEmbed();
@@ -37,7 +101,9 @@ describe('Embed formatting for Minecraft server utilities', () => {
   describe('generateSetFailureEmbed', () => {
     it('should contain no association copy as description', () => {
       const embed = embeds.generateSetFailureEmbed();
-      expect(embed.description).toBe(embeds.noAssociationCopy);
+      expect(embed.description).toBe(
+        `Usage: \`${setCommand} my.server.address\``
+      );
     });
   });
 

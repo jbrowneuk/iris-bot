@@ -121,8 +121,7 @@ describe('Minecraft server utilities', () => {
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('online');
+        expect(embed.title).toContain('online');
         done();
       });
     });
@@ -139,8 +138,7 @@ describe('Minecraft server utilities', () => {
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('offline');
+        expect(embed.title).toContain('offline');
         done();
       });
     });
@@ -159,8 +157,7 @@ describe('Minecraft server utilities', () => {
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toBeTruthy();
-        expect(embed.description).toContain('online');
+        expect(embed.title).toContain('online');
         done();
       });
     });
@@ -288,7 +285,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('online');
+        expect(embed.title).toContain('online');
         done();
       });
     });
@@ -308,7 +305,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('offline');
+        expect(embed.title).toContain('offline');
         done();
       });
     });
@@ -328,7 +325,7 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.description).toContain('offline');
+        expect(embed.title).toContain('offline');
         done();
       });
     });

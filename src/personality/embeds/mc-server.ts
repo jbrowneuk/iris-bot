@@ -55,13 +55,14 @@ export function generateServerEmbed(
   const isOnline = status !== null;
 
   const embed = new MessageEmbed();
-  embed.setTitle(`Server: ${url}`);
-  embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
+  const statusText = isOnline ? 'online' : 'offline';
 
-  const statusText = `Status: **${isOnline ? 'online' : 'offline'}**`;
+  embed.setTitle(`Server ${statusText}`);
+  embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
+  const urlText = `Address: **${url}**`;
   const versionText =
     status && status.version ? `\nRunning: **${status.version}**` : '';
-  embed.setDescription(`${statusText}${versionText}`);
+  embed.setDescription(`${urlText}${versionText}`);
 
   if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
     // Sample players is occasionally not populated
