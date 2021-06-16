@@ -1,6 +1,6 @@
 {
   "name": "iris-bot",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Discord chatbot",
   "scripts": {
     "prebuild": "node src/scripts/prebuild.js",
