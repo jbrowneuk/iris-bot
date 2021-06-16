@@ -1,47 +1,23 @@
-import { Message, MessageEmbed, TextChannel } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 import * as fs from 'fs';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
+import {
+    generateAnnounceNoAssociationEmbed, generateAnnounceSuccessEmbed, generateHelpEmbed, generateServerEmbed, generateSetFailureEmbed,
+    generateSetSuccessEmbed, generateStatusFailureEmbed
+} from './embeds/mc-server';
+import { ServerInformation, ServerResponse } from './interfaces/mc-server';
 
 // This has to be const util = require as it breaks the build if not
 const util = require('minecraft-server-util');
 
-export interface ServerInformation {
-  url: string;
-  channelId: string;
-  lastKnownOnline: boolean;
-}
-
-export interface ServerPlayer {
-  name: string;
-}
-
-export interface ServerResponse {
-  version: string;
-  onlinePlayers: number;
-  maxPlayers: number;
-  samplePlayers: ServerPlayer[];
-}
-
 // Personality constants
-const embedTitle = 'Server info';
-const embedErrorColor = 0xff8000;
-const embedSuccessColor = 0x0080ff;
 const updateMinutes = 5;
 const defaultSettingsFile = 'mc-servers.json';
 const settingsFileEnc = 'utf-8';
-
-// Response texts
-export const noAssociationCopy =
-  'No Minecraft server associated with this Discord';
-export const linkServerCopy = 'Linked the server to this Discord.';
-
-// Commands
-export const statusCommand = '+MCSTATUS';
-export const setCommand = '+MCSET';
-export const announceCommand = '+MCANNOUNCE';
 
 export class McServer implements Personality {
   protected servers: Map<string, ServerInformation>;
@@ -94,29 +70,7 @@ export class McServer implements Personality {
   }
 
   public onHelp(): Promise<MessageType> {
-    const embed = new MessageEmbed();
-    embed.setColor(embedSuccessColor);
-    embed.setTitle('Minecraft Server Plugin');
-    embed.setDescription(
-      'Allows you to check the status of a Minecraft server.'
-    );
-    embed.addField(
-      `Command: ${setCommand} <url>`,
-      'Associates a Minecraft server with this Discord server.',
-      false
-    );
-    embed.addField(
-      `Command: ${statusCommand}`,
-      'Checks the status of the associated Minecraft server.',
-      false
-    );
-    embed.addField(
-      `Command: ${announceCommand}`,
-      'Makes the bot announce status changes of the associated Minecraft server to this channel.',
-      false
-    );
-
-    return Promise.resolve(embed);
+    return Promise.resolve(generateHelpEmbed());
   }
 
   protected fetchStatuses(): void {
@@ -142,41 +96,27 @@ export class McServer implements Personality {
           return;
         }
 
-        const embed = this.generateServerEmbed(response);
-        channel.send(embed);
+        channel.send(generateServerEmbed(serverDetails.url, response));
       });
     });
   }
 
   private handleStatusCommand(message: Message): Promise<MessageType> {
-    const embed = new MessageEmbed();
-    embed.setTitle(embedTitle);
-
     if (!this.servers.has(message.guild.id)) {
-      embed.setDescription(noAssociationCopy);
-      embed.setColor(embedErrorColor);
+      const embed = generateStatusFailureEmbed();
       return Promise.resolve(embed);
     }
 
     const minecraftServer = this.servers.get(message.guild.id);
-    return this.fetchStatus(minecraftServer).then(
-      this.generateServerEmbed.bind(this)
+    return this.fetchStatus(minecraftServer).then((response) =>
+      generateServerEmbed(minecraftServer.url, response)
     );
   }
 
   private handleSetCommand(message: Message): Promise<MessageType> {
-    const embed = new MessageEmbed();
-    embed.setTitle(embedTitle);
-
     const bits = message.content.toUpperCase().split(' ');
     if (bits.length === 1) {
-      embed.setColor(embedErrorColor);
-      embed.setDescription('Usage: `+mcset my.server.address`');
-      embed.addField(
-        'Description',
-        'Associates a Minecraft server with this Discord server'
-      );
-      return Promise.resolve(embed);
+      return Promise.resolve(generateSetFailureEmbed());
     }
 
     const serverUrl = bits[1].toLowerCase();
@@ -186,36 +126,26 @@ export class McServer implements Personality {
       lastKnownOnline: false
     };
     this.servers.set(message.guild.id, details);
-    const name = message.guild.name;
-    embed.setColor(embedSuccessColor);
-    embed.setDescription(linkServerCopy);
-    embed.addField('Link information', `${name} 🔗 ${serverUrl}`);
 
     this.saveServers();
-    return Promise.resolve(embed);
+    return Promise.resolve(
+      generateSetSuccessEmbed(message.guild.name, serverUrl)
+    );
   }
 
   private handleAnnounceCommand(message: Message): Promise<MessageType> {
-    const embed = new MessageEmbed();
-    embed.setTitle(embedTitle);
-
     if (!this.servers.has(message.guild.id)) {
-      embed.setDescription(noAssociationCopy);
-      embed.setColor(embedErrorColor);
-      return Promise.resolve(embed);
+      return Promise.resolve(generateAnnounceNoAssociationEmbed());
     }
 
     const serverInfo = this.servers.get(message.guild.id);
     const textChannel = message.channel as TextChannel;
     serverInfo.channelId = textChannel.id;
 
-    embed.setColor(embedSuccessColor);
-    embed.setDescription(
-      `Announcing ${serverInfo.url} updates to ${textChannel.name}`
-    );
-
     this.saveServers();
-    return Promise.resolve(embed);
+    return Promise.resolve(
+      generateAnnounceSuccessEmbed(serverInfo.url, textChannel.name)
+    );
   }
 
   private fetchStatus(
@@ -256,25 +186,6 @@ export class McServer implements Personality {
           return null;
         }
       );
-  }
-
-  private generateServerEmbed(status: ServerResponse): MessageEmbed {
-    const isOnline = status !== null;
-    const embed = new MessageEmbed();
-    embed.setTitle(embedTitle);
-    embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
-    const statusText = `Status: **${isOnline ? 'online' : 'offline'}**`;
-    const versionText =
-      status && status.version ? `\nRunning: **${status.version}**` : '';
-    embed.setDescription(`${statusText}${versionText}`);
-
-    if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
-      // Sample players is occasionally not populated
-      const players = (status.samplePlayers || []).map((p) => p.name);
-      embed.addField('Status', `Players online:\n${players.join('\n')}`);
-    }
-
-    return embed;
   }
 
   private parseServers(err: NodeJS.ErrnoException, data: string): void {

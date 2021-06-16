@@ -5,9 +5,10 @@ import { IMock, It, Mock } from 'typemoq';
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import {
-    announceCommand, linkServerCopy, McServer, noAssociationCopy, ServerInformation, ServerResponse, setCommand, statusCommand
-} from './mc-server';
+import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
+import { noAssociationCopy } from './embeds/mc-server';
+import { ServerInformation, ServerResponse } from './interfaces/mc-server';
+import { McServer } from './mc-server';
 
 import util = require('minecraft-server-util');
 
@@ -35,6 +36,7 @@ class TestableMcServer extends McServer {
 
 const MOCK_GUILD_ID = 'mockguild';
 const MOCK_CHANNEL_ID = 'mockchannel';
+const MOCK_GUILD_NAME = 'mock name';
 const MOCK_CHANNEL_NAME = 'mock channel name';
 
 const MOCK_RUNNING_STATUS: ServerResponse = {
@@ -55,6 +57,7 @@ describe('Minecraft server utilities', () => {
   beforeEach(() => {
     mockGuild = Mock.ofType<Guild>();
     mockGuild.setup((m) => m.id).returns(() => MOCK_GUILD_ID);
+    mockGuild.setup((m) => m.name).returns(() => MOCK_GUILD_NAME);
 
     mockChannel = Mock.ofType<TextChannel>();
     mockChannel.setup((m) => m.id).returns(() => MOCK_CHANNEL_ID);
@@ -194,7 +197,8 @@ describe('Minecraft server utilities', () => {
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.description).toBe(linkServerCopy);
+        expect(embed.fields[0].value).toContain(mockUrl);
+        expect(embed.fields[0].value).toContain(MOCK_GUILD_NAME);
 
         const servers = personality.getServers();
         expect(servers.has(MOCK_GUILD_ID)).toBeTrue();
@@ -528,23 +532,6 @@ describe('Minecraft server utilities', () => {
     it('should resolve to embed', (done) => {
       personality.onHelp().then((response) => {
         expect(response).not.toBeNull();
-        const embed = response as MessageEmbed;
-        expect(embed.fields.length).toBe(3);
-
-        done();
-      });
-    });
-
-    it('should only contain <url> for set command help', (done) => {
-      personality.onHelp().then((response) => {
-        expect(response).not.toBeNull();
-        const embed = response as MessageEmbed;
-
-        embed.fields.forEach((field) => {
-          const isSetCommand = field.name.includes(setCommand);
-          expect(field.name.includes('<url>')).toBe(isSetCommand);
-        });
-
         done();
       });
     });
