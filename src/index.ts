@@ -11,6 +11,7 @@ import { DependencyContainer } from './interfaces/dependency-container';
 import { AnimalImages } from './personality/animal-images';
 import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
+import { BuildInfo } from './personality/build-info';
 import { CallResponse } from './personality/call-response';
 import { DieRoll } from './personality/die-roll';
 import { HugBot } from './personality/hug-bot';
@@ -52,15 +53,16 @@ const dependencies: DependencyContainer = {
 };
 
 // Initialise personality
+engine.addPersonality(new AnimalImages(dependencies));
 engine.addPersonality(new BasicIntelligence());
+engine.addPersonality(new BlogRoll(dependencies));
+engine.addPersonality(new BuildInfo());
+engine.addPersonality(new CallResponse(dependencies));
 engine.addPersonality(new DieRoll(dependencies));
 engine.addPersonality(new HugBot());
-engine.addPersonality(new BlogRoll(dependencies));
+engine.addPersonality(new McServer(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
 engine.addPersonality(new SimpleInteractions(dependencies));
-engine.addPersonality(new CallResponse(dependencies));
-engine.addPersonality(new AnimalImages(dependencies));
-engine.addPersonality(new McServer(dependencies));
 
 // Start bot
 engine.initialise();
