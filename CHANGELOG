@@ -1,3 +1,8 @@
+Release 0.1.9 changes:
+9c5113f6810dfc79f75579d75e32170a552ecd08 Update image URLs for FoxBot core
+94f38c3a5851f6d7e6fd9edbbcb2c829c63097a9 Rename FoxBot to AnimalImages
+ffed829b4476722884152bfc8aaf5bb905ff2303 Refactor build information into its own personality core
+
 Release 0.1.8 changes:
 d799316e050ad8c572901e24925d0cec95ad320b Refactor MCServer plugin embeds into separate file
 f140f3f57c545a294f1acf740b942018bf3c8074 Reorganise server status embed to display information more naturally
