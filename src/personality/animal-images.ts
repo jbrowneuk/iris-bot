@@ -6,8 +6,7 @@ import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
 const randomApiBaseUrl = 'https://some-random-api.ml/img/';
-const siteBaseUrl = 'https://jbrowne.io/api/image/';
-const imageApiBaseUrl = `${siteBaseUrl}?query=`;
+const imageApiBaseUrl = 'https://jbrowne.io/api/image/?query=';
 export const supportedApis = [
   { name: 'fox', url: `${randomApiBaseUrl}fox` },
   { name: 'panda', url: `${randomApiBaseUrl}panda` },
@@ -15,7 +14,8 @@ export const supportedApis = [
   { name: 'koala', url: `${randomApiBaseUrl}koala` },
   { name: 'bird', url: `${randomApiBaseUrl}birb` },
   { name: 'hyena', url: `${imageApiBaseUrl}hyena` },
-  { name: 'cat', url: `${siteBaseUrl}catapi.php` }
+  { name: 'cat', url: `${imageApiBaseUrl}cat` },
+  { name: 'dog', url: `${imageApiBaseUrl}dog` }
 ];
 
 export const helpText = `This plugin pulls random animal pictures from the internet.
@@ -23,7 +23,7 @@ Animals you can search for are \`+${supportedApis
   .map((i) => i.name)
   .join('`, `+')}\`.`;
 
-export class FoxBot implements Personality {
+export class AnimalImages implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
   onAddressed(): Promise<MessageType> {

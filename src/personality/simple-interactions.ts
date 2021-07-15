@@ -1,6 +1,5 @@
 import { Message } from 'discord.js';
 
-import { GIT_COMMIT } from '../git-commit';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith } from '../utils';
@@ -29,12 +28,7 @@ export class SimpleInteractions implements Personality {
     return Promise.resolve(null);
   }
 
-  public onMessage(message: Message): Promise<string> {
-    const response = this.getBuildInfo(message.content);
-    if (response !== null) {
-      return response;
-    }
-
+  public onMessage(): Promise<string> {
     return Promise.resolve(null);
   }
 
@@ -67,18 +61,5 @@ export class SimpleInteractions implements Personality {
 
     message.react('✋').catch((e) => this.dependencies.logger.error(e));
     return this.dependencies.responses.generateResponse('highFive');
-  }
-
-  private getBuildInfo(messageContent: string): Promise<string> {
-    const command = '+buildInfo';
-    if (!messageContent.startsWith(command)) {
-      return null;
-    }
-
-    const formattedOutput = `Your bot is running the iris-bot framework.
-https://github.com/jbrowneuk/iris-bot
-Commit \`${GIT_COMMIT.commit}\` (from \`${GIT_COMMIT.refs}\` on ${GIT_COMMIT.date})
-Node ${process.version} (${process.platform} ${process.arch})`;
-    return Promise.resolve(formattedOutput);
   }
 }
