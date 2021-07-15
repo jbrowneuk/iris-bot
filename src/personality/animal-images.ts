@@ -23,7 +23,7 @@ Animals you can search for are \`+${supportedApis
   .map((i) => i.name)
   .join('`, `+')}\`.`;
 
-export class FoxBot implements Personality {
+export class AnimalImages implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
   onAddressed(): Promise<MessageType> {

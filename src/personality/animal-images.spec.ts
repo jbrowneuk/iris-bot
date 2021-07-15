@@ -5,13 +5,13 @@ import { IMock, It, Mock } from 'typemoq';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
 import { ResponseGenerator } from '../interfaces/response-generator';
-import { FoxBot, helpText, supportedApis } from './fox-bot';
+import { AnimalImages, helpText, supportedApis } from './animal-images';
 
 describe('Animal Image API', () => {
   let mockLogger: IMock<Logger>;
   let mockResponses: IMock<ResponseGenerator>;
   let mockDependencies: DependencyContainer;
-  let personality: FoxBot;
+  let personality: AnimalImages;
 
   beforeEach(() => {
     mockLogger = Mock.ofType<Logger>();
@@ -29,7 +29,7 @@ describe('Animal Image API', () => {
       settings: null
     };
 
-    personality = new FoxBot(mockDependencies);
+    personality = new AnimalImages(mockDependencies);
   });
 
   describe('onAddressed', () => {
