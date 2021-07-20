@@ -1,3 +1,10 @@
+Release 0.1.10 - Hangman personality core:
+22617df7e7a4b0acf59b484f6cdf29da9f359a0a Add boilerplate hangman personality
+fafcf8e486a5499c56e2780cbb49163976855699 Implement fetching of word from API
+8a2c1c48936a96804ef58ce3008f4e980c32448b Implement basic game state
+0860a4ecac647b169add576e02cdef4fc47420ee Implement guessing logic
+3f96c9bd82e424d47803dad046e96ff92a6178c3 Provide embeds for the game play and summary
+
 Release 0.1.9 changes:
 9c5113f6810dfc79f75579d75e32170a552ecd08 Update image URLs for FoxBot core
 94f38c3a5851f6d7e6fd9edbbcb2c829c63097a9 Rename FoxBot to AnimalImages
