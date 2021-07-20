@@ -17,7 +17,8 @@ describe('Hangman Game Utilities', () => {
         currentWord: 'any',
         currentDisplay: '-n-',
         livesRemaining: 3,
-        wrongLetters: ['z']
+        wrongLetters: ['z'],
+        wrongWords: []
       };
 
       const gameActive = isGameActive(state);
@@ -31,7 +32,8 @@ describe('Hangman Game Utilities', () => {
         currentWord: word,
         currentDisplay: word,
         livesRemaining: 3,
-        wrongLetters: ['z']
+        wrongLetters: ['z'],
+        wrongWords: []
       };
 
       const gameActive = isGameActive(state);
@@ -44,7 +46,8 @@ describe('Hangman Game Utilities', () => {
         currentWord: 'any',
         currentDisplay: '-n-',
         livesRemaining: 0,
-        wrongLetters: ['z']
+        wrongLetters: ['z'],
+        wrongWords: []
       };
 
       const gameActive = isGameActive(state);
@@ -59,7 +62,8 @@ describe('Hangman Game Utilities', () => {
         currentWord: word,
         currentDisplay: word,
         livesRemaining: 0,
-        wrongLetters: ['z']
+        wrongLetters: ['z'],
+        wrongWords: []
       };
 
       const gameActive = isGameActive(state);

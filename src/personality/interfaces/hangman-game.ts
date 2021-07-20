@@ -7,6 +7,7 @@ export interface GameState {
   currentDisplay: string;
   livesRemaining: number;
   wrongLetters: string[];
+  wrongWords: string[];
 }
 
 /**

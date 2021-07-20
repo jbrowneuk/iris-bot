@@ -4,12 +4,12 @@ import * as nodeFetch from 'node-fetch';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { apiUrl, prefix, startCommand } from './constants/hangman-game';
+import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand } from './constants/hangman-game';
 import { GameState, WordData } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
 export class HangmanGame implements Personality {
-  private gameStates: Map<string, GameState>;
+  protected gameStates: Map<string, GameState>;
 
   constructor(private dependencies: DependencyContainer) {
     this.gameStates = new Map<string, GameState>();
@@ -31,6 +31,11 @@ export class HangmanGame implements Personality {
 
     if (text.startsWith(startCommand)) {
       return this.handleGameStart(message.guild.id);
+    }
+
+    if (text.startsWith(guessCommand)) {
+      const guess = text.substring(guessCommand.length + 1);
+      return this.handleGuess(message.guild.id, guess);
     }
 
     return Promise.resolve(null);
@@ -68,14 +73,109 @@ export class HangmanGame implements Personality {
 
     const newGameState: GameState = {
       timeStarted: Date.now(),
-      currentWord: data.word,
+      currentWord: data.word.toUpperCase(),
       currentDisplay: Array(data.word.length).fill('-').join(''),
       livesRemaining: 10,
-      wrongLetters: []
+      wrongLetters: [],
+      wrongWords: []
     };
 
     this.gameStates.set(guildId, newGameState);
 
-    return '```\n' + JSON.stringify(newGameState) + '\n```';
+    return '```\n' + JSON.stringify(newGameState) + '\n```'; // FORMAT
+  }
+
+  private handleGuess(guildId: string, guess: string): Promise<MessageType> {
+    const gameState = this.gameStates.get(guildId);
+    const gameRunning = isGameActive(gameState);
+    if (!gameRunning) {
+      return Promise.resolve('ikke startet');
+    }
+
+    const isWord = guess.length > 1;
+    if (isWord) {
+      return Promise.resolve(this.onGuessWord(guildId, guess));
+    }
+
+    return Promise.resolve(this.onGuessLetter(guildId, guess));
+  }
+
+  private onGuessWord(guildId: string, guess: string): MessageType {
+    const invalidWordRegex = /[^A-Z]+/;
+    if (invalidWordRegex.test(guess)) {
+      return 'That’s not a word I can use here.';
+    }
+
+    // Grab a reference
+    const gameState = this.gameStates.get(guildId);
+
+    if (guess.length !== gameState.currentWord.length) {
+      const wordText = `${gameState.currentWord.length}`;
+      return `Your guess has ${guess.length} letters, the word has ${wordText}. Think about that for a while.`;
+    }
+
+    if (guess === gameState.currentWord) {
+      gameState.currentDisplay = gameState.currentWord;
+      return `Yup, it’s “${guess}”`;
+    }
+
+    if (gameState.wrongWords.indexOf(guess) !== -1) {
+      return 'You’ve already guessed that one!';
+    }
+
+    gameState.livesRemaining -= 1;
+    gameState.wrongWords.push(guess);
+
+    if (gameState.livesRemaining <= 0) {
+      return `You’ve lost! The word was “${gameState.currentWord}”`;
+    }
+
+    return '```\n' + JSON.stringify(gameState) + '\n```'; // FORMAT
+  }
+
+  private onGuessLetter(guildId: string, guess: string): MessageType {
+    if (!guess.match(/[A-Z]/)) {
+      return 'That’s not a letter I can use…';
+    }
+
+    // Grab a reference
+    const gameState = this.gameStates.get(guildId);
+
+    if (gameState.currentWord.indexOf(guess) === -1) {
+      if (gameState.wrongLetters.includes(guess)) {
+        return 'You’ve already guessed that!';
+      }
+
+      gameState.wrongLetters.push(guess);
+      gameState.livesRemaining -= 1;
+
+      if (gameState.livesRemaining > 0) {
+        return `Nope, there’s no “${guess}”. You’ve got ${gameState.livesRemaining} chances remaining!`;
+      }
+
+      return `Bad luck! The word was “${gameState.currentWord}”`;
+    }
+
+    // Copy the letter into the display variable
+    for (let index = 0; index < gameState.currentDisplay.length; index += 1) {
+      const currentLetter = gameState.currentDisplay[index];
+      if (currentLetter !== blankDisplayChar) {
+        continue;
+      }
+
+      if (gameState.currentWord[index] !== guess) {
+        continue;
+      }
+
+      const lettersBefore = gameState.currentDisplay.substring(0, index);
+      const lettersAfter = gameState.currentDisplay.substring(index + 1);
+      gameState.currentDisplay = `${lettersBefore}${guess}${lettersAfter}`;
+    }
+
+    if (gameState.currentWord === gameState.currentDisplay) {
+      return `Yup, it’s “${gameState.currentWord}”`;
+    }
+
+    return '```\n' + JSON.stringify(gameState) + '\n```'; // FORMAT
   }
 }
