@@ -5,6 +5,7 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand } from './constants/hangman-game';
+import { generateGameEmbed, generateHelpEmbed } from './embeds/hangman-game';
 import { GameState, WordData } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
@@ -35,14 +36,14 @@ export class HangmanGame implements Personality {
 
     if (text.startsWith(guessCommand)) {
       const guess = text.substring(guessCommand.length + 1);
-      return this.handleGuess(message.guild.id, guess);
+      return Promise.resolve(this.handleGuess(message.guild.id, guess));
     }
 
-    return Promise.resolve(null);
+    return this.handleBlankCommand(message.guild.id);
   }
 
   onHelp(): Promise<MessageType> {
-    return Promise.resolve('no help');
+    return Promise.resolve(generateHelpEmbed());
   }
 
   private handleGameStart(guildId: string): Promise<MessageType> {
@@ -81,23 +82,22 @@ export class HangmanGame implements Personality {
     };
 
     this.gameStates.set(guildId, newGameState);
-
-    return '```\n' + JSON.stringify(newGameState) + '\n```'; // FORMAT
+    return generateGameEmbed(newGameState);
   }
 
-  private handleGuess(guildId: string, guess: string): Promise<MessageType> {
+  private handleGuess(guildId: string, guess: string): MessageType {
     const gameState = this.gameStates.get(guildId);
     const gameRunning = isGameActive(gameState);
     if (!gameRunning) {
-      return Promise.resolve('ikke startet');
+      return 'ikke startet';
     }
 
     const isWord = guess.length > 1;
     if (isWord) {
-      return Promise.resolve(this.onGuessWord(guildId, guess));
+      return this.onGuessWord(guildId, guess);
     }
 
-    return Promise.resolve(this.onGuessLetter(guildId, guess));
+    return this.onGuessLetter(guildId, guess);
   }
 
   private onGuessWord(guildId: string, guess: string): MessageType {
@@ -130,7 +130,7 @@ export class HangmanGame implements Personality {
       return `You’ve lost! The word was “${gameState.currentWord}”`;
     }
 
-    return '```\n' + JSON.stringify(gameState) + '\n```'; // FORMAT
+    return generateGameEmbed(gameState);
   }
 
   private onGuessLetter(guildId: string, guess: string): MessageType {
@@ -176,6 +176,17 @@ export class HangmanGame implements Personality {
       return `Yup, it’s “${gameState.currentWord}”`;
     }
 
-    return '```\n' + JSON.stringify(gameState) + '\n```'; // FORMAT
+    return generateGameEmbed(gameState);
+  }
+
+  private handleBlankCommand(guildId: string): Promise<MessageType> {
+    const state = this.gameStates.get(guildId);
+    if (!state) {
+      const message =
+        'No game has been played - try starting one with `+hm start`';
+      return Promise.resolve(message);
+    }
+
+    return Promise.resolve(generateGameEmbed(state));
   }
 }

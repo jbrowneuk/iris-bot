@@ -3,6 +3,7 @@ import * as nodeFetch from 'node-fetch';
 import { Mock } from 'typemoq';
 import { IMock } from 'typemoq/Api/IMock';
 
+import { DependencyContainer } from '../interfaces/dependency-container';
 import { apiUrl, guessCommand, prefix, startCommand } from './constants/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { GameState } from './interfaces/hangman-game';
