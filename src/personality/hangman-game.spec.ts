@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 import * as nodeFetch from 'node-fetch';
 import { Mock } from 'typemoq';
 
+import { apiUrl, prefix, startCommand } from './constants/hangman-game';
 import { HangmanGame } from './hangman-game';
 
 describe('Hangman game', () => {
@@ -26,7 +27,7 @@ describe('Hangman game', () => {
     });
   });
 
-  fit('should fetch random word on +hangman-test command', (done) => {
+  it('should fetch random word on start command', (done) => {
     const mockWord = { word: 'word' };
     const mockFetchResponse = {
       ok: true,
@@ -35,10 +36,13 @@ describe('Hangman game', () => {
     fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
 
     const mockMessage = Mock.ofType<Message>();
-    mockMessage.setup((s) => s.content).returns(() => '+hangman-test');
+    mockMessage
+      .setup((s) => s.content)
+      .returns(() => `${prefix} ${startCommand}`);
 
     personality.onMessage(mockMessage.object).then((response) => {
-      expect(response).toBe(mockWord.word);
+      expect(fetchSpy).toHaveBeenCalledWith(apiUrl);
+      expect(response).toContain(mockWord.word);
       done();
     });
   });
