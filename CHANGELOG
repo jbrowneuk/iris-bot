@@ -1,3 +1,15 @@
+Release 0.1.11 - Improved help and third-party stickers:
+93317c9f1b0d70626c36dd23a9eb82178d681fd1 Remove obsolete bot debugging code
+f471977357b6fa41fdaf6a6a7be1b84fa7c66acd Allow bot to respond to different forms of help command
+34944f4713cbb2d742c518b908ce32994ea166dc Rework animal image plugin help message
+c5c89981e26ed801fa90872993bf1e66eafc3663 Move blog roll utilities to utilities folder
+f21e001869c549a6e3c8cc477b87f8fef5634e00 Rework die roll plugin help message
+a55c106e8326822421fb640c8142d8623fd48a7a Rework hugbot plugin help message
+9a741e7fc9546ca6bfb63f97e7a81793d68b1a1f Rework build information help text
+6e51f22fead516ce41aac0fa16d5169c1035b349 Implement basic sticker image personality
+a97e4b1981bb8e8c9b3a993062c20a169b26f3c0 Clean up imports and types
+4aaacfe178079b1a86b387e655fab67896986557 Prepare version 0.1.11
+
 Release 0.1.10 - Hangman personality core:
 22617df7e7a4b0acf59b484f6cdf29da9f359a0a Add boilerplate hangman personality
 fafcf8e486a5499c56e2780cbb49163976855699 Implement fetching of word from API
