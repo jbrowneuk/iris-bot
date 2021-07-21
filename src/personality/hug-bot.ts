@@ -1,7 +1,8 @@
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { Personality } from '../interfaces/personality';
+import { MessageType } from '../types';
 
 const activities = [
   { request: 'hug', response: 'hug' },
@@ -14,27 +15,43 @@ const activities = [
   { request: 'stiff drink', response: '🥃' }
 ];
 
-export const helpText = `This plugin lets you send things to people! Ask me to \`give a *item* to @name\` or use \`${COMMAND_PREFIX}*item* @name\`.
-Items available: \`${activities.map((i) => i.request).join('`, `')}\`.`;
+export const helpText = `This plugin lets you send virtual things to people.`;
 
 export class HugBot implements Personality {
   public onAddressed(
-    message: discord.Message,
+    message: Message,
     addressedMessage: string
   ): Promise<string> {
     return this.commandWrapper(message, addressedMessage, 'give a ', ' to');
   }
 
-  public onMessage(message: discord.Message): Promise<string> {
+  public onMessage(message: Message): Promise<string> {
     return this.commandWrapper(message, message.content, COMMAND_PREFIX, '');
   }
 
-  public onHelp(): Promise<string> {
-    return Promise.resolve(helpText);
+  public onHelp(): Promise<MessageType> {
+    const embed = new MessageEmbed();
+    embed.setTitle('HugBot™');
+    embed.setDescription(helpText);
+
+    const commandText = `\`\`\`@bot give a *item* to @name\n\n${COMMAND_PREFIX}*item* @name\`\`\``;
+    embed.addField('Commands', commandText);
+
+    embed.addField(
+      'Things you can give',
+      activities.map((i) => i.request).join(', ')
+    );
+
+    embed.addField(
+      'Examples',
+      '```@bot give a hug to @person\n\n+cake @person```'
+    );
+
+    return Promise.resolve(embed);
   }
 
   private commandWrapper(
-    message: discord.Message,
+    message: Message,
     text: string,
     prefix: string,
     suffix: string
@@ -65,7 +82,7 @@ export class HugBot implements Personality {
   }
 
   private response(
-    message: discord.Message,
+    message: Message,
     text: string,
     command: string,
     itemOverride?: string
