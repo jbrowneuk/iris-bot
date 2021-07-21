@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import * as nodeFetch from 'node-fetch';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -18,10 +18,8 @@ export const supportedApis = [
   { name: 'dog', url: `${imageApiBaseUrl}dog` }
 ];
 
-export const helpText = `This plugin pulls random animal pictures from the internet.
-Animals you can search for are \`+${supportedApis
-  .map((i) => i.name)
-  .join('`, `+')}\`.`;
+export const helpText =
+  'This plugin gets random animal pictures from the internet.';
 
 export class AnimalImages implements Personality {
   constructor(private dependencies: DependencyContainer) {}
@@ -60,6 +58,13 @@ export class AnimalImages implements Personality {
   }
 
   onHelp(): Promise<MessageType> {
-    return Promise.resolve(helpText);
+    const embed = new MessageEmbed();
+    embed.setTitle('Animal Images');
+    embed.setDescription(helpText);
+
+    const commands = supportedApis.map((api) => `\`+${api.name}\``);
+    embed.addField('Commands', commands.join('\n'));
+
+    return Promise.resolve(embed);
   }
 }

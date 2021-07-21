@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import * as nodeFetch from 'node-fetch';
 import { IMock, It, Mock } from 'typemoq';
 
@@ -101,7 +101,14 @@ describe('Animal Image API', () => {
   describe('Help text', () => {
     it('should respond with help text', (done) => {
       personality.onHelp().then((response) => {
-        expect(response).toEqual(helpText);
+        const embed = response as MessageEmbed;
+        expect(embed.description).toEqual(helpText);
+
+        const commandField = embed.fields[0];
+        supportedApis.forEach((api) => {
+          expect(commandField.value).toContain(`+${api.name}`);
+        });
+
         done();
       });
     });
