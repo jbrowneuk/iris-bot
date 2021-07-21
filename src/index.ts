@@ -19,6 +19,7 @@ import { HugBot } from './personality/hug-bot';
 import { McServer } from './personality/mc-server';
 import { MoodControl } from './personality/mood-control';
 import { SimpleInteractions } from './personality/simple-interactions';
+import { Stickers } from './personality/stickers';
 
 // Initialise foundation
 const logger = new LoggerImpl();
@@ -65,6 +66,7 @@ engine.addPersonality(new HugBot());
 engine.addPersonality(new McServer(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
 engine.addPersonality(new SimpleInteractions(dependencies));
+engine.addPersonality(new Stickers(dependencies));
 
 // Start bot
 engine.initialise();
