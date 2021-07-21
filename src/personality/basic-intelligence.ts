@@ -1,5 +1,7 @@
-import * as discord from 'discord.js';
+import { Message } from 'discord.js';
+
 import { Personality } from '../interfaces/personality';
+import { MessageType } from '../types';
 
 /**
  * A basic personality implementation that can be used as a template to
@@ -13,9 +15,9 @@ export class BasicIntelligence implements Personality {
    * @param addressedMessage the substring of the message text after the attention grabber
    */
   public onAddressed(
-    message: discord.Message,
+    message: Message,
     addressedMessage: string
-  ): Promise<string> {
+  ): Promise<MessageType> {
     return Promise.resolve(null);
   }
 
@@ -24,7 +26,7 @@ export class BasicIntelligence implements Personality {
    *
    * @param message the message object related to this call
    */
-  public onMessage(message: discord.Message): Promise<string> {
+  public onMessage(message: Message): Promise<MessageType> {
     return new Promise((resolve) => {
       if (message.content === '+echo') {
         resolve('Echo!');
