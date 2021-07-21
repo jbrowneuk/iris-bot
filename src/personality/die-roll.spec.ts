@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { IMock, It, Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -185,7 +185,8 @@ describe('Die Roll', () => {
     it('should respond with help text', (done) => {
       const core = new DieRoll(mockDependencies);
       core.onHelp().then((response) => {
-        expect(response).toEqual(helpText);
+        const embed = response as MessageEmbed;
+        expect(embed.description).toEqual(helpText);
         done();
       });
     });
