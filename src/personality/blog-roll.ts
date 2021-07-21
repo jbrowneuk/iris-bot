@@ -5,7 +5,7 @@ import * as nodeFetch from 'node-fetch';
 import { PostData } from '../interfaces/blog-roll';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
-import { calculateReadTime, formatTimestamp } from './blog-roll.utils';
+import { calculateReadTime, formatTimestamp } from './utilities/blog-roll';
 
 const defaultUpdateMins = 60;
 const defaultSettingsFile = 'blog-roll.json';
@@ -42,10 +42,7 @@ export class BlogRoll implements Personality {
     }
   }
 
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<string> {
+  public onAddressed(): Promise<string> {
     return Promise.resolve(null);
   }
 
@@ -159,13 +156,13 @@ export class BlogRoll implements Personality {
    *
    * @param rawData raw data from API
    */
-  private handlePostResponse(rawData: any) {
+  private handlePostResponse(rawData: { posts: PostData[] }) {
     if (!rawData) {
       this.dependencies.logger.log('No API response');
       return;
     }
 
-    const posts: PostData[] = rawData.posts || [];
+    const posts = rawData.posts || [];
     if (posts.length === 0) {
       this.dependencies.logger.log('No posts found');
       return;

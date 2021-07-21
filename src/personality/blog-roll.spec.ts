@@ -118,7 +118,7 @@ describe('Blog roll', () => {
       const message = Mock.ofType<Message>();
       message.setup((m) => m.content).returns(() => 'anything');
 
-      personality.onAddressed(message.object, 'anything').then((value) => {
+      personality.onAddressed().then((value) => {
         expect(value).toBeNull();
         done();
       });
