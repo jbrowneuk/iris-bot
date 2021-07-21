@@ -1,4 +1,4 @@
-import * as discord from 'discord.js';
+import { Message, MessageEmbed, User } from 'discord.js';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
@@ -15,7 +15,6 @@ export const helpCommand = '+help';
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
-  private logMessages: boolean;
 
   constructor(
     private client: Client,
@@ -24,7 +23,6 @@ export class BotEngine implements Engine {
     private logger: Logger
   ) {
     this.personalityConstructs = [];
-    this.logMessages = false;
   }
 
   public addPersonality(personality: Personality): void {
@@ -56,7 +54,7 @@ export class BotEngine implements Engine {
 
   private attachEvents(): void {
     this.client.on(LifecycleEvents.CONNECTED, () => this.onConnected());
-    this.client.on(LifecycleEvents.MESSAGE, (message: discord.Message) =>
+    this.client.on(LifecycleEvents.MESSAGE, (message: Message) =>
       this.onMessage(message)
     );
   }
@@ -65,24 +63,7 @@ export class BotEngine implements Engine {
     this.logger.log('Connected to Discord services');
   }
 
-  private onMessage(message: discord.Message): void {
-    if (this.logMessages) {
-      this.logger.log(message.content);
-    }
-
-    if (message.content && message.content.includes('+debug')) {
-      const botInfo = this.client.getUserInformation();
-      const username = this.calculateUserName(botInfo, message);
-
-      this.logger.log('Calculated user name:', username);
-      this.logger.log('User ID', botInfo.id);
-
-      this.logMessages = message.content.includes('on');
-      return this.client.queueMessages([
-        `Message debugging: ${this.logMessages}`
-      ]);
-    }
-
+  private onMessage(message: Message): void {
     const addressedMessage = this.calculateAddressedMessage(message);
     if (addressedMessage !== null) {
       this.handleAddressedMessage(message, addressedMessage);
@@ -117,17 +98,13 @@ export class BotEngine implements Engine {
 
   private onDequeueCatch(err: Error): void {
     if (err instanceof HandledResponseError) {
-      if (this.logMessages) {
-        this.logger.log('Response handled, ignoring');
-      }
-
       return;
     }
 
     this.logger.error(err);
   }
 
-  private handleAmbientMessage(message: discord.Message): void {
+  private handleAmbientMessage(message: Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) =>
       c.onMessage(message)
     );
@@ -135,13 +112,9 @@ export class BotEngine implements Engine {
   }
 
   private handleAddressedMessage(
-    message: discord.Message,
+    message: Message,
     addressedMessage: string
   ): void {
-    if (this.logMessages) {
-      this.logger.log('Message:', addressedMessage);
-    }
-
     if (addressedMessage.startsWith(helpCommand)) {
       this.handleHelp(message, addressedMessage);
       return;
@@ -177,7 +150,7 @@ export class BotEngine implements Engine {
       .catch(this.onDequeueCatch.bind(this));
   }
 
-  private calculateAddressedMessage(message: discord.Message): string {
+  private calculateAddressedMessage(message: Message): string {
     const botInfo = this.client.getUserInformation();
     const username = this.calculateUserName(botInfo, message);
 
@@ -232,10 +205,7 @@ export class BotEngine implements Engine {
     return messageText.substr(messageLocation).trim();
   }
 
-  private calculateUserName(
-    botInfo: discord.User,
-    message: discord.Message
-  ): string {
+  private calculateUserName(botInfo: User, message: Message): string {
     // If the bot is in a "server" but has been renamed, update the value of the username
     const guildMemberInfo = message.guild.members.resolve(botInfo.id);
     if (
@@ -249,7 +219,7 @@ export class BotEngine implements Engine {
     return botInfo.username;
   }
 
-  private handleHelp(message: discord.Message, rawText: string): void {
+  private handleHelp(message: Message, rawText: string): void {
     message.react('🆗');
     const safeRawText = rawText.trim();
     if (safeRawText === helpCommand) {
@@ -260,7 +230,7 @@ export class BotEngine implements Engine {
       const coreNames = coresWithHelp.map((core) => `${core.constructor.name}`);
 
       const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
-      const messageEmbed = new discord.MessageEmbed();
+      const messageEmbed = new MessageEmbed();
       const topics = coreNames.length
         ? '`' + coreNames.join('`\n`') + '`'
         : 'No topics';

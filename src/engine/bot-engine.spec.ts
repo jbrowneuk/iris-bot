@@ -1,4 +1,4 @@
-import * as discord from 'discord.js';
+import { Guild, GuildMember, Message, MessageEmbed, User } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
@@ -17,13 +17,13 @@ describe('Bot engine', () => {
   let client: IMock<Client>;
   let responseGenerator: IMock<ResponseGenerator>;
   let settings: IMock<Settings>;
-  let mockUserInfo: IMock<discord.User>;
+  let mockUserInfo: IMock<User>;
 
   let engine: BotEngine;
   let untypedEngine: any;
 
   beforeEach(() => {
-    mockUserInfo = Mock.ofType<discord.User>();
+    mockUserInfo = Mock.ofType<User>();
     mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
     mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
 
@@ -279,7 +279,7 @@ describe('Bot engine', () => {
         .returns(() => mockUserInfo.object);
       const mockMessage = {
         content: kvp.input,
-        guild: { members: { resolve: (): discord.GuildMember => null } }
+        guild: { members: { resolve: (): GuildMember => null } }
       };
       const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
       expect(actualResult).toBe(kvp.expectedOutput);
@@ -329,11 +329,11 @@ describe('Bot engine', () => {
       onHelp: () => Promise.resolve(helpText)
     };
 
-    let mockMessage: IMock<discord.Message>;
+    let mockMessage: IMock<Message>;
     let messageQueue: MessageType[];
 
     beforeEach(() => {
-      const mockGuild = Mock.ofType<discord.Guild>();
+      const mockGuild = Mock.ofType<Guild>();
       mockGuild
         .setup((g) => g.members)
         .returns(
@@ -343,7 +343,7 @@ describe('Bot engine', () => {
             } as any)
         );
 
-      mockMessage = Mock.ofType<discord.Message>();
+      mockMessage = Mock.ofType<Message>();
       mockMessage.setup((msg) => msg.guild).returns(() => mockGuild.object);
 
       messageQueue = [];
@@ -366,7 +366,7 @@ describe('Bot engine', () => {
       expect(messageQueue[0]).toContain(helpCommand);
 
       // Embed
-      const embed = messageQueue[1] as discord.MessageEmbed;
+      const embed = messageQueue[1] as MessageEmbed;
       expect(embed.fields.length).toBe(1);
       expect(embed.fields[0].name).toBe('Help topics');
     });
@@ -384,7 +384,7 @@ describe('Bot engine', () => {
       expect(messageQueue[0]).toContain(helpCommand);
 
       // Embed
-      const embed = messageQueue[1] as discord.MessageEmbed;
+      const embed = messageQueue[1] as MessageEmbed;
       expect(embed.fields.length).toBe(1);
       expect(embed.fields[0].name).toBe('Help topics');
       expect(embed.fields[0].value).toBe('No topics');
