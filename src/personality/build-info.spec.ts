@@ -1,3 +1,5 @@
+import { MessageEmbed } from 'discord.js';
+
 import { GIT_COMMIT } from '../git-commit';
 import { BuildInfo } from './build-info';
 
@@ -25,8 +27,11 @@ describe('Build Information', () => {
   describe('Help text', () => {
     it('should respond with help text contianing git commit information', (done) => {
       personality.onHelp().then((response) => {
-        expect(response).toContain(GIT_COMMIT.commit);
-        expect(response).toContain(GIT_COMMIT.refs);
+        const embed = response as MessageEmbed;
+
+        const commitField = embed.fields.find((f) => f.name.includes('Commit'));
+        expect(commitField.value).toContain(GIT_COMMIT.commit);
+        expect(commitField.value).toContain(GIT_COMMIT.refs);
         done();
       });
     });

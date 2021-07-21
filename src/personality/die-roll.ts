@@ -1,12 +1,15 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
+import { MessageType } from '../types';
 
-const maximumRolls = 25;
+const maxNumberDice = 8;
+const maxNumberSides = 100;
+const maxNumberRolls = 25;
 
-export const helpText = `This plugin helps you roll virtual dice. Ask me to roll a die in the format \`<number of die>d<number of sides>\`.
-You can combine die rolls of different types by separating them with a space; for example, \`{£me} roll 4d6 5d20\``;
+export const helpText = `A plugin that helps you roll virtual dice in the format \`<number of die>d<number of sides>\`.
+Simply mention the bot with the roll you want: \`\`\`@bot roll 4d20\`\`\``;
 
 /**
  * Dice rolling feature
@@ -32,8 +35,18 @@ export class DieRoll implements Personality {
     return Promise.resolve(null);
   }
 
-  public onHelp(): Promise<string> {
-    return Promise.resolve(helpText);
+  public onHelp(): Promise<MessageType> {
+    const embed = new MessageEmbed();
+    embed.setTitle('Die roll');
+    embed.setDescription(helpText);
+
+    const multiDice = `You can combine die rolls of different types by separating them with a space; for example, \`\`\`@bot roll 4d6 5d20\`\`\``;
+    embed.addField('Multiple rolls', multiDice);
+    embed.addField('Maximum die per roll', maxNumberDice);
+    embed.addField('Maximum sides per die', maxNumberSides);
+    embed.addField('Maximum rolls per request', maxNumberRolls);
+
+    return Promise.resolve(embed);
   }
 
   /**
@@ -56,7 +69,7 @@ export class DieRoll implements Personality {
       return this.dependencies.responses.generateResponse('dieRollFail');
     }
 
-    if (this.totalDiceRolled > maximumRolls) {
+    if (this.totalDiceRolled > maxNumberRolls) {
       dice.push(this.dependencies.responses.generateResponse('dieRollLimit'));
     }
 
@@ -109,7 +122,7 @@ export class DieRoll implements Personality {
    * @param rollInfo a string containing a potential die format
    */
   private handleSingleDieRoll(rollInfo: string): Promise<string> {
-    if (!rollInfo.includes('d') || this.totalDiceRolled > maximumRolls) {
+    if (!rollInfo.includes('d') || this.totalDiceRolled > maxNumberRolls) {
       return null;
     }
 
@@ -125,7 +138,7 @@ export class DieRoll implements Personality {
     }
 
     let correctionDice: Promise<string> = null;
-    if (numberDice < 0 || numberDice > 10) {
+    if (numberDice < 0 || numberDice > maxNumberDice) {
       if (hasNumberDice) {
         const cachedCount = `${numberDice}`;
         correctionDice = this.dependencies.responses
@@ -137,7 +150,7 @@ export class DieRoll implements Personality {
     }
 
     let correctionSides: Promise<string> = null;
-    if (numberSides < 4 || numberSides > 100) {
+    if (numberSides < 4 || numberSides > maxNumberSides) {
       const cachedSides = `d${numberSides}`;
       correctionSides = this.dependencies.responses
         .generateResponse('dieRollCorrectionSides')

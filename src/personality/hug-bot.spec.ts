@@ -1,4 +1,4 @@
-import { Message, User } from 'discord.js';
+import { Message, MessageEmbed, User } from 'discord.js';
 import { IMock, Mock } from 'typemoq';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
@@ -99,7 +99,8 @@ describe('Hugbot', () => {
     it('should respond with help text', (done) => {
       const core = new HugBot();
       core.onHelp().then((response) => {
-        expect(response).toEqual(helpText);
+        const embed = response as MessageEmbed;
+        expect(embed.description).toEqual(helpText);
         done();
       });
     });

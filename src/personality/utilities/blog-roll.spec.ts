@@ -1,4 +1,4 @@
-import { calculateReadTime, formatTimestamp } from './blog-roll.utils';
+import { calculateReadTime, formatTimestamp } from './blog-roll';
 
 describe('Blog roll utilities', () => {
   describe('formatTimestamp', () => {
