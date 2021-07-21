@@ -7,7 +7,7 @@ import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
 import { MessageType } from '../types';
-import { BotEngine, helpCommand } from './bot-engine';
+import { BotEngine, helpCommands } from './bot-engine';
 import { HandledResponseError } from './handled-response-error';
 
 const MOCK_USERNAME = 'bot';
@@ -321,102 +321,106 @@ describe('Bot engine', () => {
     expect(queuedPromises.length).toBe(1);
   });
 
-  describe('help functionality', () => {
-    const helpText = 'I’m helping';
-    const coreWithHelp: Personality = {
-      onAddressed: () => Promise.resolve(null),
-      onMessage: () => Promise.resolve(null),
-      onHelp: () => Promise.resolve(helpText)
-    };
+  // Run all help tests with each help command
+  // This is disgusting but can't think of a cleaner way to do it
+  helpCommands.forEach((helpCommand) => {
+    describe(`Help functionality using ${helpCommand}`, () => {
+      const helpText = 'I’m helping';
+      const coreWithHelp: Personality = {
+        onAddressed: () => Promise.resolve(null),
+        onMessage: () => Promise.resolve(null),
+        onHelp: () => Promise.resolve(helpText)
+      };
 
-    let mockMessage: IMock<Message>;
-    let messageQueue: MessageType[];
+      let mockMessage: IMock<Message>;
+      let messageQueue: MessageType[];
 
-    beforeEach(() => {
-      const mockGuild = Mock.ofType<Guild>();
-      mockGuild
-        .setup((g) => g.members)
-        .returns(
-          () =>
-            ({
-              resolve: (): any => undefined
-            } as any)
-        );
+      beforeEach(() => {
+        const mockGuild = Mock.ofType<Guild>();
+        mockGuild
+          .setup((g) => g.members)
+          .returns(
+            () =>
+              ({
+                resolve: (): any => undefined
+              } as any)
+          );
 
-      mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((msg) => msg.guild).returns(() => mockGuild.object);
+        mockMessage = Mock.ofType<Message>();
+        mockMessage.setup((msg) => msg.guild).returns(() => mockGuild.object);
 
-      messageQueue = [];
-      client
-        .setup((c) => c.queueMessages(It.isAny()))
-        .callback((messages) => messageQueue.push(...messages));
-    });
-
-    it('should respond with help and plugin summary if no personality core supplied and core loaded', () => {
-      const messageText = `${MOCK_USERNAME} ${helpCommand}`;
-      engine.addPersonality(coreWithHelp);
-
-      mockMessage.setup((msg) => msg.content).returns(() => messageText);
-      untypedEngine.onMessage(mockMessage.object);
-
-      expect(messageQueue.length).toBe(2);
-
-      // Summary text
-      expect(typeof messageQueue[0]).toBe('string');
-      expect(messageQueue[0]).toContain(helpCommand);
-
-      // Embed
-      const embed = messageQueue[1] as MessageEmbed;
-      expect(embed.fields.length).toBe(1);
-      expect(embed.fields[0].name).toBe('Help topics');
-    });
-
-    it('should respond with help and no topics if no personality core supplied and no cores loaded', () => {
-      const messageText = `${MOCK_USERNAME} ${helpCommand}`;
-
-      mockMessage.setup((msg) => msg.content).returns(() => messageText);
-      untypedEngine.onMessage(mockMessage.object);
-
-      expect(messageQueue.length).toBe(2);
-
-      // Summary text
-      expect(typeof messageQueue[0]).toBe('string');
-      expect(messageQueue[0]).toContain(helpCommand);
-
-      // Embed
-      const embed = messageQueue[1] as MessageEmbed;
-      expect(embed.fields.length).toBe(1);
-      expect(embed.fields[0].name).toBe('Help topics');
-      expect(embed.fields[0].value).toBe('No topics');
-    });
-
-    it('should respond with plugin help if personality core supplied and loaded', (done) => {
-      const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
-
-      engine.addPersonality(coreWithHelp);
-
-      mockMessage.setup((msg) => msg.content).returns(() => messageText);
-      untypedEngine.onMessage(mockMessage.object);
-
-      setTimeout(() => {
-        expect(messageQueue.length).toBe(1);
-        expect(typeof messageQueue[0]).toBe('string');
-        expect(messageQueue[0]).toBe(helpText);
-        done();
+        messageQueue = [];
+        client
+          .setup((c) => c.queueMessages(It.isAny()))
+          .callback((messages) => messageQueue.push(...messages));
       });
-    });
 
-    it('should respond with generic text if personality core supplied but not loaded', (done) => {
-      const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
+      it('should respond with help and plugin summary if no personality core supplied and core loaded', () => {
+        const messageText = `${MOCK_USERNAME} ${helpCommand}`;
+        engine.addPersonality(coreWithHelp);
 
-      mockMessage.setup((msg) => msg.content).returns(() => messageText);
-      untypedEngine.onMessage(mockMessage.object);
+        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        untypedEngine.onMessage(mockMessage.object);
 
-      setTimeout(() => {
-        expect(messageQueue.length).toBe(1);
+        expect(messageQueue.length).toBe(2);
+
+        // Summary text
         expect(typeof messageQueue[0]).toBe('string');
-        expect(messageQueue[0]).toBe('No help for that!');
-        done();
+        expect(messageQueue[0]).toContain(helpCommand);
+
+        // Embed
+        const embed = messageQueue[1] as MessageEmbed;
+        expect(embed.fields.length).toBe(1);
+        expect(embed.fields[0].name).toBe('Help topics');
+      });
+
+      it('should respond with help and no topics if no personality core supplied and no cores loaded', () => {
+        const messageText = `${MOCK_USERNAME} ${helpCommand}`;
+
+        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        untypedEngine.onMessage(mockMessage.object);
+
+        expect(messageQueue.length).toBe(2);
+
+        // Summary text
+        expect(typeof messageQueue[0]).toBe('string');
+        expect(messageQueue[0]).toContain(helpCommand);
+
+        // Embed
+        const embed = messageQueue[1] as MessageEmbed;
+        expect(embed.fields.length).toBe(1);
+        expect(embed.fields[0].name).toBe('Help topics');
+        expect(embed.fields[0].value).toBe('No topics');
+      });
+
+      it('should respond with plugin help if personality core supplied and loaded', (done) => {
+        const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
+
+        engine.addPersonality(coreWithHelp);
+
+        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        untypedEngine.onMessage(mockMessage.object);
+
+        setTimeout(() => {
+          expect(messageQueue.length).toBe(1);
+          expect(typeof messageQueue[0]).toBe('string');
+          expect(messageQueue[0]).toBe(helpText);
+          done();
+        });
+      });
+
+      it('should respond with generic text if personality core supplied but not loaded', (done) => {
+        const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
+
+        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        untypedEngine.onMessage(mockMessage.object);
+
+        setTimeout(() => {
+          expect(messageQueue.length).toBe(1);
+          expect(typeof messageQueue[0]).toBe('string');
+          expect(messageQueue[0]).toBe('No help for that!');
+          done();
+        });
       });
     });
   });

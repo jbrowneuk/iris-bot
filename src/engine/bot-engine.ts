@@ -11,7 +11,7 @@ import { MessageType } from '../types';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { HandledResponseError } from './handled-response-error';
 
-export const helpCommand = '+help';
+export const helpCommands = ['help', '+help'];
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
@@ -115,11 +115,14 @@ export class BotEngine implements Engine {
     message: Message,
     addressedMessage: string
   ): void {
-    if (addressedMessage.startsWith(helpCommand)) {
-      this.handleHelp(message, addressedMessage);
+    // Check if requesting help
+    const selectedHelp = getValueStartedWith(addressedMessage, helpCommands);
+    if (selectedHelp) {
+      this.handleHelpCommand(message, addressedMessage, selectedHelp);
       return;
     }
 
+    // Check if bot was simply mentioned
     if (addressedMessage.length === 0) {
       this.responses
         .generateResponse('addressedNoCommand')
@@ -219,31 +222,62 @@ export class BotEngine implements Engine {
     return botInfo.username;
   }
 
-  private handleHelp(message: Message, rawText: string): void {
+  /**
+   * Wrapper to handle a help request
+   *
+   * @param message message object from server
+   * @param text relevant text content from the user's message
+   * @param helpCommand the detected help command from the text content
+   */
+  private handleHelpCommand(
+    message: Message,
+    text: string,
+    helpCommand: string
+  ): void {
     message.react('🆗');
-    const safeRawText = rawText.trim();
-    if (safeRawText === helpCommand) {
-      const coresWithHelp = this.personalityConstructs.filter((core) => {
-        return typeof core.onHelp === 'function';
-      });
+    const trimText = text.trim();
 
-      const coreNames = coresWithHelp.map((core) => `${core.constructor.name}`);
-
-      const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
-      const messageEmbed = new MessageEmbed();
-      const topics = coreNames.length
-        ? '`' + coreNames.join('`\n`') + '`'
-        : 'No topics';
-      messageEmbed.addField('Help topics', topics);
-      return this.client.queueMessages([responseText, messageEmbed]);
+    // General bot help provided if no personality specified
+    if (trimText === helpCommand) {
+      return this.handleBotHelp();
     }
 
-    const bits = safeRawText.split(' ');
+    const bits = text.split(' ');
     const commandPosition = bits.indexOf(helpCommand) + 1;
-    const commandBits = bits.slice(commandPosition);
+    const personalities = bits.slice(commandPosition);
+    this.handlePersonalityHelp(message, personalities[0]);
+  }
+
+  /**
+   * Provides general help for the bot, i.e. listing personality plugins
+   */
+  private handleBotHelp(): void {
+    const coresWithHelp = this.personalityConstructs.filter((core) => {
+      return typeof core.onHelp === 'function';
+    });
+
+    const coreNames = coresWithHelp.map((core) => `${core.constructor.name}`);
+
+    const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
+    const messageEmbed = new MessageEmbed();
+    const topics = coreNames.length
+      ? '`' + coreNames.join('`\n`') + '`'
+      : 'No topics';
+    messageEmbed.addField('Help topics', topics);
+
+    this.client.queueMessages([responseText, messageEmbed]);
+  }
+
+  /**
+   * Gets the help content from a specific personality plugin
+   *
+   * @param message the message object from the server
+   * @param personality the requested personality plugin name (i.e. contructor)
+   */
+  private handlePersonalityHelp(message: Message, personality: string): void {
     const helpingCore = this.personalityConstructs.find(
       (core) =>
-        core.constructor.name.toUpperCase() === commandBits[0].toUpperCase()
+        core.constructor.name.toUpperCase() === personality.toUpperCase()
     );
 
     if (!helpingCore) {
