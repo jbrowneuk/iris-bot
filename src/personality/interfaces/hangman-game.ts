@@ -1,4 +1,13 @@
 /**
+ * Encapsulates the game statistics for the Hangman game
+ */
+export interface GameStatistics {
+  totalWins: number;
+  totalLosses: number;
+  currentStreak: number;
+}
+
+/**
  * Encapsulates the basic game state for the Hangman game
  */
 export interface GameState {
@@ -8,6 +17,14 @@ export interface GameState {
   livesRemaining: number;
   wrongLetters: string[];
   wrongWords: string[];
+}
+
+/**
+ * Encapsulates game data for the Hangman game
+ */
+export interface GameData {
+  state: GameState;
+  statistics: GameStatistics;
 }
 
 /**
