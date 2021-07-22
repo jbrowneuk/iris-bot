@@ -156,6 +156,10 @@ export class HangmanGame implements Personality {
       return `Bad luck! The word was “${gameState.currentWord}”`;
     }
 
+    if (gameState.currentDisplay.indexOf(guess) >= 0) {
+      return 'You’ve already guessed that!';
+    }
+
     // Copy the letter into the display variable
     for (let index = 0; index < gameState.currentDisplay.length; index += 1) {
       const currentLetter = gameState.currentDisplay[index];
