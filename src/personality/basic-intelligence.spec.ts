@@ -1,5 +1,6 @@
 import { Message } from 'discord.js';
 import { Mock } from 'typemoq';
+
 import { BasicIntelligence } from './basic-intelligence';
 
 describe('basic intelligence', () => {
@@ -8,7 +9,7 @@ describe('basic intelligence', () => {
     message.setup((m) => m.content).returns(() => 'anything');
     const core = new BasicIntelligence();
 
-    core.onAddressed(message.object, 'anything').then((result: string) => {
+    core.onAddressed(message.object, 'anything').then((result) => {
       expect(result).toBe(null);
       done();
     });
@@ -19,7 +20,7 @@ describe('basic intelligence', () => {
     message.setup((m) => m.content).returns(() => '+echo');
     const core = new BasicIntelligence();
 
-    core.onMessage(message.object).then((result: string) => {
+    core.onMessage(message.object).then((result) => {
       expect(result).toBe('Echo!');
       done();
     });
