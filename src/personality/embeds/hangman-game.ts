@@ -1,7 +1,7 @@
 import { MessageEmbed } from 'discord.js';
 
 import { guessCommand, prefix, startCommand } from '../constants/hangman-game';
-import { GameState } from '../interfaces/hangman-game';
+import { GameData } from '../interfaces/hangman-game';
 
 const embedTitle = 'Hangman';
 
@@ -30,7 +30,8 @@ export function generateHelpEmbed(): MessageEmbed {
   return embed;
 }
 
-export function generateGameEmbed(gameState: GameState): MessageEmbed {
+export function generateGameEmbed(gameData: GameData): MessageEmbed {
+  const gameState = gameData.state;
   const embed = generateBaseEmbed();
   const letterDisplay = `\`${gameState.currentDisplay}\``;
   const countDisplay = `(${gameState.currentDisplay.length} letters)`;
@@ -48,6 +49,18 @@ export function generateGameEmbed(gameState: GameState): MessageEmbed {
     'Wrong guesses',
     `Letters: ${lettersSummary}\nWords: ${wordsSummary}`
   );
+
+  return embed;
+}
+
+export function generateStatsEmbed(gameData: GameData): MessageEmbed {
+  const stats = gameData.statistics;
+  const embed = generateBaseEmbed();
+  embed.setDescription('Statistics for this Discord server');
+
+  embed.addField('Current win streak', stats.currentStreak);
+  embed.addField('Total wins', stats.totalWins);
+  embed.addField('Total losses', stats.totalLosses);
 
   return embed;
 }
