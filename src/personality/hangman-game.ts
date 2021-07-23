@@ -1,5 +1,5 @@
 import { Message, MessageEmbed } from 'discord.js';
-import { readFile, writeFile } from 'fs';
+import { readFile, writeFileSync } from 'fs';
 import * as nodeFetch from 'node-fetch';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -24,11 +24,11 @@ export class HangmanGame implements Personality {
 
   destroy(): void {
     const serialisedState = JSON.stringify(Array.from(this.gameData));
-    writeFile(settingsFilePath, serialisedState, settingsFileEnc, (err) => {
-      if (err) {
-        return this.dependencies.logger.error(err);
-      }
-    });
+    try {
+      writeFileSync(settingsFilePath, serialisedState, settingsFileEnc);
+    } catch (ex) {
+      this.dependencies.logger.error(ex.message || ex);
+    }
   }
 
   onAddressed(): Promise<MessageType> {
@@ -75,7 +75,7 @@ export class HangmanGame implements Personality {
   private parseSettings(err: NodeJS.ErrnoException, data: string): void {
     if (err || !data) {
       this.gameData = new Map<string, GameData>();
-      return this.dependencies.logger.error(err.message);
+      return this.dependencies.logger.error((err && err.message) || 'No data');
     }
 
     const parsedData = JSON.parse(data);

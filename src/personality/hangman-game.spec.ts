@@ -1,7 +1,7 @@
 import { Guild, Message, MessageEmbed } from 'discord.js';
 import * as fs from 'fs';
 import * as nodeFetch from 'node-fetch';
-import { IMock, Mock } from 'typemoq';
+import { IMock, It, Mock, Times } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
@@ -10,10 +10,9 @@ import { HangmanGame } from './hangman-game';
 import { GameData, GameState, GameStatistics } from './interfaces/hangman-game';
 
 class TestableHangmanGame extends HangmanGame {
-  public constructor() {
-    const mockLogger = Mock.ofType<Logger>();
+  public constructor(logger: Logger) {
     const mockDeps = Mock.ofType<DependencyContainer>();
-    mockDeps.setup((m) => m.logger).returns(() => mockLogger.object);
+    mockDeps.setup((m) => m.logger).returns(() => logger);
 
     super(mockDeps.object);
 
@@ -92,12 +91,15 @@ describe('Hangman game', () => {
   let personality: TestableHangmanGame;
   let mockGuild: IMock<Guild>;
   let mockMessage: IMock<Message>;
+  let mockLogger: IMock<Logger>;
 
   beforeEach(() => {
+    mockLogger = Mock.ofType<Logger>();
+
     mockGuild = Mock.ofType<Guild>();
     mockGuild.setup((m) => m.id).returns(() => mockGuildId);
 
-    personality = new TestableHangmanGame();
+    personality = new TestableHangmanGame(mockLogger.object);
   });
 
   it('should create', () => {
@@ -607,21 +609,23 @@ describe('Hangman game', () => {
       cb(new Error('mock'), undefined);
     }
 
-    function fakeWriteSuccess(
-      name: string,
-      data: string,
-      enc: string,
-      cb: (err: NodeJS.ErrnoException) => void
-    ) {
+    function fakeWriteSuccess(name: string, data: string, enc: string) {
       expect(name).toBeTruthy();
       expect(data).toBe(serialisedString);
       expect(enc).toBe('utf-8');
-      cb(null);
+    }
+
+    function fakeWriteFail(name: string, data: string, enc: string) {
+      expect(name).toBeTruthy();
+      expect(data).toBe(serialisedString);
+      expect(enc).toBe('utf-8');
+
+      throw new Error('mock error');
     }
 
     beforeEach(() => {
       readSpy = spyOn(fs, 'readFile');
-      writeSpy = spyOn(fs, 'writeFile');
+      writeSpy = spyOn(fs, 'writeFileSync');
     });
 
     it('should load settings on initialise', (done) => {
@@ -663,6 +667,16 @@ describe('Hangman game', () => {
       personality.destroy();
 
       expect(writeSpy).toHaveBeenCalled();
+    });
+
+    it('should log error if unable to persist settings on destroy', () => {
+      writeSpy.and.callFake(fakeWriteFail);
+
+      personality.gameDataMap.set(mockGuildId, hydratedData);
+      personality.destroy();
+
+      expect(writeSpy).toHaveBeenCalled();
+      mockLogger.verify((m) => m.error(It.isAny()), Times.once());
     });
   });
 });
