@@ -1,16 +1,19 @@
 import { Guild, Message, MessageEmbed } from 'discord.js';
+import * as fs from 'fs';
 import * as nodeFetch from 'node-fetch';
 import { IMock, Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Logger } from '../interfaces/logger';
 import { apiUrl, guessCommand, prefix, startCommand, statsCommand } from './constants/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { GameData, GameState, GameStatistics } from './interfaces/hangman-game';
 
 class TestableHangmanGame extends HangmanGame {
   public constructor() {
+    const mockLogger = Mock.ofType<Logger>();
     const mockDeps = Mock.ofType<DependencyContainer>();
-    mockDeps.setup((m) => m.logger).returns(() => console);
+    mockDeps.setup((m) => m.logger).returns(() => mockLogger.object);
 
     super(mockDeps.object);
 
@@ -559,6 +562,107 @@ describe('Hangman game', () => {
         expect(gameState.currentDisplay).toContain(guessLetter);
         done();
       });
+    });
+  });
+
+  describe('Settings persistence', () => {
+    const hydratedData: GameData = {
+      state: {
+        currentWord: 'HELLO',
+        currentDisplay: '-E--O',
+        timeStarted: 1024768,
+        livesRemaining: 9,
+        wrongLetters: ['P'],
+        wrongWords: []
+      },
+      statistics: {
+        totalWins: 4,
+        totalLosses: 1,
+        currentStreak: 2
+      }
+    };
+
+    const serialisedString = JSON.stringify([[mockGuildId, hydratedData]]);
+
+    let readSpy: jasmine.Spy;
+    let writeSpy: jasmine.Spy;
+
+    function fakeReadSuccess(
+      name: string,
+      enc: string,
+      cb: (err: NodeJS.ErrnoException, data: string) => void
+    ) {
+      expect(name).toBeTruthy();
+      expect(enc).toBe('utf-8');
+      cb(null, serialisedString);
+    }
+
+    function fakeReadFail(
+      name: string,
+      enc: string,
+      cb: (err: NodeJS.ErrnoException, data: string) => void
+    ) {
+      expect(name).toBeTruthy();
+      expect(enc).toBe('utf-8');
+      cb(new Error('mock'), undefined);
+    }
+
+    function fakeWriteSuccess(
+      name: string,
+      data: string,
+      enc: string,
+      cb: (err: NodeJS.ErrnoException) => void
+    ) {
+      expect(name).toBeTruthy();
+      expect(data).toBe(serialisedString);
+      expect(enc).toBe('utf-8');
+      cb(null);
+    }
+
+    beforeEach(() => {
+      readSpy = spyOn(fs, 'readFile');
+      writeSpy = spyOn(fs, 'writeFile');
+    });
+
+    it('should load settings on initialise', (done) => {
+      readSpy.and.callFake(fakeReadSuccess);
+
+      personality.initialise();
+
+      setTimeout(() => {
+        const dataForGuild = personality.gameDataMap.get(mockGuildId);
+        expect(dataForGuild).toBeTruthy();
+
+        const state = dataForGuild.state;
+        expect(state).toBeTruthy();
+        expect(state.currentDisplay).toBe(hydratedData.state.currentDisplay);
+
+        const stats = dataForGuild.statistics;
+        expect(stats).toBeTruthy();
+        expect(stats.totalWins).toBe(hydratedData.statistics.totalWins);
+        done();
+      });
+    });
+
+    it('should generate blank data if load fails on initialise', (done) => {
+      readSpy.and.callFake(fakeReadFail);
+
+      personality.initialise();
+
+      setTimeout(() => {
+        expect(personality.gameDataMap).toBeTruthy();
+        expect(personality.gameDataMap.size).toBe(0);
+        done();
+      });
+    });
+
+    it('should persist settings on destroy', () => {
+      writeSpy.and.callFake(fakeWriteSuccess);
+
+      personality.gameDataMap.set(mockGuildId, hydratedData);
+      personality.destroy();
+
+      expect(writeSpy).toHaveBeenCalled();
     });
   });
 });

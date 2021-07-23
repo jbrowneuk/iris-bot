@@ -1,4 +1,5 @@
 import { Message, MessageEmbed } from 'discord.js';
+import { readFile, writeFile } from 'fs';
 import * as nodeFetch from 'node-fetch';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -9,11 +10,25 @@ import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embe
 import { GameData, GameState, GameStatistics, WordData } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
+const settingsFilePath = 'hangman.json';
+const settingsFileEnc = 'utf-8';
+
 export class HangmanGame implements Personality {
   protected gameData: Map<string, GameData>;
 
-  constructor(private dependencies: DependencyContainer) {
-    this.gameData = new Map<string, GameData>();
+  constructor(private dependencies: DependencyContainer) {}
+
+  initialise(): void {
+    readFile(settingsFilePath, settingsFileEnc, this.parseSettings.bind(this));
+  }
+
+  destroy(): void {
+    const serialisedState = JSON.stringify(Array.from(this.gameData));
+    writeFile(settingsFilePath, serialisedState, settingsFileEnc, (err) => {
+      if (err) {
+        return this.dependencies.logger.error(err);
+      }
+    });
   }
 
   onAddressed(): Promise<MessageType> {
@@ -48,6 +63,23 @@ export class HangmanGame implements Personality {
 
   onHelp(): Promise<MessageType> {
     return Promise.resolve(generateHelpEmbed());
+  }
+
+  /**
+   * Handles the callback from loading the settings file, either parsing
+   * data or generating a blank state if required
+   *
+   * @param err loading error, or falsy if no error
+   * @param data loaded data, in string format
+   */
+  private parseSettings(err: NodeJS.ErrnoException, data: string): void {
+    if (err || !data) {
+      this.gameData = new Map<string, GameData>();
+      return this.dependencies.logger.error(err.message);
+    }
+
+    const parsedData = JSON.parse(data);
+    this.gameData = new Map<string, GameData>(parsedData);
   }
 
   private handleGameStart(guildId: string): Promise<MessageType> {
