@@ -1,19 +1,34 @@
-import { Message } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
+import { readFile, writeFile } from 'fs';
 import * as nodeFetch from 'node-fetch';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand } from './constants/hangman-game';
-import { generateGameEmbed, generateHelpEmbed } from './embeds/hangman-game';
-import { GameState, WordData } from './interfaces/hangman-game';
+import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand, statsCommand } from './constants/hangman-game';
+import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
+import { GameData, GameState, GameStatistics, WordData } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
-export class HangmanGame implements Personality {
-  protected gameStates: Map<string, GameState>;
+const settingsFilePath = 'hangman.json';
+const settingsFileEnc = 'utf-8';
 
-  constructor(private dependencies: DependencyContainer) {
-    this.gameStates = new Map<string, GameState>();
+export class HangmanGame implements Personality {
+  protected gameData: Map<string, GameData>;
+
+  constructor(private dependencies: DependencyContainer) {}
+
+  initialise(): void {
+    readFile(settingsFilePath, settingsFileEnc, this.parseSettings.bind(this));
+  }
+
+  destroy(): void {
+    const serialisedState = JSON.stringify(Array.from(this.gameData));
+    writeFile(settingsFilePath, serialisedState, settingsFileEnc, (err) => {
+      if (err) {
+        return this.dependencies.logger.error(err);
+      }
+    });
   }
 
   onAddressed(): Promise<MessageType> {
@@ -39,16 +54,38 @@ export class HangmanGame implements Personality {
       return Promise.resolve(this.handleGuess(message.guild.id, guess));
     }
 
-    return this.handleBlankCommand(message.guild.id);
+    if (text.startsWith(statsCommand)) {
+      return this.handleSummaryCommand(message.guild.id, generateStatsEmbed);
+    }
+
+    return this.handleSummaryCommand(message.guild.id, generateGameEmbed);
   }
 
   onHelp(): Promise<MessageType> {
     return Promise.resolve(generateHelpEmbed());
   }
 
+  /**
+   * Handles the callback from loading the settings file, either parsing
+   * data or generating a blank state if required
+   *
+   * @param err loading error, or falsy if no error
+   * @param data loaded data, in string format
+   */
+  private parseSettings(err: NodeJS.ErrnoException, data: string): void {
+    if (err || !data) {
+      this.gameData = new Map<string, GameData>();
+      return this.dependencies.logger.error(err.message);
+    }
+
+    const parsedData = JSON.parse(data);
+    this.gameData = new Map<string, GameData>(parsedData);
+  }
+
   private handleGameStart(guildId: string): Promise<MessageType> {
-    if (isGameActive(this.gameStates.get(guildId))) {
-      return Promise.resolve('Game already running');
+    const guildGame = this.gameData.get(guildId);
+    if (guildGame && isGameActive(guildGame.state)) {
+      return Promise.resolve('Game is already running');
     }
 
     return nodeFetch
@@ -67,12 +104,31 @@ export class HangmanGame implements Personality {
       });
   }
 
+  /**
+   * Begins a new game of Hangman
+   *
+   * @param guildId the id of the guild the request originated from
+   * @param data word data from API
+   * @returns an embed with the new game information
+   */
   private handleWordResponse(guildId: string, data: WordData): MessageType {
     if (!data || !data.word) {
       return 'Could not load word';
     }
 
-    const newGameState: GameState = {
+    let statistics: GameStatistics;
+    const currentData = this.gameData.get(guildId);
+    if (currentData) {
+      statistics = currentData.statistics;
+    } else {
+      statistics = {
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
+    }
+
+    const state: GameState = {
       timeStarted: Date.now(),
       currentWord: data.word.toUpperCase(),
       currentDisplay: Array(data.word.length).fill('-').join(''),
@@ -81,13 +137,21 @@ export class HangmanGame implements Personality {
       wrongWords: []
     };
 
-    this.gameStates.set(guildId, newGameState);
-    return generateGameEmbed(newGameState);
+    const updatedData = { state, statistics };
+    this.gameData.set(guildId, updatedData);
+    return generateGameEmbed(updatedData);
   }
 
+  /**
+   * Wrapper function to handle guessing of letters or words
+   *
+   * @param guildId the id of the guild the request originated from
+   * @param guess letter or word guessed
+   * @returns game information or help texts
+   */
   private handleGuess(guildId: string, guess: string): MessageType {
-    const gameState = this.gameStates.get(guildId);
-    const gameRunning = isGameActive(gameState);
+    const gameData = this.gameData.get(guildId);
+    const gameRunning = gameData && isGameActive(gameData.state);
     if (!gameRunning) {
       return 'ikke startet';
     }
@@ -106,31 +170,36 @@ export class HangmanGame implements Personality {
       return 'That’s not a word I can use here.';
     }
 
-    // Grab a reference
-    const gameState = this.gameStates.get(guildId);
+    // Grab a reference to the game data
+    const gameData = this.gameData.get(guildId);
+    const { state, statistics } = gameData;
 
-    if (guess.length !== gameState.currentWord.length) {
-      const wordText = `${gameState.currentWord.length}`;
+    if (guess.length !== state.currentWord.length) {
+      const wordText = `${state.currentWord.length}`;
       return `Your guess has ${guess.length} letters, the word has ${wordText}. Think about that for a while.`;
     }
 
-    if (guess === gameState.currentWord) {
-      gameState.currentDisplay = gameState.currentWord;
+    if (guess === state.currentWord) {
+      state.currentDisplay = state.currentWord;
+      statistics.currentStreak += 1;
+      statistics.totalWins += 1;
       return `Yup, it’s “${guess}”`;
     }
 
-    if (gameState.wrongWords.indexOf(guess) !== -1) {
-      return 'You’ve already guessed that one!';
+    if (state.wrongWords.indexOf(guess) !== -1) {
+      return 'That’s already been guessed.';
     }
 
-    gameState.livesRemaining -= 1;
-    gameState.wrongWords.push(guess);
+    state.livesRemaining -= 1;
+    state.wrongWords.push(guess);
 
-    if (gameState.livesRemaining <= 0) {
-      return `You’ve lost! The word was “${gameState.currentWord}”`;
+    if (state.livesRemaining <= 0) {
+      statistics.currentStreak = 0;
+      statistics.totalLosses += 1;
+      return `You’ve lost! The word was “${state.currentWord}”`;
     }
 
-    return generateGameEmbed(gameState);
+    return generateGameEmbed(gameData);
   }
 
   private onGuessLetter(guildId: string, guess: string): MessageType {
@@ -138,55 +207,68 @@ export class HangmanGame implements Personality {
       return 'That’s not a letter I can use…';
     }
 
-    // Grab a reference
-    const gameState = this.gameStates.get(guildId);
+    // Grab a reference to the game data
+    const gameData = this.gameData.get(guildId);
+    const { state, statistics } = gameData;
 
-    if (gameState.currentWord.indexOf(guess) === -1) {
-      if (gameState.wrongLetters.includes(guess)) {
-        return 'You’ve already guessed that!';
+    if (state.currentWord.indexOf(guess) === -1) {
+      if (state.wrongLetters.includes(guess)) {
+        return 'This letter’s already been guessed!';
       }
 
-      gameState.wrongLetters.push(guess);
-      gameState.livesRemaining -= 1;
+      state.wrongLetters.push(guess);
+      state.wrongLetters.sort();
+      state.livesRemaining -= 1;
 
-      if (gameState.livesRemaining > 0) {
-        return `Nope, there’s no “${guess}”. You’ve got ${gameState.livesRemaining} chances remaining!`;
+      if (state.livesRemaining > 0) {
+        return `Nope, there’s no “${guess}”. You’ve got ${state.livesRemaining} chances remaining!`;
       }
 
-      return `Bad luck! The word was “${gameState.currentWord}”`;
+      statistics.currentStreak = 0;
+      statistics.totalLosses += 1;
+      return `Bad luck! The word was “${state.currentWord}”`;
+    }
+
+    if (state.currentDisplay.indexOf(guess) >= 0) {
+      return 'This letter’s already been guessed!';
     }
 
     // Copy the letter into the display variable
-    for (let index = 0; index < gameState.currentDisplay.length; index += 1) {
-      const currentLetter = gameState.currentDisplay[index];
+    for (let index = 0; index < state.currentDisplay.length; index += 1) {
+      const currentLetter = state.currentDisplay[index];
       if (currentLetter !== blankDisplayChar) {
         continue;
       }
 
-      if (gameState.currentWord[index] !== guess) {
+      if (state.currentWord[index] !== guess) {
         continue;
       }
 
-      const lettersBefore = gameState.currentDisplay.substring(0, index);
-      const lettersAfter = gameState.currentDisplay.substring(index + 1);
-      gameState.currentDisplay = `${lettersBefore}${guess}${lettersAfter}`;
+      const lettersBefore = state.currentDisplay.substring(0, index);
+      const lettersAfter = state.currentDisplay.substring(index + 1);
+      state.currentDisplay = `${lettersBefore}${guess}${lettersAfter}`;
     }
 
-    if (gameState.currentWord === gameState.currentDisplay) {
-      return `Yup, it’s “${gameState.currentWord}”`;
+    if (state.currentWord === state.currentDisplay) {
+      statistics.currentStreak += 1;
+      statistics.totalWins += 1;
+      return `Yup, it’s “${state.currentWord}”`;
     }
 
-    return generateGameEmbed(gameState);
+    return generateGameEmbed(gameData);
   }
 
-  private handleBlankCommand(guildId: string): Promise<MessageType> {
-    const state = this.gameStates.get(guildId);
-    if (!state) {
+  private handleSummaryCommand(
+    guildId: string,
+    embedGen: (input: GameData) => MessageEmbed
+  ): Promise<MessageType> {
+    const data = this.gameData.get(guildId);
+    if (!data) {
       const message =
         'No game has been played - try starting one with `+hm start`';
       return Promise.resolve(message);
     }
 
-    return Promise.resolve(generateGameEmbed(state));
+    return Promise.resolve(embedGen(data));
   }
 }
