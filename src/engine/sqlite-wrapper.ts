@@ -1,12 +1,13 @@
 import * as sqlite from 'sqlite3';
 
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
+import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
 
 const databaseFile = './bot.sqlite';
 
 export class SqliteWrapper implements Database {
-  private db: sqlite.Database;
+  protected db: sqlite.Database;
 
   constructor(private logger: Logger) {
     this.db = null;
@@ -93,5 +94,82 @@ export class SqliteWrapper implements Database {
         resolve(rows);
       });
     });
+  }
+
+  public insertRecordsToCollection(
+    collectionName: string,
+    valuesRaw: KeyedObject
+  ): Promise<void> {
+    const values = this.prepareObject(valuesRaw);
+    const insertLogic = Object.keys(values).join();
+    const sql = `INSERT INTO ${collectionName} VALUES (${insertLogic})`;
+
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, values, (err) => {
+        if (err === null) {
+          resolve();
+        }
+
+        reject(err);
+      });
+    });
+  }
+
+  public updateRecordsInCollection(
+    collectionName: string,
+    fieldsRaw: KeyedObject,
+    whereRaw: KeyedObject
+  ): Promise<void> {
+    const fields = this.prepareObject(fieldsRaw);
+    const where = this.prepareObject(whereRaw);
+
+    const queryObject = this.prepareObject({ ...fields, ...where });
+    const setStr = this.prepareSqlField(fields);
+    const whereStr = this.prepareSqlField(where);
+    const sql = `UPDATE ${collectionName} SET ${setStr} WHERE ${whereStr}`;
+
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, queryObject, (err) => {
+        if (err === null) {
+          return resolve();
+        }
+
+        return reject(err);
+      });
+    });
+  }
+
+  /**
+   * Converts a raw key-value pair object into one usable by the SQLite implementation
+   * that expects object keys to be prefixed with `$`
+   *
+   * @param rawInput the raw key-value pair object
+   * @returns a sanitised key-value pair object for use by sqlite prepared statments
+   */
+  private prepareObject(rawInput: KeyedObject): KeyedObject {
+    const preparedObject: KeyedObject = {};
+    const rawKeys = Object.keys(rawInput);
+    rawKeys.forEach((key) => {
+      const preparedKey = key.startsWith('$') ? key : `$${key}`;
+      preparedObject[preparedKey] = rawInput[key];
+    });
+
+    return preparedObject;
+  }
+
+  /**
+   * Converts a field object to a string to be used in a prepared statement
+   *
+   * @param fields the field object, in the format `{ $key: 'value' }`
+   * @returns sql prepared statement for this object
+   */
+  private prepareSqlField(fields: KeyedObject): string {
+    const fieldKeys = Object.keys(fields);
+    const statements = fieldKeys.map((key) => {
+      const tableKey = key.substring(1);
+      return `${tableKey} = ${key}`;
+    });
+
+    return statements.join();
   }
 }
