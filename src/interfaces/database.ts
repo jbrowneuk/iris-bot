@@ -41,10 +41,10 @@ export interface Database {
    * @param collectionName the collection to get
    * @param filter a filter for results
    */
-  getRecordsFromCollection(
+  getRecordsFromCollection<T>(
     collectionName: string,
     filter: QueryFilter
-  ): Promise<any[]>;
+  ): Promise<T[]>;
 
   /**
    * Inserts a record into a collection

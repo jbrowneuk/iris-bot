@@ -50,10 +50,10 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  public getRecordsFromCollection(
+  public getRecordsFromCollection<T>(
     collectionName: string,
     filter: QueryFilter
-  ): Promise<any[]> {
+  ): Promise<T[]> {
     if (this.db === null) {
       return Promise.reject(new Error('No connection established'));
     }
@@ -83,7 +83,7 @@ export class SqliteWrapper implements Database {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM ${collectionName}${where}`;
       const statement = this.db.prepare(sql);
-      statement.all(vals, (err: Error, rows: any[]) => {
+      statement.all(vals, (err: Error, rows: T[]) => {
         statement.finalize();
 
         if (err) {

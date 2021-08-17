@@ -171,7 +171,7 @@ describe('SQLite wrapper', () => {
       testObject.dbInstance = mockSqlite.object;
 
       testObject
-        .getRecordsFromCollection(expectedCollection, {})
+        .getRecordsFromCollection<KeyedObject>(expectedCollection, {})
         .then((records: KeyedObject[]) => {
           mockSqlite.verify(
             (m) => m.prepare(It.isValue(`SELECT * FROM ${expectedCollection}`)),

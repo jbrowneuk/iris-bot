@@ -8,6 +8,10 @@ const collectionName = 'responses';
 
 export const NoResponseText = 'Nothing to say to that…';
 
+interface PhraseResponse {
+  text: string;
+}
+
 /**
  * Used to randomly select a response from a collection of responses
  */
@@ -53,7 +57,7 @@ export class ResponseGeneratorImpl implements ResponseGenerator {
       });
     }
 
-    const responses = await this.database.getRecordsFromCollection(
+    const responses = await this.database.getRecordsFromCollection<PhraseResponse>(
       collectionName,
       filter
     );
