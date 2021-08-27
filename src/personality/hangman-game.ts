@@ -5,7 +5,7 @@ import * as nodeFetch from 'node-fetch';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand, statsCommand } from './constants/hangman-game';
+import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
 import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
 import { GameData, GameState, GameStatistics, WordData } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
@@ -58,7 +58,11 @@ export class HangmanGame implements Personality {
       return this.handleSummaryCommand(message.guild.id, generateStatsEmbed);
     }
 
-    return this.handleSummaryCommand(message.guild.id, generateGameEmbed);
+    if (text.startsWith(summaryCommand)) {
+      return this.handleSummaryCommand(message.guild.id, generateGameEmbed);
+    }
+
+    return this.onHelp();
   }
 
   onHelp(): Promise<MessageType> {
@@ -131,7 +135,7 @@ export class HangmanGame implements Personality {
     const state: GameState = {
       timeStarted: Date.now(),
       currentWord: data.word.toUpperCase(),
-      currentDisplay: Array(data.word.length).fill('-').join(''),
+      currentDisplay: Array(data.word.length).fill(blankDisplayChar).join(''),
       livesRemaining: 10,
       wrongLetters: [],
       wrongWords: []
@@ -153,7 +157,7 @@ export class HangmanGame implements Personality {
     const gameData = this.gameData.get(guildId);
     const gameRunning = gameData && isGameActive(gameData.state);
     if (!gameRunning) {
-      return 'ikke startet';
+      return `The game hasn’t been started. Try starting one with \`${prefix} ${startCommand}\``;
     }
 
     const isWord = guess.length > 1;
@@ -264,8 +268,7 @@ export class HangmanGame implements Personality {
   ): Promise<MessageType> {
     const data = this.gameData.get(guildId);
     if (!data) {
-      const message =
-        'No game has been played - try starting one with `+hm start`';
+      const message = `No game has been played - try starting one with \`${prefix} ${startCommand}\``;
       return Promise.resolve(message);
     }
 
