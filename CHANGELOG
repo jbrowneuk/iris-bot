@@ -1,3 +1,11 @@
+release 0.1.12, 0.1.13 and 0.1.14 - Hangman game bugfixes, statistics and persistence
+16ebf39ea37af62473e3fb0e2ac41562d776fce2 Prevent adding already guessed correct letters
+fe3999df207f997c0eedc60b5607f8e730521bf9 Add GameData and GameStatistics interfaces
+3f50d8493805baa6e03210b5371da223b5dfe253 Implement statistics for hangman game
+2a8d8b6965b9032a1d3fa8be0fed4d4c658524a0 Implement hangman state persistence
+c8fe0a1e62574ed9ddf1f82b56a64763a4e4554a Remove asynchronous call in destroy
+9d63f707f1cc33067bdafe05bd0632f872f182bc Change hangman game default behaviour to show help
+
 Release 0.1.11 - Improved help and third-party stickers:
 93317c9f1b0d70626c36dd23a9eb82178d681fd1 Remove obsolete bot debugging code
 f471977357b6fa41fdaf6a6a7be1b84fa7c66acd Allow bot to respond to different forms of help command
