@@ -5,7 +5,8 @@ import { IMock, It, Mock, Times } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import { apiUrl, guessCommand, prefix, startCommand, statsCommand } from './constants/hangman-game';
+import { apiUrl, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
+import * as HangmanEmbeds from './embeds/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { GameData, GameState, GameStatistics } from './interfaces/hangman-game';
 
@@ -106,7 +107,25 @@ describe('Hangman game', () => {
     expect(personality).toBeTruthy();
   });
 
-  describe('help functionality', () => {
+  describe('Default behaviour', () => {
+    beforeEach(() => {
+      mockMessage = Mock.ofType<Message>();
+      mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
+      mockMessage.setup((s) => s.content).returns(() => prefix);
+
+      personality.addMockGameState(mockGuildId);
+    });
+
+    it('should provide help if command given with no parameters', done => {
+      const helpSpy = spyOn(personality, 'onHelp').and.callThrough();
+      personality.onMessage(mockMessage.object).then(() => {
+        expect(helpSpy).toHaveBeenCalled();
+        done();
+      });
+    });
+  });
+
+  describe('Help functionality', () => {
     it('should respond with help message', (done) => {
       personality.onHelp().then((response) => {
         expect(response).toBeTruthy();
@@ -402,6 +421,43 @@ describe('Hangman game', () => {
     });
   });
 
+  describe('Game summary', () => {
+    const word = 'ABCDE';
+    let startData: GameData;
+
+    beforeEach(() => {
+      mockMessage = Mock.ofType<Message>();
+      mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
+      mockMessage
+        .setup((s) => s.content)
+        .returns(() => `${prefix} ${summaryCommand}`);
+
+      personality.addBlankGameState(mockGuildId);
+      startData = personality.gameDataMap.get(mockGuildId);
+      startData.state.currentWord = word;
+      startData.state.currentDisplay = word.replace(word[2], '-');
+    });
+
+    it('should return embed', (done) => {
+      personality.onMessage(mockMessage.object).then((response) => {
+        expect(response).toBeInstanceOf(MessageEmbed);
+        done();
+      });
+    });
+
+    it('should generate embed using appropriate embed generator', (done) => {
+      const embedGenSpy = spyOn(
+        HangmanEmbeds,
+        'generateGameEmbed'
+      ).and.callThrough();
+
+      personality.onMessage(mockMessage.object).then(() => {
+        expect(embedGenSpy).toHaveBeenCalled();
+        done();
+      });
+    });
+  });
+
   describe('Statistic summary', () => {
     const word = 'ABCDE';
     let startData: GameData;
@@ -416,7 +472,7 @@ describe('Hangman game', () => {
       startData.state.currentDisplay = word.replace(word[2], '-');
     });
 
-    it('should return embed showing statistics', (done) => {
+    it('should return embed', (done) => {
       mockMessage
         .setup((s) => s.content)
         .returns(() => `${prefix} ${statsCommand}`);

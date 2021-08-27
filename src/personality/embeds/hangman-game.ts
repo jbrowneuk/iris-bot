@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 
-import { guessCommand, prefix, startCommand } from '../constants/hangman-game';
+import { guessCommand, prefix, startCommand, summaryCommand } from '../constants/hangman-game';
 import { GameData } from '../interfaces/hangman-game';
 
 const embedTitle = 'Hangman';
@@ -16,7 +16,7 @@ export function generateHelpEmbed(): MessageEmbed {
   embed.setDescription('Plays a game of hangman using words from web sources.');
   embed.addField(
     'Game summary',
-    `Use \`${prefix}\` to see a summary of the game.`
+    `Use \`${prefix} ${summaryCommand}\` to see a summary of the game.`
   );
   embed.addField(
     'Starting a game',
@@ -24,7 +24,7 @@ export function generateHelpEmbed(): MessageEmbed {
   );
   embed.addField(
     'Making guesses',
-    `Use \`${prefix} ${guessCommand} <your guess>\` to guess a word or letter.`
+    `Use \`${prefix} ${guessCommand} <your guess>\` to guess a letter or word.`
   );
 
   return embed;
