@@ -1,6 +1,7 @@
 {
   "generalConfiguration.sortOnBeforeSave": true,
-  "sortConfiguration.joinImportPaths": true,
-  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.type": "maxLineLength",
-  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 140
+  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.type": "newLineEachExpressionAfterCountLimitExceptIfOnlyOne",
+  "importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 80,
+  "importStringConfiguration.tabSize": 2,
+  "importStringConfiguration.quoteMark": "single"
 }
