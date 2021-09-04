@@ -1,4 +1,8 @@
-import { announceCommand, setCommand, statusCommand } from '../constants/mc-server';
+import {
+  announceCommand,
+  setCommand,
+  statusCommand
+} from '../constants/mc-server';
 import { ServerResponse } from '../interfaces/mc-server';
 import * as embeds from './mc-server';
 

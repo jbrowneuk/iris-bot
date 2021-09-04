@@ -9,7 +9,6 @@ import { SettingsManager } from './engine/settings-manager';
 import { SqliteWrapper } from './engine/sqlite-wrapper';
 import { DependencyContainer } from './interfaces/dependency-container';
 import { AnimalImages } from './personality/animal-images';
-import { BasicIntelligence } from './personality/basic-intelligence';
 import { BlogRoll } from './personality/blog-roll';
 import { BuildInfo } from './personality/build-info';
 import { CallResponse } from './personality/call-response';
@@ -56,7 +55,6 @@ const dependencies: DependencyContainer = {
 
 // Initialise personality
 engine.addPersonality(new AnimalImages(dependencies));
-engine.addPersonality(new BasicIntelligence());
 engine.addPersonality(new BlogRoll(dependencies));
 engine.addPersonality(new BuildInfo());
 engine.addPersonality(new CallResponse(dependencies));

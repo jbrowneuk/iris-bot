@@ -1,6 +1,11 @@
 import { MessageEmbed } from 'discord.js';
 
-import { guessCommand, prefix, startCommand, summaryCommand } from '../constants/hangman-game';
+import {
+  guessCommand,
+  prefix,
+  startCommand,
+  summaryCommand
+} from '../constants/hangman-game';
 import { GameData } from '../interfaces/hangman-game';
 
 const embedTitle = 'Hangman';

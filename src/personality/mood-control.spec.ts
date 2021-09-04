@@ -108,10 +108,7 @@ describe('Mood control', () => {
 
   describe('onMessage interaction', () => {
     it('should return promise resolving to null', (done) => {
-      const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => 'any message');
-
-      moodControl.onMessage(mockMessage.object).then((value) => {
+      moodControl.onMessage().then((value) => {
         expect(value).toBeNull();
         done();
       });
@@ -138,8 +135,8 @@ describe('Mood control', () => {
 
   describe('beginActivity', () => {
     beforeEach(() => {
-      spyOn(utils, 'randomFloat').and.callFake((min, max) => min);
-      spyOn(utils, 'randomInteger').and.callFake((min, max) => min);
+      spyOn(utils, 'randomFloat').and.callFake((min) => min);
+      spyOn(utils, 'randomInteger').and.callFake((min) => min);
 
       mockMoodEngine
         .setup((s) => s.calculateDelta(It.isAny(), It.isAny()))

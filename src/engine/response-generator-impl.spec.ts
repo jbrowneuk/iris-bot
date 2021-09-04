@@ -3,7 +3,10 @@ import { IMock, It, Mock } from 'typemoq';
 import { Database, QueryFilter } from '../interfaces/database';
 import { Logger } from '../interfaces/logger';
 import { Mood, MoodEngine } from '../interfaces/mood-engine';
-import { NoResponseText, ResponseGeneratorImpl } from './response-generator-impl';
+import {
+  NoResponseText,
+  ResponseGeneratorImpl
+} from './response-generator-impl';
 
 const mockDbRows = [{ text: 'a' }, { text: 'b' }, { text: 'c' }];
 

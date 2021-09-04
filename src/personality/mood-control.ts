@@ -87,10 +87,7 @@ export class MoodControl implements Personality {
     }
   }
 
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<string> {
+  public onAddressed(_: Message, addressedMessage: string): Promise<string> {
     const startsWithCommand = getValueStartedWith(
       addressedMessage,
       moodSummaryCommands
@@ -102,7 +99,7 @@ export class MoodControl implements Personality {
     return this.dependencies.responses.generateResponse('mood');
   }
 
-  public onMessage(message: Message): Promise<string> {
+  public onMessage(): Promise<string> {
     return Promise.resolve(null);
   }
 

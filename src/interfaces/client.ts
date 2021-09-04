@@ -1,4 +1,4 @@
-import { Channel, Message, PresenceData, User } from 'discord.js';
+import { Channel, PresenceData, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import { MessageType } from '../types';

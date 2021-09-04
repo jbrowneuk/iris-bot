@@ -203,7 +203,7 @@ describe('Bot engine', () => {
 
     untypedEngine
       .dequeuePromises(fakeMessageFns)
-      .catch((err: any) =>
+      .catch((err: Error) =>
         expect(err instanceof HandledResponseError).toBeTruthy()
       );
 
@@ -226,7 +226,7 @@ describe('Bot engine', () => {
     untypedEngine
       .dequeuePromises(fakeMessageFns)
       .then(() => fail('should not get here'))
-      .catch((err: any) => {
+      .catch((err: string) => {
         expect(err).toBe(failureMessage);
         client.verify((c) => c.queueMessages(It.isAny()), Times.never());
         done();

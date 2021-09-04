@@ -1,17 +1,21 @@
 import { Guild, Message, MessageEmbed, TextChannel } from 'discord.js';
 import * as fs from 'fs';
+import { StatusResponse } from 'minecraft-server-util/dist/model/StatusResponse';
 import { IMock, It, Mock } from 'typemoq';
 
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
+import {
+  announceCommand,
+  setCommand,
+  statusCommand
+} from './constants/mc-server';
 import { noAssociationCopy } from './embeds/mc-server';
-import { ServerInformation, ServerResponse } from './interfaces/mc-server';
+import { ServerInformation } from './interfaces/mc-server';
 import { McServer } from './mc-server';
 
 import util = require('minecraft-server-util');
-
 class TestableMcServer extends McServer {
   public setMockServer(discordId: string, info: ServerInformation): void {
     this.servers.set(discordId, info);
@@ -39,12 +43,12 @@ const MOCK_CHANNEL_ID = 'mockchannel';
 const MOCK_GUILD_NAME = 'mock name';
 const MOCK_CHANNEL_NAME = 'mock channel name';
 
-const MOCK_RUNNING_STATUS: ServerResponse = {
+const MOCK_RUNNING_STATUS = {
   version: '1.16.2',
   onlinePlayers: 1,
   maxPlayers: 5,
-  samplePlayers: [{ name: 'bob-bobertson' }]
-};
+  samplePlayers: [{ name: 'bob-bobertson', id: 'any' }]
+} as StatusResponse;
 
 describe('Minecraft server utilities', () => {
   let mockGuild: IMock<Guild>;
@@ -95,7 +99,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
 
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
 
       personality.onMessage(mockMessage.object).then((response) => {
@@ -115,7 +119,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
 
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
 
       personality.onMessage(mockMessage.object).then((response) => {
@@ -133,7 +137,9 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup((m) => m.content).returns(() => statusCommand);
       mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<any>(null));
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<StatusResponse>(null)
+      );
 
       personality.onMessage(mockMessage.object).then((response) => {
         expect(response).toBeTruthy();
@@ -151,7 +157,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
 
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
 
       personality.onMessage(mockMessage.object).then((response) => {
@@ -256,7 +262,7 @@ describe('Minecraft server utilities', () => {
 
     it('should fetch server status for known servers', (done) => {
       const statusUpdateHandler = spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
 
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
@@ -271,7 +277,7 @@ describe('Minecraft server utilities', () => {
     it('should post status to channel if server comes online', (done) => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
       mockClient
         .setup((m) => m.findChannelById(It.isAny()))
@@ -292,7 +298,9 @@ describe('Minecraft server utilities', () => {
 
     it('should post status to channel if server goes offline', (done) => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<any>(null));
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<StatusResponse>(null)
+      );
       mockClient
         .setup((m) => m.findChannelById(It.isAny()))
         .returns(() => mockChannel.object);
@@ -333,7 +341,7 @@ describe('Minecraft server utilities', () => {
     it('should not post status to channel if server is online and status does not change', (done) => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(MOCK_RUNNING_STATUS)
+        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
       );
       mockClient
         .setup((m) => m.findChannelById(It.isAny()))
@@ -353,7 +361,9 @@ describe('Minecraft server utilities', () => {
 
     it('should not post status to channel if server is offline and status does not change', (done) => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<any>(null));
+      spyOn(util, 'status').and.callFake(() =>
+        Promise.resolve<StatusResponse>(null)
+      );
       mockClient
         .setup((m) => m.findChannelById(It.isAny()))
         .returns(() => mockChannel.object);
@@ -372,18 +382,18 @@ describe('Minecraft server utilities', () => {
   });
 
   describe('server status handling', () => {
-    function mapVersion(version: string): ServerResponse {
+    function mapVersion(version: string): StatusResponse {
       return {
         version,
         onlinePlayers: 1,
         maxPlayers: 5,
         samplePlayers: [{ name: 'bob-bobertson' }]
-      };
+      } as StatusResponse;
     }
 
     it('should provide valid status if server is reporting two part version', (done) => {
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion('1.17'))
+        Promise.resolve<StatusResponse>(mapVersion('1.17'))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -394,7 +404,7 @@ describe('Minecraft server utilities', () => {
 
     it('should provide valid status if server is reporting three part version', (done) => {
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion('1.16.5'))
+        Promise.resolve<StatusResponse>(mapVersion('1.16.5'))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -405,7 +415,7 @@ describe('Minecraft server utilities', () => {
 
     it('should provide valid status if server is reporting three part version with custom software', (done) => {
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion('Paper 1.16.2'))
+        Promise.resolve<StatusResponse>(mapVersion('Paper 1.16.2'))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -416,7 +426,7 @@ describe('Minecraft server utilities', () => {
 
     it('should provide null status if server is reporting Exaroton-style sleeping text', (done) => {
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion('§9◉ Sleeping'))
+        Promise.resolve<StatusResponse>(mapVersion('§9◉ Sleeping'))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -428,7 +438,7 @@ describe('Minecraft server utilities', () => {
     it('should extract correct version if server is reporting three part version', (done) => {
       const semVer = '1.16.2';
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion(semVer))
+        Promise.resolve<StatusResponse>(mapVersion(semVer))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -440,7 +450,7 @@ describe('Minecraft server utilities', () => {
     it('should extract correct version if server is reporting three part version with custom software', (done) => {
       const semVer = '1.16.2';
       spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<any>(mapVersion(`Paper ${semVer}`))
+        Promise.resolve<StatusResponse>(mapVersion(`Paper ${semVer}`))
       );
 
       personality.invokeGetServerStatus().then((response) => {
@@ -464,7 +474,7 @@ describe('Minecraft server utilities', () => {
       const fakeReadFile = (
         path: string,
         enc: string,
-        cb: (err: any, data: string) => void
+        cb: (err: Error, data: string) => void
       ) => {
         expect(path).toBeTruthy();
         expect(enc).toBeTruthy();
