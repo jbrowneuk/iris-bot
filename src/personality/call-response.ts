@@ -4,6 +4,10 @@ import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 
+interface CannedResponse {
+  response: string;
+}
+
 /**
  * Call-Response personality
  *
@@ -39,7 +43,7 @@ export class CallResponse implements Personality {
     };
 
     return this.database
-      .getRecordsFromCollection('call_response', filter)
+      .getRecordsFromCollection<CannedResponse>('call_response', filter)
       .then((messagePairs) => {
         if (!messagePairs || messagePairs.length === 0) {
           return null;

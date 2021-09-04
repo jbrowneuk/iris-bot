@@ -1,3 +1,5 @@
+import { KeyedObject } from './keyed-object';
+
 export enum QueryLogic {
   And = 'AND',
   Or = 'OR',
@@ -39,8 +41,32 @@ export interface Database {
    * @param collectionName the collection to get
    * @param filter a filter for results
    */
-  getRecordsFromCollection(
+  getRecordsFromCollection<T>(
     collectionName: string,
     filter: QueryFilter
-  ): Promise<any[]>;
+  ): Promise<T[]>;
+
+  /**
+   * Inserts a record into a collection
+   *
+   * @param collectionName the collection to add to
+   * @param values the key-value pairs
+   */
+  insertRecordsToCollection(
+    collectionName: string,
+    values: KeyedObject
+  ): Promise<void>;
+
+  /**
+   * Updates a set of records in a table
+   *
+   * @param collectionName collection to modify
+   * @param fields records to update with values
+   * @param where query filter
+   */
+  updateRecordsInCollection(
+    collectionName: string,
+    fields: KeyedObject,
+    where: KeyedObject
+  ): Promise<void>;
 }
