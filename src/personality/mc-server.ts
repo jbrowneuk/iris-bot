@@ -4,14 +4,24 @@ import * as fs from 'fs';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
 import {
-    generateAnnounceNoAssociationEmbed, generateAnnounceSuccessEmbed, generateHelpEmbed, generateServerEmbed, generateSetFailureEmbed,
-    generateSetSuccessEmbed, generateStatusFailureEmbed
+  announceCommand,
+  setCommand,
+  statusCommand
+} from './constants/mc-server';
+import {
+  generateAnnounceNoAssociationEmbed,
+  generateAnnounceSuccessEmbed,
+  generateHelpEmbed,
+  generateServerEmbed,
+  generateSetFailureEmbed,
+  generateSetSuccessEmbed,
+  generateStatusFailureEmbed
 } from './embeds/mc-server';
 import { ServerInformation, ServerResponse } from './interfaces/mc-server';
 
 // This has to be const util = require as it breaks the build if not
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const util = require('minecraft-server-util');
 
 // Personality constants
@@ -180,12 +190,10 @@ export class McServer implements Personality {
           samplePlayers: response.samplePlayers
         };
       })
-      .catch(
-        (error: Error): ServerResponse => {
-          this.dependencies.logger.error('Server unreachable:', error);
-          return null;
-        }
-      );
+      .catch((error: Error): ServerResponse => {
+        this.dependencies.logger.error('Server unreachable:', error);
+        return null;
+      });
   }
 
   private parseServers(err: NodeJS.ErrnoException, data: string): void {

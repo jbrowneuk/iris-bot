@@ -39,7 +39,8 @@ describe('basic intelligence', () => {
           }
 
           const filterWhere = filter.where[0];
-          const response = filterWhere.value === mockCallFullText ? mockResponse : null;
+          const response =
+            filterWhere.value === mockCallFullText ? mockResponse : null;
           return Promise.resolve([{ response }]);
         });
     });

@@ -6,6 +6,8 @@ import { MessageType } from '../types';
 /**
  * A basic personality implementation that can be used as a template to
  * implement your own personality implementations from
+ *
+ * Don't forget to initialise and add to the bot in the index.ts file!
  */
 export class BasicIntelligence implements Personality {
   /**

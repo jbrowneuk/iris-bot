@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 
+import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
 import { Settings } from '../interfaces/settings';
 
@@ -7,7 +8,7 @@ const defaultPath = './config.json';
 const encoding = 'utf8';
 
 export class SettingsManager implements Settings {
-  protected settingsData: { [key: string]: any };
+  protected settingsData: KeyedObject;
 
   /**
    * Initialises an instance of the SettingsManager class, loading from file if
@@ -24,7 +25,7 @@ export class SettingsManager implements Settings {
     this.initialiseFromFile();
   }
 
-  public getSettings(): { [key: string]: any } {
+  public getSettings(): KeyedObject {
     return this.settingsData;
   }
 

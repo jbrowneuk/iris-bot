@@ -57,10 +57,11 @@ export class ResponseGeneratorImpl implements ResponseGenerator {
       });
     }
 
-    const responses = await this.database.getRecordsFromCollection<PhraseResponse>(
-      collectionName,
-      filter
-    );
+    const responses =
+      await this.database.getRecordsFromCollection<PhraseResponse>(
+        collectionName,
+        filter
+      );
     if (responses.length === 0) {
       this.logger.error('Unable to find a response', phrase, mood);
       return NoResponseText;

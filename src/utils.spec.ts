@@ -56,11 +56,9 @@ describe('utilities - test whether a string starts with a value in a set', () =>
 });
 
 describe('utilities - random number generation', () => {
-  let randomSpy: jasmine.Spy;
-
   beforeEach(() => {
     // Mock the randomiser behaviour for consistent results
-    randomSpy = spyOn(Math, 'random').and.returnValue(0.5);
+    spyOn(Math, 'random').and.returnValue(0.5);
   });
 
   describe('random float', () => {

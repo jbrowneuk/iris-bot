@@ -1,6 +1,14 @@
 import { guessCommand, prefix, startCommand } from '../constants/hangman-game';
-import { GameData, GameState, GameStatistics } from '../interfaces/hangman-game';
-import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
+import {
+  GameData,
+  GameState,
+  GameStatistics
+} from '../interfaces/hangman-game';
+import {
+  generateGameEmbed,
+  generateHelpEmbed,
+  generateStatsEmbed
+} from './hangman-game';
 
 describe('Hangman Game Status embed', () => {
   const mockGame: GameState = {

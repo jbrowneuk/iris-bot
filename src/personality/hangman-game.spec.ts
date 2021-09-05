@@ -5,7 +5,14 @@ import { IMock, It, Mock, Times } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import { apiUrl, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
+import {
+  apiUrl,
+  guessCommand,
+  prefix,
+  startCommand,
+  statsCommand,
+  summaryCommand
+} from './constants/hangman-game';
 import * as HangmanEmbeds from './embeds/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { GameData, GameState, GameStatistics } from './interfaces/hangman-game';
@@ -116,7 +123,7 @@ describe('Hangman game', () => {
       personality.addMockGameState(mockGuildId);
     });
 
-    it('should provide help if command given with no parameters', done => {
+    it('should provide help if command given with no parameters', (done) => {
       const helpSpy = spyOn(personality, 'onHelp').and.callThrough();
       personality.onMessage(mockMessage.object).then(() => {
         expect(helpSpy).toHaveBeenCalled();
@@ -178,8 +185,8 @@ describe('Hangman game', () => {
       expect(oldWord).not.toContain('-');
 
       personality.onMessage(mockMessage.object).then(() => {
-        const newWord = personality.getStateForGuild(mockGuildId)
-          .currentDisplay;
+        const newWord =
+          personality.getStateForGuild(mockGuildId).currentDisplay;
 
         expect(newWord).not.toBe(oldWord);
         done();

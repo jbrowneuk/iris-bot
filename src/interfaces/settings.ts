@@ -1,8 +1,10 @@
+import { KeyedObject } from './keyed-object';
+
 export interface Settings {
   /**
    * Gets the raw settings representation
    */
-  getSettings(): { [key: string]: any };
+  getSettings(): KeyedObject;
 
   /**
    * Gets a setting by its key

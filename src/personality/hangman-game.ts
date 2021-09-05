@@ -5,9 +5,26 @@ import * as nodeFetch from 'node-fetch';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { apiUrl, blankDisplayChar, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
-import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
-import { GameData, GameState, GameStatistics, WordData } from './interfaces/hangman-game';
+import {
+  apiUrl,
+  blankDisplayChar,
+  guessCommand,
+  prefix,
+  startCommand,
+  statsCommand,
+  summaryCommand
+} from './constants/hangman-game';
+import {
+  generateGameEmbed,
+  generateHelpEmbed,
+  generateStatsEmbed
+} from './embeds/hangman-game';
+import {
+  GameData,
+  GameState,
+  GameStatistics,
+  WordData
+} from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
 const settingsFilePath = 'hangman.json';
@@ -27,7 +44,8 @@ export class HangmanGame implements Personality {
     try {
       writeFileSync(settingsFilePath, serialisedState, settingsFileEnc);
     } catch (ex) {
-      this.dependencies.logger.error(ex.message || ex);
+      const typedMessage = ex as Error;
+      this.dependencies.logger.error(typedMessage.message || ex);
     }
   }
 

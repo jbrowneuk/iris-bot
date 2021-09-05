@@ -1,3 +1,3 @@
 export interface KeyedObject {
-  [key: string]: unknown;
+  [key: string]: any;
 }

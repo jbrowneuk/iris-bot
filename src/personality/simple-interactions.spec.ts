@@ -93,23 +93,23 @@ describe('Simple interactions', () => {
   });
 
   describe('High five interaction', () => {
-    it('should handle an addressed message with the high five commands', async (done) => {
-      const knownCommands = ['highfive', 'high five', '^5'];
-      const expectedResponse = 'highFive';
+    const knownCommands = ['highfive', 'high five', '^5'];
+    const expectedResponse = 'highFive';
 
-      for (const command of knownCommands) {
+    knownCommands.forEach((command) => {
+      it(`should handle an addressed message with the known '${command}'' command`, (done) => {
         const message = Mock.ofType<Message>();
         message
           .setup((m) => m.react(It.isAny()))
           .returns(() => Promise.resolve(null));
 
-        const response = await personality.onAddressed(message.object, command);
+        personality.onAddressed(message.object, command).then((response) => {
+          expect(response).toBe(expectedResponse);
+          message.verify((m) => m.react(It.isValue('✋')), Times.once());
 
-        expect(response).toBe(expectedResponse);
-        message.verify((m) => m.react(It.isValue('✋')), Times.once());
-      }
-
-      done();
+          done();
+        });
+      });
     });
 
     it('should not handle an addressed message without the high five commands', (done) => {

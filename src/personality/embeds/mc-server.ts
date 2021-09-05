@@ -1,6 +1,10 @@
 import { MessageEmbed } from 'discord.js';
 
-import { announceCommand, setCommand, statusCommand } from '../constants/mc-server';
+import {
+  announceCommand,
+  setCommand,
+  statusCommand
+} from '../constants/mc-server';
 import { ServerResponse } from '../interfaces/mc-server';
 
 const embedTitle = 'Server info';
