@@ -5,11 +5,11 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
-const apiBase = 'https://media.jbrowne.io/stickers/';
-const apiUrl = `${apiBase}stickers.php?name=`;
+const stickerReferenceUrl = 'https://jbrowne.io/iris-bot/stickers/';
+const apiUrl = 'https://jbrowne.io/api/stickers/index.php';
 
 export const prefix = '+s ';
-export const helpText = `Posts a large sticker image to chat. All image names can be found at ${apiBase}`;
+export const helpText = `Posts a large sticker image to chat. All image names can be found at ${stickerReferenceUrl}`;
 
 interface Sticker {
   name: string;
