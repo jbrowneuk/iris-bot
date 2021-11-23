@@ -1,3 +1,6 @@
+release 0.1.15 - minor feature request: jokes
+b2bf802077db561f8b8b8b57f6f87c57851e0789 Implement basic functionality to fetch jokes from an API
+
 release 0.1.12, 0.1.13 and 0.1.14 - Hangman game bugfixes, statistics and persistence
 16ebf39ea37af62473e3fb0e2ac41562d776fce2 Prevent adding already guessed correct letters
 fe3999df207f997c0eedc60b5607f8e730521bf9 Add GameData and GameStatistics interfaces
