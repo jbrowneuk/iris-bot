@@ -20,6 +20,7 @@ import { McServer } from './personality/mc-server';
 import { MoodControl } from './personality/mood-control';
 import { SimpleInteractions } from './personality/simple-interactions';
 import { Stickers } from './personality/stickers';
+import { TallyPersonality } from './personality/tally-personality';
 
 // Initialise foundation
 const logger = new LoggerImpl();
@@ -67,6 +68,7 @@ engine.addPersonality(new McServer(dependencies));
 engine.addPersonality(new MoodControl(dependencies, moodEngine));
 engine.addPersonality(new SimpleInteractions(dependencies));
 engine.addPersonality(new Stickers(dependencies));
+engine.addPersonality(new TallyPersonality(dependencies));
 
 // Start bot
 engine.initialise();
