@@ -1,6 +1,6 @@
-import { GameState } from '../interfaces/hangman-game';
+import { GameData } from '../interfaces/hangman-game';
 
-export function isGameActive(game: GameState): boolean {
+export function isGameActive(game: GameData): boolean {
   if (!game) {
     return false;
   }

@@ -1,66 +1,75 @@
-import { guessCommand, prefix, startCommand } from '../constants/hangman-game';
 import {
-  GameData,
-  GameState,
-  GameStatistics
-} from '../interfaces/hangman-game';
+  guessCommand,
+  prefix,
+  startCommand,
+  statsCommand
+} from '../constants/hangman-game';
+import { GameData } from '../interfaces/hangman-game';
 import {
   generateGameEmbed,
   generateHelpEmbed,
   generateStatsEmbed
 } from './hangman-game';
 
+const mockStats = {
+  totalWins: 5,
+  totalLosses: 2,
+  currentStreak: 3
+};
+
+const mockGame: GameData = {
+  timeStarted: 123456,
+  currentWord: 'BAFFLE',
+  currentDisplay: 'BA--L-',
+  livesRemaining: 7,
+  wrongLetters: ['C', 'H'],
+  wrongWords: ['BATTLE', 'BOTTLE'],
+  ...mockStats
+};
+
+const mockNew: GameData = {
+  timeStarted: 123456,
+  currentWord: 'BAFFLE',
+  currentDisplay: '------',
+  livesRemaining: 10,
+  wrongLetters: [],
+  wrongWords: [],
+  ...mockStats
+};
+
 describe('Hangman Game Status embed', () => {
-  const mockGame: GameState = {
-    timeStarted: 123456,
-    currentWord: 'BAFFLE',
-    currentDisplay: 'BA--L-',
-    livesRemaining: 7,
-    wrongLetters: ['C', 'H'],
-    wrongWords: ['BATTLE', 'BOTTLE']
-  };
-
-  const mockNew: GameState = {
-    timeStarted: 123456,
-    currentWord: 'BAFFLE',
-    currentDisplay: '------',
-    livesRemaining: 10,
-    wrongLetters: [],
-    wrongWords: []
-  };
-
   it('should display current guessed letters', () => {
-    const gameData: GameData = { state: mockGame, statistics: null };
+    const gameData: GameData = mockGame;
     const embed = generateGameEmbed(gameData);
     expect(embed.description).toContain(mockGame.currentDisplay);
   });
 
   it('should display remaining lives', () => {
-    const gameData: GameData = { state: mockGame, statistics: null };
+    const gameData: GameData = mockGame;
     const embed = generateGameEmbed(gameData);
     expect(embed.description).toContain(`${mockGame.livesRemaining} chances`);
   });
 
   it('should display incorrect letters if present', () => {
-    const gameData: GameData = { state: mockGame, statistics: null };
+    const gameData: GameData = mockGame;
     const guessSummary = generateGameEmbed(gameData).fields[0];
     expect(guessSummary.value).toContain(`${mockGame.wrongLetters.join()}`);
   });
 
   it('should display incorrect words if present', () => {
-    const gameData: GameData = { state: mockGame, statistics: null };
+    const gameData: GameData = mockGame;
     const guessSummary = generateGameEmbed(gameData).fields[0];
     expect(guessSummary.value).toContain(`${mockGame.wrongWords.join()}`);
   });
 
   it('should display none for incorrect letters if not present', () => {
-    const gameData: GameData = { state: mockNew, statistics: null };
+    const gameData: GameData = mockNew;
     const guessSummary = generateGameEmbed(gameData).fields[0];
     expect(guessSummary.value).toContain('Letters: *none*');
   });
 
   it('should display none for incorrect words if not present', () => {
-    const gameData: GameData = { state: mockNew, statistics: null };
+    const gameData: GameData = mockNew;
     const guessSummary = generateGameEmbed(gameData).fields[0];
     expect(guessSummary.value).toContain('Words: *none*');
   });
@@ -96,41 +105,43 @@ describe('Hangman Game Help embed', () => {
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(guessCommand);
   });
+
+  it('should contain instructions to view statistics', () => {
+    const helpEmbed = generateHelpEmbed();
+    const summaryField = helpEmbed.fields.find((f) =>
+      f.name.toUpperCase().includes('STATS')
+    );
+
+    expect(summaryField).toBeDefined();
+    expect(summaryField.value).toContain(statsCommand);
+  });
 });
 
 describe('Hangman Game Summary embed', () => {
-  const statistics: GameStatistics = {
-    totalWins: 5,
-    totalLosses: 2,
-    currentStreak: 3
-  };
-
-  const mockGameData: GameData = { state: null, statistics };
-
   it('should display total wins', () => {
-    const embed = generateStatsEmbed(mockGameData);
+    const embed = generateStatsEmbed(mockGame);
     const winField = embed.fields.find((f) =>
       f.name.toUpperCase().includes('WINS')
     );
 
-    expect(winField.value).toBe('' + statistics.totalWins);
+    expect(winField.value).toBe('' + mockStats.totalWins);
   });
 
   it('should display total wins', () => {
-    const embed = generateStatsEmbed(mockGameData);
+    const embed = generateStatsEmbed(mockGame);
     const lossField = embed.fields.find((f) =>
       f.name.toUpperCase().includes('LOSSES')
     );
 
-    expect(lossField.value).toBe('' + statistics.totalLosses);
+    expect(lossField.value).toBe('' + mockStats.totalLosses);
   });
 
   it('should display current win streak', () => {
-    const embed = generateStatsEmbed(mockGameData);
+    const embed = generateStatsEmbed(mockGame);
     const streakField = embed.fields.find((f) =>
       f.name.toUpperCase().includes('STREAK')
     );
 
-    expect(streakField.value).toBe('' + statistics.currentStreak);
+    expect(streakField.value).toBe('' + mockStats.currentStreak);
   });
 });

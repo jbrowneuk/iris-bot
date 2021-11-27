@@ -1,7 +1,7 @@
 import { Message, MessageEmbed } from 'discord.js';
-import { readFile, writeFileSync } from 'fs';
 import * as nodeFetch from 'node-fetch';
 
+import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
@@ -10,6 +10,7 @@ import {
   blankDisplayChar,
   guessCommand,
   prefix,
+  sqlCollection,
   startCommand,
   statsCommand,
   summaryCommand
@@ -21,33 +22,39 @@ import {
 } from './embeds/hangman-game';
 import {
   GameData,
-  GameState,
-  GameStatistics,
+  SerialisableGameData,
   WordData
 } from './interfaces/hangman-game';
 import { isGameActive } from './utilities/hangman-game';
 
-const settingsFilePath = 'hangman.json';
-const settingsFileEnc = 'utf-8';
+const arraySplitToken = '#';
+
+function packArray(input: string[]): string {
+  return input.join(arraySplitToken);
+}
+
+function unpackArray(input: string): string[] {
+  return input.split(arraySplitToken).filter((str) => str.length > 0);
+}
+
+export function serialiseGameData(gameData: GameData): SerialisableGameData {
+  return {
+    ...gameData,
+    wrongLetters: packArray(gameData.wrongLetters),
+    wrongWords: packArray(gameData.wrongWords)
+  };
+}
+
+export function deserialiseGameData(rawData: SerialisableGameData): GameData {
+  return {
+    ...rawData,
+    wrongLetters: unpackArray(rawData.wrongLetters),
+    wrongWords: unpackArray(rawData.wrongWords)
+  };
+}
 
 export class HangmanGame implements Personality {
-  protected gameData: Map<string, GameData>;
-
   constructor(private dependencies: DependencyContainer) {}
-
-  initialise(): void {
-    readFile(settingsFilePath, settingsFileEnc, this.parseSettings.bind(this));
-  }
-
-  destroy(): void {
-    const serialisedState = JSON.stringify(Array.from(this.gameData));
-    try {
-      writeFileSync(settingsFilePath, serialisedState, settingsFileEnc);
-    } catch (ex) {
-      const typedMessage = ex as Error;
-      this.dependencies.logger.error(typedMessage.message || ex);
-    }
-  }
 
   onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);
@@ -69,7 +76,7 @@ export class HangmanGame implements Personality {
 
     if (text.startsWith(guessCommand)) {
       const guess = text.substring(guessCommand.length + 1);
-      return Promise.resolve(this.handleGuess(message.guild.id, guess));
+      return this.handleGuess(message.guild.id, guess);
     }
 
     if (text.startsWith(statsCommand)) {
@@ -87,81 +94,124 @@ export class HangmanGame implements Personality {
     return Promise.resolve(generateHelpEmbed());
   }
 
-  /**
-   * Handles the callback from loading the settings file, either parsing
-   * data or generating a blank state if required
-   *
-   * @param err loading error, or falsy if no error
-   * @param data loaded data, in string format
-   */
-  private parseSettings(err: NodeJS.ErrnoException, data: string): void {
-    if (err || !data) {
-      this.gameData = new Map<string, GameData>();
-      return this.dependencies.logger.error((err && err.message) || 'No data');
-    }
+  private fetchWordFromApi(): Promise<WordData> {
+    return nodeFetch.default(apiUrl).then((response) => {
+      if (!response.ok) {
+        throw new Error(`Unable to fetch API: ${response.status}`);
+      }
 
-    const parsedData = JSON.parse(data);
-    this.gameData = new Map<string, GameData>(parsedData);
+      return response.json();
+    });
+  }
+
+  private fetchGameForGuild(guildId: string): Promise<GameData> {
+    const filter: QueryFilter = {
+      where: [{ field: 'guildId', value: guildId }]
+    };
+
+    return this.dependencies.database
+      .getRecordsFromCollection<SerialisableGameData>(sqlCollection, filter)
+      .then((records) => {
+        if (records.length === 0) {
+          return null;
+        }
+
+        return deserialiseGameData(records[0]);
+      });
+  }
+
+  private initialiseGameForGuild(
+    guildId: string,
+    gameData: GameData
+  ): Promise<void> {
+    const serialised = serialiseGameData(gameData);
+    const insertData = { guildId, ...serialised };
+
+    return this.dependencies.database.insertRecordsToCollection(
+      sqlCollection,
+      insertData
+    );
+  }
+
+  private updateGameForGuild(
+    guildId: string,
+    gameData: GameData
+  ): Promise<void> {
+    const filter = { $guildId: guildId };
+    const serialised = serialiseGameData(gameData);
+
+    return this.dependencies.database.updateRecordsInCollection(
+      sqlCollection,
+      serialised,
+      filter
+    );
   }
 
   private handleGameStart(guildId: string): Promise<MessageType> {
-    const guildGame = this.gameData.get(guildId);
-    if (guildGame && isGameActive(guildGame.state)) {
-      return Promise.resolve('Game is already running');
-    }
+    return this.fetchGameForGuild(guildId).then((guildData) => {
+      if (guildData && isGameActive(guildData)) {
+        return 'Game is already running';
+      }
 
-    return nodeFetch
-      .default(apiUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Unable to fetch API: ${response.status}`);
-        }
-
-        return response.json();
-      })
-      .then((rawData) => this.handleWordResponse(guildId, rawData))
-      .catch((e) => {
-        this.dependencies.logger.error(e);
-        return 'My internet is not working right now.';
-      });
+      return this.fetchWordFromApi()
+        .then((rawData) => this.handleWordResponse(guildId, rawData, guildData))
+        .catch((e) => {
+          this.dependencies.logger.error(e);
+          return 'My internet is not working right now.';
+        });
+    });
   }
 
   /**
    * Begins a new game of Hangman
    *
    * @param guildId the id of the guild the request originated from
-   * @param data word data from API
-   * @returns an embed with the new game information
+   * @param wordData word data from API
+   * @param guildData the current guild's game state
+   * @returns a promise resolving to an embed with the new game information
    */
-  private handleWordResponse(guildId: string, data: WordData): MessageType {
-    if (!data || !data.word) {
-      return 'Could not load word';
+  private handleWordResponse(
+    guildId: string,
+    wordData: WordData,
+    guildData: GameData
+  ): Promise<MessageType> {
+    if (!wordData || !wordData.word) {
+      // TODO Use response generator
+      return Promise.resolve('Could not think of a word');
     }
 
-    let statistics: GameStatistics;
-    const currentData = this.gameData.get(guildId);
-    if (currentData) {
-      statistics = currentData.statistics;
-    } else {
-      statistics = {
-        totalWins: 0,
-        totalLosses: 0,
-        currentStreak: 0
-      };
-    }
-
-    const state: GameState = {
+    const newGame: Omit<
+      GameData,
+      'totalWins' | 'totalLosses' | 'currentStreak'
+    > = {
       timeStarted: Date.now(),
-      currentWord: data.word.toUpperCase(),
-      currentDisplay: Array(data.word.length).fill(blankDisplayChar).join(''),
+      currentWord: wordData.word.toUpperCase(),
+      currentDisplay: Array(wordData.word.length)
+        .fill(blankDisplayChar)
+        .join(''),
       livesRemaining: 10,
       wrongLetters: [],
       wrongWords: []
     };
 
-    const updatedData = { state, statistics };
-    this.gameData.set(guildId, updatedData);
-    return generateGameEmbed(updatedData);
+    if (guildData) {
+      const gameData = { ...guildData, ...newGame };
+
+      return this.updateGameForGuild(guildId, gameData).then(() =>
+        generateGameEmbed(gameData)
+      );
+    } else {
+      const gameData = {
+        ...newGame,
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
+
+      return this.initialiseGameForGuild(guildId, gameData).then(() =>
+        generateGameEmbed(gameData)
+      );
+    }
   }
 
   /**
@@ -171,125 +221,150 @@ export class HangmanGame implements Personality {
    * @param guess letter or word guessed
    * @returns game information or help texts
    */
-  private handleGuess(guildId: string, guess: string): MessageType {
-    const gameData = this.gameData.get(guildId);
-    const gameRunning = gameData && isGameActive(gameData.state);
-    if (!gameRunning) {
-      return `The game hasn’t been started. Try starting one with \`${prefix} ${startCommand}\``;
-    }
+  private handleGuess(guildId: string, guess: string): Promise<MessageType> {
+    return this.fetchGameForGuild(guildId)
+      .then((gameData) => {
+        const gameRunning = gameData && isGameActive(gameData);
+        if (!gameRunning) {
+          return `The game hasn’t been started. Try starting one with \`${prefix} ${startCommand}\``;
+        }
 
-    const isWord = guess.length > 1;
-    if (isWord) {
-      return this.onGuessWord(guildId, guess);
-    }
+        const isWord = guess.length > 1;
+        if (isWord) {
+          return this.onGuessWord(guildId, guess, gameData);
+        }
 
-    return this.onGuessLetter(guildId, guess);
+        return this.onGuessLetter(guildId, guess, gameData);
+      })
+      .catch((e) => {
+        console.error(e);
+        return 'Not doing that now';
+      });
   }
 
-  private onGuessWord(guildId: string, guess: string): MessageType {
+  private onGuessWord(
+    guildId: string,
+    guess: string,
+    gameData: GameData
+  ): Promise<MessageType> {
     const invalidWordRegex = /[^A-Z]+/;
     if (invalidWordRegex.test(guess)) {
-      return 'That’s not a word I can use here.';
+      return Promise.resolve('That’s not a word I can use here.');
     }
 
-    // Grab a reference to the game data
-    const gameData = this.gameData.get(guildId);
-    const { state, statistics } = gameData;
-
-    if (guess.length !== state.currentWord.length) {
-      const wordText = `${state.currentWord.length}`;
-      return `Your guess has ${guess.length} letters, the word has ${wordText}. Think about that for a while.`;
+    if (guess.length !== gameData.currentWord.length) {
+      const wordText = `Your guess has ${guess.length} letters, the word has ${gameData.currentWord.length}.`;
+      return Promise.resolve(`${wordText}Think about that for a while.`);
     }
 
-    if (guess === state.currentWord) {
-      state.currentDisplay = state.currentWord;
-      statistics.currentStreak += 1;
-      statistics.totalWins += 1;
-      return `Yup, it’s “${guess}”`;
+    if (guess === gameData.currentWord) {
+      gameData.currentDisplay = gameData.currentWord;
+      gameData.currentStreak += 1;
+      gameData.totalWins += 1;
+
+      return this.updateGameForGuild(guildId, gameData).then(
+        () => `Yup, it’s “${guess}”`
+      );
     }
 
-    if (state.wrongWords.indexOf(guess) !== -1) {
-      return 'That’s already been guessed.';
+    if (gameData.wrongWords.indexOf(guess) !== -1) {
+      return Promise.resolve('That’s already been guessed.');
     }
 
-    state.livesRemaining -= 1;
-    state.wrongWords.push(guess);
+    gameData.livesRemaining -= 1;
+    gameData.wrongWords.push(guess);
 
-    if (state.livesRemaining <= 0) {
-      statistics.currentStreak = 0;
-      statistics.totalLosses += 1;
-      return `You’ve lost! The word was “${state.currentWord}”`;
+    if (gameData.livesRemaining <= 0) {
+      gameData.currentStreak = 0;
+      gameData.totalLosses += 1;
+
+      return this.updateGameForGuild(guildId, gameData).then(
+        () => `You’ve lost! The word was “${gameData.currentWord}”`
+      );
     }
 
-    return generateGameEmbed(gameData);
+    return this.updateGameForGuild(guildId, gameData).then(() =>
+      generateGameEmbed(gameData)
+    );
   }
 
-  private onGuessLetter(guildId: string, guess: string): MessageType {
+  private onGuessLetter(
+    guildId: string,
+    guess: string,
+    gameData: GameData
+  ): Promise<MessageType> {
     if (!guess.match(/[A-Z]/)) {
-      return 'That’s not a letter I can use…';
+      return Promise.resolve('That’s not a letter I can use…');
     }
 
-    // Grab a reference to the game data
-    const gameData = this.gameData.get(guildId);
-    const { state, statistics } = gameData;
-
-    if (state.currentWord.indexOf(guess) === -1) {
-      if (state.wrongLetters.includes(guess)) {
-        return 'This letter’s already been guessed!';
+    if (gameData.currentWord.indexOf(guess) === -1) {
+      if (gameData.wrongLetters.includes(guess)) {
+        return Promise.resolve('This letter’s already been guessed!');
       }
 
-      state.wrongLetters.push(guess);
-      state.wrongLetters.sort();
-      state.livesRemaining -= 1;
+      gameData.wrongLetters.push(guess);
+      gameData.wrongLetters.sort();
+      gameData.livesRemaining -= 1;
 
-      if (state.livesRemaining > 0) {
-        return `Nope, there’s no “${guess}”. You’ve got ${state.livesRemaining} chances remaining!`;
+      if (gameData.livesRemaining > 0) {
+        return this.updateGameForGuild(guildId, gameData).then(
+          () =>
+            `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`
+        );
       }
 
-      statistics.currentStreak = 0;
-      statistics.totalLosses += 1;
-      return `Bad luck! The word was “${state.currentWord}”`;
+      gameData.currentStreak = 0;
+      gameData.totalLosses += 1;
+
+      return this.updateGameForGuild(guildId, gameData).then(
+        () => `Bad luck! The word was “${gameData.currentWord}”`
+      );
     }
 
-    if (state.currentDisplay.indexOf(guess) >= 0) {
-      return 'This letter’s already been guessed!';
+    if (gameData.currentDisplay.indexOf(guess) >= 0) {
+      return Promise.resolve('This letter’s already been guessed!');
     }
 
     // Copy the letter into the display variable
-    for (let index = 0; index < state.currentDisplay.length; index += 1) {
-      const currentLetter = state.currentDisplay[index];
+    for (let index = 0; index < gameData.currentDisplay.length; index += 1) {
+      const currentLetter = gameData.currentDisplay[index];
       if (currentLetter !== blankDisplayChar) {
         continue;
       }
 
-      if (state.currentWord[index] !== guess) {
+      if (gameData.currentWord[index] !== guess) {
         continue;
       }
 
-      const lettersBefore = state.currentDisplay.substring(0, index);
-      const lettersAfter = state.currentDisplay.substring(index + 1);
-      state.currentDisplay = `${lettersBefore}${guess}${lettersAfter}`;
+      const lettersBefore = gameData.currentDisplay.substring(0, index);
+      const lettersAfter = gameData.currentDisplay.substring(index + 1);
+      gameData.currentDisplay = `${lettersBefore}${guess}${lettersAfter}`;
     }
 
-    if (state.currentWord === state.currentDisplay) {
-      statistics.currentStreak += 1;
-      statistics.totalWins += 1;
-      return `Yup, it’s “${state.currentWord}”`;
+    if (gameData.currentWord === gameData.currentDisplay) {
+      gameData.currentStreak += 1;
+      gameData.totalWins += 1;
+
+      return this.updateGameForGuild(guildId, gameData).then(
+        () => `Yup, it’s “${gameData.currentWord}” - congrats!`
+      );
     }
 
-    return generateGameEmbed(gameData);
+    return this.updateGameForGuild(guildId, gameData).then(() =>
+      generateGameEmbed(gameData)
+    );
   }
 
   private handleSummaryCommand(
     guildId: string,
     embedGen: (input: GameData) => MessageEmbed
   ): Promise<MessageType> {
-    const data = this.gameData.get(guildId);
-    if (!data) {
-      const message = `No game has been played - try starting one with \`${prefix} ${startCommand}\``;
-      return Promise.resolve(message);
-    }
+    return this.fetchGameForGuild(guildId).then((gameData) => {
+      if (!gameData) {
+        return `No game has been played - try starting one with \`${prefix} ${startCommand}\``;
+      }
 
-    return Promise.resolve(embedGen(data));
+      return embedGen(gameData);
+    });
   }
 }
