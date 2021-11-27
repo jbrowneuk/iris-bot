@@ -9,6 +9,18 @@ BEGIN TRANSACTION;
 -- -----------------------------------------------------------------------------
 
 -- -----------------------------------------------------------------------------
+-- Tally/total count table
+-- -----------------------
+-- Used by the tally personality to keep a running tally.
+-- `guildId` is the guild ID
+-- `count` is the current tally
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS "tally" (
+	"guildId"	TEXT,
+	"count"	INTEGER
+);
+
+-- -----------------------------------------------------------------------------
 -- Responses table
 -- ---------------
 -- Used to control the responses provided by the response generator:
