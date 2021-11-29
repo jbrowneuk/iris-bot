@@ -1,30 +1,24 @@
-/**
- * Encapsulates the game statistics for the Hangman game
- */
-export interface GameStatistics {
+interface GameDataBase {
+  timeStarted: number;
+  currentWord: string;
+  currentDisplay: string;
+  livesRemaining: number;
   totalWins: number;
   totalLosses: number;
   currentStreak: number;
 }
 
 /**
- * Encapsulates the basic game state for the Hangman game
+ * Encapsulates game data for the Hangman game
  */
-export interface GameState {
-  timeStarted: number;
-  currentWord: string;
-  currentDisplay: string;
-  livesRemaining: number;
+export interface GameData extends GameDataBase {
   wrongLetters: string[];
   wrongWords: string[];
 }
 
-/**
- * Encapsulates game data for the Hangman game
- */
-export interface GameData {
-  state: GameState;
-  statistics: GameStatistics;
+export interface SerialisableGameData extends GameDataBase {
+  wrongLetters: string;
+  wrongWords: string;
 }
 
 /**

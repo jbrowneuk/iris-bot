@@ -21,6 +21,35 @@ CREATE TABLE IF NOT EXISTS "tally" (
 );
 
 -- -----------------------------------------------------------------------------
+-- Hangman Game persistence
+-- ------------------------
+-- Used by the hangman game personality to persist game data between restarts.
+-- `guildId` is the guild ID
+-- `timeStarted` is the timestamp of when the game was started
+-- `currentWord` is the game's current word
+-- `currentDisplay` is the game's word, as guessed by the players. Missing
+--                  letters are blanked with a symbol.
+-- `livesRemaining` is the remaining chances of making guesses for the game
+-- `wrongLetters` is a set of incorrect letter guesses, separated by a symbol
+-- `wrongWords` is a set of incorrect word guesses, separated by a symbol
+-- `totalWins` is the total number of wins for the guild
+-- `totalLosses` is the total number of losses for the guild
+-- `currentStreak` is the current win streak for the guild
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS  "hangman" (
+	"guildId"	TEXT,
+	"timeStarted"	INTEGER,
+	"currentWord"	TEXT,
+	"currentDisplay"	TEXT,
+	"livesRemaining"	INTEGER,
+	"wrongLetters"	TEXT,
+	"wrongWords"	TEXT,
+	"totalWins"	INTEGER,
+	"totalLosses"	INTEGER,
+	"currentStreak"	INTEGER
+)
+
+-- -----------------------------------------------------------------------------
 -- Responses table
 -- ---------------
 -- Used to control the responses provided by the response generator:

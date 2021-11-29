@@ -5,3 +5,4 @@ export const guessCommand = 'GUESS';
 export const statsCommand = 'STATS';
 export const summaryCommand = 'SHOW';
 export const blankDisplayChar = '-';
+export const sqlCollection = 'hangman';

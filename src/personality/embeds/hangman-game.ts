@@ -4,6 +4,7 @@ import {
   guessCommand,
   prefix,
   startCommand,
+  statsCommand,
   summaryCommand
 } from '../constants/hangman-game';
 import { GameData } from '../interfaces/hangman-game';
@@ -31,24 +32,25 @@ export function generateHelpEmbed(): MessageEmbed {
     'Making guesses',
     `Use \`${prefix} ${guessCommand} <your guess>\` to guess a letter or word.`
   );
+  embed.addField(
+    'Viewing stats',
+    `Use \`${prefix} ${statsCommand}\` to see the current server stats.`
+  );
 
   return embed;
 }
 
 export function generateGameEmbed(gameData: GameData): MessageEmbed {
-  const gameState = gameData.state;
   const embed = generateBaseEmbed();
-  const letterDisplay = `\`${gameState.currentDisplay}\``;
-  const countDisplay = `(${gameState.currentDisplay.length} letters)`;
-  const chanceDisplay = `${gameState.livesRemaining} chances left`;
+  const letterDisplay = `\`${gameData.currentDisplay}\``;
+  const countDisplay = `(${gameData.currentDisplay.length} letters)`;
+  const chanceDisplay = `${gameData.livesRemaining} chances left`;
   embed.setDescription(`${letterDisplay} ${countDisplay}\n${chanceDisplay}`);
   const lettersSummary =
-    gameState.wrongLetters.length > 0
-      ? gameState.wrongLetters.join()
-      : '*none*';
+    gameData.wrongLetters.length > 0 ? gameData.wrongLetters.join() : '*none*';
 
   const wordsSummary =
-    gameState.wrongWords.length > 0 ? gameState.wrongWords.join() : '*none*';
+    gameData.wrongWords.length > 0 ? gameData.wrongWords.join() : '*none*';
 
   embed.addField(
     'Wrong guesses',
@@ -59,13 +61,12 @@ export function generateGameEmbed(gameData: GameData): MessageEmbed {
 }
 
 export function generateStatsEmbed(gameData: GameData): MessageEmbed {
-  const stats = gameData.statistics;
   const embed = generateBaseEmbed();
   embed.setDescription('Statistics for this Discord server');
 
-  embed.addField('Current win streak', stats.currentStreak);
-  embed.addField('Total wins', stats.totalWins);
-  embed.addField('Total losses', stats.totalLosses);
+  embed.addField('Current win streak', gameData.currentStreak);
+  embed.addField('Total wins', gameData.totalWins);
+  embed.addField('Total losses', gameData.totalLosses);
 
   return embed;
 }
