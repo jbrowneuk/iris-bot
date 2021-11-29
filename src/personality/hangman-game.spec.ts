@@ -54,68 +54,6 @@ describe('Hangman Game - default behaviour', () => {
     });
   });
 
-  // describe('Multiple guild feature', () => {
-  //   const altGuildId = 'myaltguild';
-  //   let altGuildStartState: GameState;
-
-  //   beforeEach(() => {
-  //     const mockFetchResponse = {
-  //       ok: true,
-  //       json: () => Promise.resolve(mockWord)
-  //     };
-
-  //     fetchSpy = spyOn(nodeFetch, 'default');
-  //     fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
-
-  //     mockMessage = Mock.ofType<Message>();
-  //     mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
-
-  //     personality.addMockGameState(altGuildId);
-  //     altGuildStartState = { ...personality.getStateForGuild(altGuildId) };
-  //   });
-
-  //   it('should not affect existing game if new one started in alternate guild', (done) => {
-  //     mockMessage
-  //       .setup((s) => s.content)
-  //       .returns(() => `${prefix} ${startCommand}`);
-
-  //     expect(personality.gameDataMap.get(mockGuildId)).toBeFalsy();
-
-  //     personality.onMessage(mockMessage.object).then(() => {
-  //       // Other guild not touched
-  //       const altGuildState = personality.getStateForGuild(altGuildId);
-  //       expect(altGuildState).toEqual(altGuildStartState);
-
-  //       // Current guild data added
-  //       expect(personality.gameDataMap.get(mockGuildId)).toBeTruthy();
-  //       done();
-  //     });
-  //   });
-
-  //   it('should not affect existing game if guess happens in alternate guild', (done) => {
-  //     const initialData = personality.addBlankGameState(mockGuildId);
-  //     initialData.state.currentWord = 'WORD';
-  //     initialData.state.currentDisplay = '----';
-  //     initialData.state.livesRemaining = 10;
-  //     const guessLetter = initialData.state.currentWord[0];
-
-  //     mockMessage
-  //       .setup((s) => s.content)
-  //       .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
-
-  //     personality.onMessage(mockMessage.object).then(() => {
-  //       // Other guild not touched
-  //       const altGuildState = personality.getStateForGuild(altGuildId);
-  //       expect(altGuildState).toEqual(altGuildStartState);
-
-  //       // Current guild data added
-  //       const gameState = personality.getStateForGuild(mockGuildId);
-  //       expect(gameState.currentDisplay).toContain(guessLetter);
-  //       done();
-  //     });
-  //   });
-  // });
-
   // describe('Settings persistence', () => {
   //   const hydratedData: GameData = {
   //     currentWord: 'HELLO',
