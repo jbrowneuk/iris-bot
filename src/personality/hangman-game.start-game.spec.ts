@@ -13,7 +13,7 @@ import {
   sqlCollection,
   startCommand
 } from './constants/hangman-game';
-import { HangmanGame, serialiseGameData } from './hangman-game';
+import { HangmanGame } from './hangman-game';
 import {
   mockActiveGame,
   mockCompleteGame,
@@ -21,6 +21,7 @@ import {
   mockWord
 } from './hangman-game.specdata';
 import { SerialisableGameData } from './interfaces/hangman-game';
+import { serialiseGameData } from './utilities/hangman-game';
 
 describe('Hangman Game - start game behaviour', () => {
   let fetchSpy: jasmine.Spy;

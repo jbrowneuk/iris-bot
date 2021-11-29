@@ -25,33 +25,11 @@ import {
   SerialisableGameData,
   WordData
 } from './interfaces/hangman-game';
-import { isGameActive } from './utilities/hangman-game';
-
-const arraySplitToken = '#';
-
-function packArray(input: string[]): string {
-  return input.join(arraySplitToken);
-}
-
-function unpackArray(input: string): string[] {
-  return input.split(arraySplitToken).filter((str) => str.length > 0);
-}
-
-export function serialiseGameData(gameData: GameData): SerialisableGameData {
-  return {
-    ...gameData,
-    wrongLetters: packArray(gameData.wrongLetters),
-    wrongWords: packArray(gameData.wrongWords)
-  };
-}
-
-export function deserialiseGameData(rawData: SerialisableGameData): GameData {
-  return {
-    ...rawData,
-    wrongLetters: unpackArray(rawData.wrongLetters),
-    wrongWords: unpackArray(rawData.wrongWords)
-  };
-}
+import {
+  deserialiseGameData,
+  isGameActive,
+  serialiseGameData
+} from './utilities/hangman-game';
 
 export class HangmanGame implements Personality {
   constructor(private dependencies: DependencyContainer) {}

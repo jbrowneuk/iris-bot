@@ -14,13 +14,13 @@ import {
   summaryCommand
 } from './constants/hangman-game';
 import * as embeds from './embeds/hangman-game';
-import {
-  deserialiseGameData,
-  HangmanGame,
-  serialiseGameData
-} from './hangman-game';
+import { HangmanGame } from './hangman-game';
 import { mockActiveGame, mockGuildId } from './hangman-game.specdata';
 import { GameData, SerialisableGameData } from './interfaces/hangman-game';
+import {
+  deserialiseGameData,
+  serialiseGameData
+} from './utilities/hangman-game';
 
 describe('Hangman Game - summary feature behaviour', () => {
   let personality: HangmanGame;

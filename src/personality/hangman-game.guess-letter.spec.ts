@@ -6,13 +6,13 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
 import { guessCommand, prefix, sqlCollection } from './constants/hangman-game';
-import {
-  deserialiseGameData,
-  HangmanGame,
-  serialiseGameData
-} from './hangman-game';
+import { HangmanGame } from './hangman-game';
 import { mockActiveGame, mockGuildId } from './hangman-game.specdata';
 import { GameData, SerialisableGameData } from './interfaces/hangman-game';
+import {
+  deserialiseGameData,
+  serialiseGameData
+} from './utilities/hangman-game';
 
 describe('Hangman Game - guessing behaviour for single letters', () => {
   let personality: HangmanGame;

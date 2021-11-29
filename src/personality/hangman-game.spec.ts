@@ -1,25 +1,14 @@
-import { Guild, Message, MessageEmbed } from 'discord.js';
-import * as fs from 'fs';
-import * as nodeFetch from 'node-fetch';
-import { IMock, It, Mock, Times } from 'typemoq';
+import { Guild, Message } from 'discord.js';
+import { IMock, Mock } from 'typemoq';
 
 import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import {
-  guessCommand,
-  prefix,
-  startCommand,
-  statsCommand,
-  summaryCommand
-} from './constants/hangman-game';
-import * as HangmanEmbeds from './embeds/hangman-game';
+import { prefix } from './constants/hangman-game';
 import { HangmanGame } from './hangman-game';
-import { mockGuildId, mockWord } from './hangman-game.specdata';
-import { GameData } from './interfaces/hangman-game';
+import { mockGuildId } from './hangman-game.specdata';
 
 describe('Hangman Game - default behaviour', () => {
-  let fetchSpy: jasmine.Spy;
   let personality: HangmanGame;
   let mockGuild: IMock<Guild>;
   let mockMessage: IMock<Message>;
