@@ -1,3 +1,12 @@
+Release 0.2.0 - SQL persistence
+This release lays the groundwork for persisting bot settings using the SQL database
+
+0372ba96dc8e958f1cbb007f57673e6651b294eb Add tally feature to test new SQL persistence implementation
+273ba7bbbd174ed33255fa3e806ab2984c9b16c1 Convert Hangman Game personality to use SQL persistence
+fcbd228c070a35598b2c39cdf29b3b449ca60ac9 Refactor game helper utilities to a separate file
+bac2f689c4d3a52735fd61f40c90f40711378886 Restore multi-guild specs
+4c7510992c5e3afb36fff040ded2a66895012eac Remove init/destroy settings persistence tests
+
 release 0.1.15 - minor feature request: jokes
 b2bf802077db561f8b8b8b57f6f87c57851e0789 Implement basic functionality to fetch jokes from an API
 
