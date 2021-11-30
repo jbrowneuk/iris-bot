@@ -1,15 +1,6 @@
-import {
-  guessCommand,
-  prefix,
-  startCommand,
-  statsCommand
-} from '../constants/hangman-game';
+import { guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { GameData } from '../interfaces/hangman-game';
-import {
-  generateGameEmbed,
-  generateHelpEmbed,
-  generateStatsEmbed
-} from './hangman-game';
+import { embedColor, embedTitle, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
 
 const mockStats = {
   totalWins: 5,
@@ -38,6 +29,13 @@ const mockNew: GameData = {
 };
 
 describe('Hangman Game Status embed', () => {
+  it('should have title and colour defined', () => {
+    const gameData: GameData = mockGame;
+    const embed = generateGameEmbed(gameData);
+    expect(embed.title).toBe(embedTitle);
+    expect(embed.hexColor).toBe(embedColor);
+  });
+
   it('should display current guessed letters', () => {
     const gameData: GameData = mockGame;
     const embed = generateGameEmbed(gameData);
@@ -76,11 +74,15 @@ describe('Hangman Game Status embed', () => {
 });
 
 describe('Hangman Game Help embed', () => {
+  it('should have title and colour defined', () => {
+    const embed = generateHelpEmbed();
+    expect(embed.title).toBe(embedTitle);
+    expect(embed.hexColor).toBe(embedColor);
+  });
+
   it('should contain game summary instructions', () => {
     const helpEmbed = generateHelpEmbed();
-    const summaryField = helpEmbed.fields.find((f) =>
-      f.name.toUpperCase().includes('SUMMARY')
-    );
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('SUMMARY'));
 
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(prefix);
@@ -88,9 +90,7 @@ describe('Hangman Game Help embed', () => {
 
   it('should contain game start instructions', () => {
     const helpEmbed = generateHelpEmbed();
-    const summaryField = helpEmbed.fields.find((f) =>
-      f.name.toUpperCase().includes('START')
-    );
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('START'));
 
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(startCommand);
@@ -98,9 +98,7 @@ describe('Hangman Game Help embed', () => {
 
   it('should contain game play instructions', () => {
     const helpEmbed = generateHelpEmbed();
-    const summaryField = helpEmbed.fields.find((f) =>
-      f.name.toUpperCase().includes('GUESS')
-    );
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('GUESS'));
 
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(guessCommand);
@@ -108,9 +106,7 @@ describe('Hangman Game Help embed', () => {
 
   it('should contain instructions to view statistics', () => {
     const helpEmbed = generateHelpEmbed();
-    const summaryField = helpEmbed.fields.find((f) =>
-      f.name.toUpperCase().includes('STATS')
-    );
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('STATS'));
 
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(statsCommand);
@@ -118,30 +114,34 @@ describe('Hangman Game Help embed', () => {
 });
 
 describe('Hangman Game Summary embed', () => {
-  it('should display total wins', () => {
-    const embed = generateStatsEmbed(mockGame);
-    const winField = embed.fields.find((f) =>
-      f.name.toUpperCase().includes('WINS')
-    );
-
-    expect(winField.value).toBe('' + mockStats.totalWins);
+  it('should have title and colour defined', () => {
+    const gameData: GameData = mockGame;
+    const embed = generateStatsEmbed(gameData);
+    expect(embed.title).toBe(embedTitle);
+    expect(embed.hexColor).toBe(embedColor);
   });
 
   it('should display total wins', () => {
     const embed = generateStatsEmbed(mockGame);
-    const lossField = embed.fields.find((f) =>
-      f.name.toUpperCase().includes('LOSSES')
-    );
+    const winField = embed.fields.find(f => f.name.toUpperCase().includes('WINS'));
+
+    expect(winField.value).toBe('' + mockStats.totalWins);
+    expect(winField.inline).toBeTrue();
+  });
+
+  it('should display total wins', () => {
+    const embed = generateStatsEmbed(mockGame);
+    const lossField = embed.fields.find(f => f.name.toUpperCase().includes('LOSSES'));
 
     expect(lossField.value).toBe('' + mockStats.totalLosses);
+    expect(lossField.inline).toBeTrue();
   });
 
   it('should display current win streak', () => {
     const embed = generateStatsEmbed(mockGame);
-    const streakField = embed.fields.find((f) =>
-      f.name.toUpperCase().includes('STREAK')
-    );
+    const streakField = embed.fields.find(f => f.name.toUpperCase().includes('STREAK'));
 
     expect(streakField.value).toBe('' + mockStats.currentStreak);
+    expect(streakField.inline).toBeTrue();
   });
 });
