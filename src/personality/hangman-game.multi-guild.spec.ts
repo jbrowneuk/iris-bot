@@ -30,8 +30,8 @@ describe('Hangman Game - multiple guild behaviour', () => {
     mockMessage = Mock.ofType<Message>();
 
     const mockDeps = Mock.ofType<DependencyContainer>();
-    mockDeps.setup((m) => m.logger).returns(() => mockLogger.object);
-    mockDeps.setup((m) => m.database).returns(() => mockDatabase.object);
+    mockDeps.setup(m => m.logger).returns(() => mockLogger.object);
+    mockDeps.setup(m => m.database).returns(() => mockDatabase.object);
 
     personality = new HangmanGame(mockDeps.object);
 
@@ -45,17 +45,13 @@ describe('Hangman Game - multiple guild behaviour', () => {
     fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
   });
 
-  it('should not affect existing game if new one started in alternate guild', (done) => {
-    mockGuild.setup((m) => m.id).returns(() => mockGuildId);
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${startCommand}`);
-    mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
+  it('should not affect existing game if new one started in alternate guild', done => {
+    mockGuild.setup(m => m.id).returns(() => mockGuildId);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${startCommand}`);
+    mockMessage.setup(s => s.guild).returns(() => mockGuild.object);
 
     mockDatabase
-      .setup((m) =>
-        m.getRecordsFromCollection<SerialisableGameData>(It.isAny(), It.isAny())
-      )
+      .setup(m => m.getRecordsFromCollection<SerialisableGameData>(It.isAny(), It.isAny()))
       .returns((c: string, filter: QueryFilter) => {
         if (filter.where[0].value === altGuildId) {
           return Promise.resolve([serialiseGameData(mockActiveGame)]);
@@ -66,13 +62,13 @@ describe('Hangman Game - multiple guild behaviour', () => {
 
     let lastGuildId = altGuildId;
     mockDatabase
-      .setup((m) => m.insertRecordsToCollection(It.isAny(), It.isAny()))
+      .setup(m => m.insertRecordsToCollection(It.isAny(), It.isAny()))
       .returns((c: string, value: KeyedObject) => {
         lastGuildId = value.guildId;
         return Promise.resolve();
       });
 
-    personality.onMessage(mockMessage.object).then((response) => {
+    personality.onMessage(mockMessage.object).then(response => {
       expect(response).toBeTruthy();
       expect(lastGuildId).toBe(mockGuildId);
 
@@ -80,30 +76,24 @@ describe('Hangman Game - multiple guild behaviour', () => {
     });
   });
 
-  it('should not affect existing game if guess happens in an alternate guild', (done) => {
-    mockGuild.setup((m) => m.id).returns(() => altGuildId);
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} z`);
-    mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
+  it('should not affect existing game if guess happens in an alternate guild', done => {
+    mockGuild.setup(m => m.id).returns(() => altGuildId);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} z`);
+    mockMessage.setup(s => s.guild).returns(() => mockGuild.object);
 
     mockDatabase
-      .setup((m) =>
-        m.getRecordsFromCollection<SerialisableGameData>(It.isAny(), It.isAny())
-      )
+      .setup(m => m.getRecordsFromCollection<SerialisableGameData>(It.isAny(), It.isAny()))
       .returns(() => Promise.resolve([serialiseGameData(mockActiveGame)]));
 
     let lastGuildId = mockGuildId;
     mockDatabase
-      .setup((m) =>
-        m.updateRecordsInCollection(It.isAny(), It.isAny(), It.isAny())
-      )
+      .setup(m => m.updateRecordsInCollection(It.isAny(), It.isAny(), It.isAny()))
       .returns((c: string, v: KeyedObject, where: KeyedObject) => {
         lastGuildId = where.$guildId;
         return Promise.resolve();
       });
 
-    personality.onMessage(mockMessage.object).then((response) => {
+    personality.onMessage(mockMessage.object).then(response => {
       expect(response).toBeTruthy();
       expect(lastGuildId).toBe(altGuildId);
 

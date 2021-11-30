@@ -20,11 +20,11 @@ describe('Hangman Game - default behaviour', () => {
     mockDatabase = Mock.ofType<Database>();
 
     mockGuild = Mock.ofType<Guild>();
-    mockGuild.setup((m) => m.id).returns(() => mockGuildId);
+    mockGuild.setup(m => m.id).returns(() => mockGuildId);
 
     const mockDeps = Mock.ofType<DependencyContainer>();
-    mockDeps.setup((m) => m.logger).returns(() => mockLogger.object);
-    mockDeps.setup((m) => m.database).returns(() => mockDatabase.object);
+    mockDeps.setup(m => m.logger).returns(() => mockLogger.object);
+    mockDeps.setup(m => m.database).returns(() => mockDatabase.object);
 
     personality = new HangmanGame(mockDeps.object);
   });
@@ -33,10 +33,10 @@ describe('Hangman Game - default behaviour', () => {
     expect(personality).toBeTruthy();
   });
 
-  it('should provide help if command given with no parameters', (done) => {
+  it('should provide help if command given with no parameters', done => {
     mockMessage = Mock.ofType<Message>();
-    mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
-    mockMessage.setup((s) => s.content).returns(() => prefix);
+    mockMessage.setup(s => s.guild).returns(() => mockGuild.object);
+    mockMessage.setup(s => s.content).returns(() => prefix);
 
     const helpSpy = spyOn(personality, 'onHelp').and.callThrough();
     personality.onMessage(mockMessage.object).then(() => {
@@ -46,8 +46,8 @@ describe('Hangman Game - default behaviour', () => {
   });
 
   describe('Help functionality', () => {
-    it('should respond with help message', (done) => {
-      personality.onHelp().then((response) => {
+    it('should respond with help message', done => {
+      personality.onHelp().then(response => {
         expect(response).toBeTruthy();
         done();
       });

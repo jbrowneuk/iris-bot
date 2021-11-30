@@ -9,10 +9,7 @@ import { guessCommand, prefix, sqlCollection } from './constants/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { mockActiveGame, mockGuildId } from './hangman-game.specdata';
 import { GameData, SerialisableGameData } from './interfaces/hangman-game';
-import {
-  deserialiseGameData,
-  serialiseGameData
-} from './utilities/hangman-game';
+import { deserialiseGameData, serialiseGameData } from './utilities/hangman-game';
 
 describe('Hangman Game - guessing behaviour for single letters', () => {
   let personality: HangmanGame;
@@ -30,11 +27,11 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     mockDatabase = Mock.ofType<Database>();
 
     mockGuild = Mock.ofType<Guild>();
-    mockGuild.setup((m) => m.id).returns(() => mockGuildId);
+    mockGuild.setup(m => m.id).returns(() => mockGuildId);
 
     const mockDeps = Mock.ofType<DependencyContainer>();
-    mockDeps.setup((m) => m.logger).returns(() => mockLogger.object);
-    mockDeps.setup((m) => m.database).returns(() => mockDatabase.object);
+    mockDeps.setup(m => m.logger).returns(() => mockLogger.object);
+    mockDeps.setup(m => m.database).returns(() => mockDatabase.object);
 
     personality = new HangmanGame(mockDeps.object);
 
@@ -42,39 +39,26 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     // Update state happens when a guess is made
     afterState = null;
     mockDatabase
-      .setup((m) =>
-        m.updateRecordsInCollection(
-          It.isValue(sqlCollection),
-          It.isAny(),
-          It.isAny()
-        )
-      )
+      .setup(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()))
       .callback((collection: string, fields: KeyedObject) => {
         afterState = deserialiseGameData(fields as SerialisableGameData);
       })
       .returns(() => Promise.resolve());
 
     mockMessage = Mock.ofType<Message>();
-    mockMessage.setup((s) => s.guild).returns(() => mockGuild.object);
+    mockMessage.setup(s => s.guild).returns(() => mockGuild.object);
 
     const runningGame = serialiseGameData(beforeState);
     mockDatabase
-      .setup((m) =>
-        m.getRecordsFromCollection<SerialisableGameData>(
-          It.isValue(sqlCollection),
-          It.isAny()
-        )
-      )
+      .setup(m => m.getRecordsFromCollection<SerialisableGameData>(It.isValue(sqlCollection), It.isAny()))
       .returns(() => Promise.resolve([runningGame]));
   });
 
-  it('should add correct letter to display variable', (done) => {
+  it('should add correct letter to display variable', done => {
     const guessLetter = 'f';
     const guessLetterUC = guessLetter.toUpperCase();
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(afterState.currentDisplay).toContain(guessLetterUC);
@@ -82,13 +66,11 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     });
   });
 
-  it('should not add correct letter to wrong letters array', (done) => {
+  it('should not add correct letter to wrong letters array', done => {
     const guessLetter = 'f';
     const guessLetterUC = guessLetter.toUpperCase();
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(afterState.wrongLetters).not.toContain(guessLetterUC);
@@ -96,13 +78,11 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     });
   });
 
-  it('should not add incorrect letter to display variable', (done) => {
+  it('should not add incorrect letter to display variable', done => {
     const guessLetter = 'z';
     const guessLetterUC = guessLetter.toUpperCase();
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(afterState.currentDisplay).not.toContain(guessLetterUC);
@@ -110,13 +90,11 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     });
   });
 
-  it('should add incorrect letter to incorrect letters array', (done) => {
+  it('should add incorrect letter to incorrect letters array', done => {
     const guessLetter = 'z';
     const guessLetterUC = guessLetter.toUpperCase();
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(afterState.wrongLetters).toContain(guessLetterUC);
@@ -124,13 +102,11 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     });
   });
 
-  it('should remove life on incorrect letter', (done) => {
+  it('should remove life on incorrect letter', done => {
     const guessLetter = 'z';
     const beforeLives = beforeState.livesRemaining;
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(afterState.livesRemaining).toBe(beforeLives - 1);
@@ -138,91 +114,49 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
     });
   });
 
-  it('should not duplicate an incorrect letter', (done) => {
+  it('should not duplicate an incorrect letter', done => {
     const guessLetter = beforeState.wrongLetters[0];
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
 
-    personality.onMessage(mockMessage.object).then((response) => {
+    personality.onMessage(mockMessage.object).then(response => {
       expect(response).toContain('already been guessed');
 
       // Shouldn't insert or update state
-      mockDatabase.verify(
-        (m) =>
-          m.updateRecordsInCollection(
-            It.isValue(sqlCollection),
-            It.isAny(),
-            It.isAny()
-          ),
-        Times.never()
-      );
-      mockDatabase.verify(
-        (m) =>
-          m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()),
-        Times.never()
-      );
+      mockDatabase.verify(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()), Times.never());
+      mockDatabase.verify(m => m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()), Times.never());
 
       done();
     });
   });
 
-  it('should not accept numeric character', (done) => {
+  it('should not accept numeric character', done => {
     const guessChar = '4';
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessChar}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessChar}`);
 
-    personality.onMessage(mockMessage.object).then((response) => {
+    personality.onMessage(mockMessage.object).then(response => {
       expect(response).toContain('not a letter');
 
       // Shouldn't insert or update state
-      mockDatabase.verify(
-        (m) =>
-          m.updateRecordsInCollection(
-            It.isValue(sqlCollection),
-            It.isAny(),
-            It.isAny()
-          ),
-        Times.never()
-      );
-      mockDatabase.verify(
-        (m) =>
-          m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()),
-        Times.never()
-      );
+      mockDatabase.verify(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()), Times.never());
+      mockDatabase.verify(m => m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()), Times.never());
 
       done();
     });
   });
 
-  it('should not accept symbol character', (done) => {
+  it('should not accept symbol character', done => {
     const guessChar = '#';
 
-    mockMessage
-      .setup((s) => s.content)
-      .returns(() => `${prefix} ${guessCommand} ${guessChar}`);
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessChar}`);
 
-    personality.onMessage(mockMessage.object).then((response) => {
+    personality.onMessage(mockMessage.object).then(response => {
       expect(response).toContain('not a letter');
 
       // Shouldn't insert or update state
-      mockDatabase.verify(
-        (m) =>
-          m.updateRecordsInCollection(
-            It.isValue(sqlCollection),
-            It.isAny(),
-            It.isAny()
-          ),
-        Times.never()
-      );
-      mockDatabase.verify(
-        (m) =>
-          m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()),
-        Times.never()
-      );
+      mockDatabase.verify(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()), Times.never());
+      mockDatabase.verify(m => m.insertRecordsToCollection(It.isValue(sqlCollection), It.isAny()), Times.never());
 
       done();
     });
