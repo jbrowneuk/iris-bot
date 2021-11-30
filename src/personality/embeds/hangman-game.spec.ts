@@ -126,6 +126,7 @@ describe('Hangman Game Summary embed', () => {
     const winField = embed.fields.find(f => f.name.toUpperCase().includes('WINS'));
 
     expect(winField.value).toBe('' + mockStats.totalWins);
+    expect(winField.inline).toBeTrue();
   });
 
   it('should display total wins', () => {
@@ -133,6 +134,7 @@ describe('Hangman Game Summary embed', () => {
     const lossField = embed.fields.find(f => f.name.toUpperCase().includes('LOSSES'));
 
     expect(lossField.value).toBe('' + mockStats.totalLosses);
+    expect(lossField.inline).toBeTrue();
   });
 
   it('should display current win streak', () => {
@@ -140,5 +142,6 @@ describe('Hangman Game Summary embed', () => {
     const streakField = embed.fields.find(f => f.name.toUpperCase().includes('STREAK'));
 
     expect(streakField.value).toBe('' + mockStats.currentStreak);
+    expect(streakField.inline).toBeTrue();
   });
 });
