@@ -1,3 +1,15 @@
+Release 0.2.1 - Hangman game fixes
+From this release forward, we'll switch to using PRs as change history. Using
+commits is not useful for users, and developers can already see these in the repo.
+
+This release contains
+
+- Reconfigure linting rules (#74)
+  Enables autoformat on file saving and adjusts formatting rules for easier reading
+- Hangman game feature fixes (#75)
+  Reformats the game summary to use inline fields to take up less space, and fixes
+  incorrect guessing of full words
+
 Release 0.2.0 - SQL persistence
 This release lays the groundwork for persisting bot settings using the SQL database
 
