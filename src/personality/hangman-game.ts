@@ -5,31 +5,10 @@ import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import {
-  apiUrl,
-  blankDisplayChar,
-  guessCommand,
-  prefix,
-  sqlCollection,
-  startCommand,
-  statsCommand,
-  summaryCommand
-} from './constants/hangman-game';
-import {
-  generateGameEmbed,
-  generateHelpEmbed,
-  generateStatsEmbed
-} from './embeds/hangman-game';
-import {
-  GameData,
-  SerialisableGameData,
-  WordData
-} from './interfaces/hangman-game';
-import {
-  deserialiseGameData,
-  isGameActive,
-  serialiseGameData
-} from './utilities/hangman-game';
+import { apiUrl, blankDisplayChar, guessCommand, prefix, sqlCollection, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
+import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
+import { GameData, SerialisableGameData, WordData } from './interfaces/hangman-game';
+import { deserialiseGameData, isGameActive, serialiseGameData } from './utilities/hangman-game';
 
 export class HangmanGame implements Personality {
   constructor(private dependencies: DependencyContainer) {}
@@ -73,7 +52,7 @@ export class HangmanGame implements Personality {
   }
 
   private fetchWordFromApi(): Promise<WordData> {
-    return nodeFetch.default(apiUrl).then((response) => {
+    return nodeFetch.default(apiUrl).then(response => {
       if (!response.ok) {
         throw new Error(`Unable to fetch API: ${response.status}`);
       }
@@ -87,53 +66,38 @@ export class HangmanGame implements Personality {
       where: [{ field: 'guildId', value: guildId }]
     };
 
-    return this.dependencies.database
-      .getRecordsFromCollection<SerialisableGameData>(sqlCollection, filter)
-      .then((records) => {
-        if (records.length === 0) {
-          return null;
-        }
+    return this.dependencies.database.getRecordsFromCollection<SerialisableGameData>(sqlCollection, filter).then(records => {
+      if (records.length === 0) {
+        return null;
+      }
 
-        return deserialiseGameData(records[0]);
-      });
+      return deserialiseGameData(records[0]);
+    });
   }
 
-  private initialiseGameForGuild(
-    guildId: string,
-    gameData: GameData
-  ): Promise<void> {
+  private initialiseGameForGuild(guildId: string, gameData: GameData): Promise<void> {
     const serialised = serialiseGameData(gameData);
     const insertData = { guildId, ...serialised };
 
-    return this.dependencies.database.insertRecordsToCollection(
-      sqlCollection,
-      insertData
-    );
+    return this.dependencies.database.insertRecordsToCollection(sqlCollection, insertData);
   }
 
-  private updateGameForGuild(
-    guildId: string,
-    gameData: GameData
-  ): Promise<void> {
+  private updateGameForGuild(guildId: string, gameData: GameData): Promise<void> {
     const filter = { $guildId: guildId };
     const serialised = serialiseGameData(gameData);
 
-    return this.dependencies.database.updateRecordsInCollection(
-      sqlCollection,
-      serialised,
-      filter
-    );
+    return this.dependencies.database.updateRecordsInCollection(sqlCollection, serialised, filter);
   }
 
   private handleGameStart(guildId: string): Promise<MessageType> {
-    return this.fetchGameForGuild(guildId).then((guildData) => {
+    return this.fetchGameForGuild(guildId).then(guildData => {
       if (guildData && isGameActive(guildData)) {
         return 'Game is already running';
       }
 
       return this.fetchWordFromApi()
-        .then((rawData) => this.handleWordResponse(guildId, rawData, guildData))
-        .catch((e) => {
+        .then(rawData => this.handleWordResponse(guildId, rawData, guildData))
+        .catch(e => {
           this.dependencies.logger.error(e);
           return 'My internet is not working right now.';
         });
@@ -148,25 +112,16 @@ export class HangmanGame implements Personality {
    * @param guildData the current guild's game state
    * @returns a promise resolving to an embed with the new game information
    */
-  private handleWordResponse(
-    guildId: string,
-    wordData: WordData,
-    guildData: GameData
-  ): Promise<MessageType> {
+  private handleWordResponse(guildId: string, wordData: WordData, guildData: GameData): Promise<MessageType> {
     if (!wordData || !wordData.word) {
       // TODO Use response generator
       return Promise.resolve('Could not think of a word');
     }
 
-    const newGame: Omit<
-      GameData,
-      'totalWins' | 'totalLosses' | 'currentStreak'
-    > = {
+    const newGame: Omit<GameData, 'totalWins' | 'totalLosses' | 'currentStreak'> = {
       timeStarted: Date.now(),
       currentWord: wordData.word.toUpperCase(),
-      currentDisplay: Array(wordData.word.length)
-        .fill(blankDisplayChar)
-        .join(''),
+      currentDisplay: Array(wordData.word.length).fill(blankDisplayChar).join(''),
       livesRemaining: 10,
       wrongLetters: [],
       wrongWords: []
@@ -175,9 +130,7 @@ export class HangmanGame implements Personality {
     if (guildData) {
       const gameData = { ...guildData, ...newGame };
 
-      return this.updateGameForGuild(guildId, gameData).then(() =>
-        generateGameEmbed(gameData)
-      );
+      return this.updateGameForGuild(guildId, gameData).then(() => generateGameEmbed(gameData));
     } else {
       const gameData = {
         ...newGame,
@@ -186,9 +139,7 @@ export class HangmanGame implements Personality {
         currentStreak: 0
       };
 
-      return this.initialiseGameForGuild(guildId, gameData).then(() =>
-        generateGameEmbed(gameData)
-      );
+      return this.initialiseGameForGuild(guildId, gameData).then(() => generateGameEmbed(gameData));
     }
   }
 
@@ -201,7 +152,7 @@ export class HangmanGame implements Personality {
    */
   private handleGuess(guildId: string, guess: string): Promise<MessageType> {
     return this.fetchGameForGuild(guildId)
-      .then((gameData) => {
+      .then(gameData => {
         const gameRunning = gameData && isGameActive(gameData);
         if (!gameRunning) {
           return `The game hasn’t been started. Try starting one with \`${prefix} ${startCommand}\``;
@@ -214,17 +165,13 @@ export class HangmanGame implements Personality {
 
         return this.onGuessLetter(guildId, guess, gameData);
       })
-      .catch((e) => {
+      .catch(e => {
         console.error(e);
         return 'Not doing that now';
       });
   }
 
-  private onGuessWord(
-    guildId: string,
-    guess: string,
-    gameData: GameData
-  ): Promise<MessageType> {
+  private onGuessWord(guildId: string, guess: string, gameData: GameData): Promise<MessageType> {
     const invalidWordRegex = /[^A-Z]+/;
     if (invalidWordRegex.test(guess)) {
       return Promise.resolve('That’s not a word I can use here.');
@@ -240,9 +187,7 @@ export class HangmanGame implements Personality {
       gameData.currentStreak += 1;
       gameData.totalWins += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(
-        () => `Yup, it’s “${guess}”`
-      );
+      return this.updateGameForGuild(guildId, gameData).then(() => `Yup, it’s “${guess}”`);
     }
 
     if (gameData.wrongWords.indexOf(guess) !== -1) {
@@ -256,21 +201,13 @@ export class HangmanGame implements Personality {
       gameData.currentStreak = 0;
       gameData.totalLosses += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(
-        () => `You’ve lost! The word was “${gameData.currentWord}”`
-      );
+      return this.updateGameForGuild(guildId, gameData).then(() => `You’ve lost! The word was “${gameData.currentWord}”`);
     }
 
-    return this.updateGameForGuild(guildId, gameData).then(() =>
-      generateGameEmbed(gameData)
-    );
+    return this.updateGameForGuild(guildId, gameData).then(() => `Nope, it’s not “${guess}”`);
   }
 
-  private onGuessLetter(
-    guildId: string,
-    guess: string,
-    gameData: GameData
-  ): Promise<MessageType> {
+  private onGuessLetter(guildId: string, guess: string, gameData: GameData): Promise<MessageType> {
     if (!guess.match(/[A-Z]/)) {
       return Promise.resolve('That’s not a letter I can use…');
     }
@@ -285,18 +222,13 @@ export class HangmanGame implements Personality {
       gameData.livesRemaining -= 1;
 
       if (gameData.livesRemaining > 0) {
-        return this.updateGameForGuild(guildId, gameData).then(
-          () =>
-            `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`
-        );
+        return this.updateGameForGuild(guildId, gameData).then(() => `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`);
       }
 
       gameData.currentStreak = 0;
       gameData.totalLosses += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(
-        () => `Bad luck! The word was “${gameData.currentWord}”`
-      );
+      return this.updateGameForGuild(guildId, gameData).then(() => `Bad luck! The word was “${gameData.currentWord}”`);
     }
 
     if (gameData.currentDisplay.indexOf(guess) >= 0) {
@@ -323,21 +255,14 @@ export class HangmanGame implements Personality {
       gameData.currentStreak += 1;
       gameData.totalWins += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(
-        () => `Yup, it’s “${gameData.currentWord}” - congrats!`
-      );
+      return this.updateGameForGuild(guildId, gameData).then(() => `Yup, it’s “${gameData.currentWord}” - congrats!`);
     }
 
-    return this.updateGameForGuild(guildId, gameData).then(() =>
-      generateGameEmbed(gameData)
-    );
+    return this.updateGameForGuild(guildId, gameData).then(() => generateGameEmbed(gameData));
   }
 
-  private handleSummaryCommand(
-    guildId: string,
-    embedGen: (input: GameData) => MessageEmbed
-  ): Promise<MessageType> {
-    return this.fetchGameForGuild(guildId).then((gameData) => {
+  private handleSummaryCommand(guildId: string, embedGen: (input: GameData) => MessageEmbed): Promise<MessageType> {
+    return this.fetchGameForGuild(guildId).then(gameData => {
       if (!gameData) {
         return `No game has been played - try starting one with \`${prefix} ${startCommand}\``;
       }
