@@ -13,4 +13,5 @@ export interface ServerResponse {
   onlinePlayers: number;
   maxPlayers: number;
   samplePlayers: ServerPlayer[];
+  description?: string;
 }

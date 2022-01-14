@@ -2,13 +2,10 @@ import { Message, TextChannel } from 'discord.js';
 import * as fs from 'fs';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { KeyedObject } from '../interfaces/keyed-object';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import {
-  announceCommand,
-  setCommand,
-  statusCommand
-} from './constants/mc-server';
+import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
 import {
   generateAnnounceNoAssociationEmbed,
   generateAnnounceSuccessEmbed,
@@ -39,16 +36,9 @@ export class McServer implements Personality {
 
   public initialise(): void {
     const updateInterval = updateMinutes * 60 * 1000;
-    this.timerInterval = setInterval(
-      this.fetchStatuses.bind(this),
-      updateInterval
-    );
+    this.timerInterval = setInterval(this.fetchStatuses.bind(this), updateInterval);
 
-    fs.readFile(
-      defaultSettingsFile,
-      settingsFileEnc,
-      this.parseServers.bind(this)
-    );
+    fs.readFile(defaultSettingsFile, settingsFileEnc, this.parseServers.bind(this));
   }
 
   public destroy(): void {
@@ -84,10 +74,10 @@ export class McServer implements Personality {
   }
 
   protected fetchStatuses(): void {
-    this.servers.forEach((serverDetails) => {
+    this.servers.forEach(serverDetails => {
       const preCheckStatus = serverDetails.lastKnownOnline;
 
-      this.fetchStatus(serverDetails).then((response) => {
+      this.fetchStatus(serverDetails).then(response => {
         const postCheckStatus = serverDetails.lastKnownOnline;
         if (preCheckStatus === postCheckStatus) {
           return;
@@ -98,9 +88,7 @@ export class McServer implements Personality {
           return;
         }
 
-        const channel = this.dependencies.client.findChannelById(
-          serverDetails.channelId
-        ) as TextChannel;
+        const channel = this.dependencies.client.findChannelById(serverDetails.channelId) as TextChannel;
 
         if (!channel || channel === null) {
           return;
@@ -118,9 +106,7 @@ export class McServer implements Personality {
     }
 
     const minecraftServer = this.servers.get(message.guild.id);
-    return this.fetchStatus(minecraftServer).then((response) =>
-      generateServerEmbed(minecraftServer.url, response)
-    );
+    return this.fetchStatus(minecraftServer).then(response => generateServerEmbed(minecraftServer.url, response));
   }
 
   private handleSetCommand(message: Message): Promise<MessageType> {
@@ -138,9 +124,7 @@ export class McServer implements Personality {
     this.servers.set(message.guild.id, details);
 
     this.saveServers();
-    return Promise.resolve(
-      generateSetSuccessEmbed(message.guild.name, serverUrl)
-    );
+    return Promise.resolve(generateSetSuccessEmbed(message.guild.name, serverUrl));
   }
 
   private handleAnnounceCommand(message: Message): Promise<MessageType> {
@@ -153,15 +137,11 @@ export class McServer implements Personality {
     serverInfo.channelId = textChannel.id;
 
     this.saveServers();
-    return Promise.resolve(
-      generateAnnounceSuccessEmbed(serverInfo.url, textChannel.name)
-    );
+    return Promise.resolve(generateAnnounceSuccessEmbed(serverInfo.url, textChannel.name));
   }
 
-  private fetchStatus(
-    serverDetails: ServerInformation
-  ): Promise<ServerResponse> {
-    return this.getServerStatus(serverDetails.url).then((status) => {
+  private fetchStatus(serverDetails: ServerInformation): Promise<ServerResponse> {
+    return this.getServerStatus(serverDetails.url).then(status => {
       const isOnline = status !== null;
       serverDetails.lastKnownOnline = isOnline;
       return status;
@@ -171,7 +151,7 @@ export class McServer implements Personality {
   protected getServerStatus(url: string): Promise<ServerResponse> {
     return util
       .status(url)
-      .then((response: ServerResponse) => {
+      .then((response: KeyedObject) => {
         if (!response || !response.version) {
           return null;
         }
@@ -187,11 +167,12 @@ export class McServer implements Personality {
           version: matches[0],
           onlinePlayers: response.onlinePlayers,
           maxPlayers: response.maxPlayers,
-          samplePlayers: response.samplePlayers
+          samplePlayers: response.samplePlayers,
+          description: response.description && response.description.descriptionText ? response.description.descriptionText : null
         };
       })
       .catch((error: Error): ServerResponse => {
-        this.dependencies.logger.error('Server unreachable:', error);
+        this.dependencies.logger.error('Server unreachable:', error || 'no error');
         return null;
       });
   }
@@ -226,15 +207,10 @@ export class McServer implements Personality {
       settingsObj[key] = value;
     });
 
-    fs.writeFile(
-      defaultSettingsFile,
-      JSON.stringify(settingsObj),
-      settingsFileEnc,
-      (err) => {
-        if (err) {
-          return this.dependencies.logger.error(err);
-        }
+    fs.writeFile(defaultSettingsFile, JSON.stringify(settingsObj), settingsFileEnc, err => {
+      if (err) {
+        return this.dependencies.logger.error(err);
       }
-    );
+    });
   }
 }

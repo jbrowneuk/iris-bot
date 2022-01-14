@@ -1,10 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 
-import {
-  announceCommand,
-  setCommand,
-  statusCommand
-} from '../constants/mc-server';
+import { announceCommand, defaultDescription, noAssociationCopy, setCommand, statusCommand } from '../constants/mc-server';
 import { ServerResponse } from '../interfaces/mc-server';
 
 const embedTitle = 'Server info';
@@ -12,9 +8,11 @@ const embedErrorColor = 0xff8000;
 const embedSuccessColor = 0x0080ff;
 
 // Response texts
-export const noAssociationCopy =
-  'No Minecraft server associated with this Discord';
 export const linkServerCopy = 'Linked the server to this Discord.';
+
+// Field titles (for test checking)
+export const fieldTitleVersion = 'Version';
+export const fieldTitlePlayers = 'Players';
 
 /**
  * Generates a message embed containing the help for the plugin
@@ -26,21 +24,9 @@ export function generateHelpEmbed(): MessageEmbed {
   embed.setColor(embedSuccessColor);
   embed.setTitle('Minecraft Server Plugin');
   embed.setDescription('Allows you to check the status of a Minecraft server.');
-  embed.addField(
-    `Command: ${setCommand} <url>`,
-    'Associates a Minecraft server with this Discord server.',
-    false
-  );
-  embed.addField(
-    `Command: ${statusCommand}`,
-    'Checks the status of the associated Minecraft server.',
-    false
-  );
-  embed.addField(
-    `Command: ${announceCommand}`,
-    'Makes the bot announce status changes of the associated Minecraft server to this channel.',
-    false
-  );
+  embed.addField(`Command: ${setCommand} <url>`, 'Associates a Minecraft server with this Discord server.', false);
+  embed.addField(`Command: ${statusCommand}`, 'Checks the status of the associated Minecraft server.', false);
+  embed.addField(`Command: ${announceCommand}`, 'Makes the bot announce status changes of the associated Minecraft server to this channel.', false);
 
   return embed;
 }
@@ -52,26 +38,25 @@ export function generateHelpEmbed(): MessageEmbed {
  * @param status the updated server status
  * @returns a MessageEmbed containing a summary of the server status
  */
-export function generateServerEmbed(
-  url: string,
-  status: ServerResponse
-): MessageEmbed {
+export function generateServerEmbed(url: string, status: ServerResponse): MessageEmbed {
   const isOnline = status !== null;
-
-  const embed = new MessageEmbed();
+  const description = status && status.description ? status.description : defaultDescription;
   const statusText = isOnline ? 'online' : 'offline';
 
-  embed.setTitle(`Server ${statusText}`);
+  const embed = new MessageEmbed();
+  embed.setTitle(url);
+  embed.setDescription(`${description}\n\nNow ${statusText}`);
   embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
-  const urlText = `Address: **${url}**`;
-  const versionText =
-    status && status.version ? `\nRunning: **${status.version}**` : '';
-  embed.setDescription(`${urlText}${versionText}`);
+
+  // Version field
+  if (status && status.version) {
+    embed.addField(fieldTitleVersion, status.version);
+  }
 
   if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
     // Sample players is occasionally not populated
-    const players = (status.samplePlayers || []).map((p) => p.name);
-    embed.addField(`Players (${status.onlinePlayers})`, players.join('\n'));
+    const players = (status.samplePlayers || []).map(p => p.name);
+    embed.addField(`${fieldTitlePlayers} (${status.onlinePlayers})`, players.join('\n'));
   }
 
   return embed;
@@ -97,10 +82,7 @@ export function generateStatusFailureEmbed(): MessageEmbed {
  *
  * @returns a MessageEmbed containing a summary of the link
  */
-export function generateSetSuccessEmbed(
-  guildName: string,
-  serverUrl: string
-): MessageEmbed {
+export function generateSetSuccessEmbed(guildName: string, serverUrl: string): MessageEmbed {
   const embed = new MessageEmbed();
   embed.setTitle(embedTitle);
   embed.setColor(embedSuccessColor);
@@ -121,10 +103,7 @@ export function generateSetFailureEmbed(): MessageEmbed {
 
   embed.setColor(embedErrorColor);
   embed.setDescription(`Usage: \`${setCommand} my.server.address\``);
-  embed.addField(
-    'Description',
-    'Associates a Minecraft server with this Discord server'
-  );
+  embed.addField('Description', 'Associates a Minecraft server with this Discord server');
 
   return embed;
 }
@@ -137,10 +116,7 @@ export function generateAnnounceNoAssociationEmbed(): MessageEmbed {
   return embed;
 }
 
-export function generateAnnounceSuccessEmbed(
-  serverUrl: string,
-  channelName: string
-): MessageEmbed {
+export function generateAnnounceSuccessEmbed(serverUrl: string, channelName: string): MessageEmbed {
   const embed = new MessageEmbed();
   embed.setTitle(embedTitle);
   embed.setColor(embedSuccessColor);
