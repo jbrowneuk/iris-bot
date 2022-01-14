@@ -6,12 +6,7 @@ import { IMock, It, Mock } from 'typemoq';
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
-import {
-  announceCommand,
-  setCommand,
-  statusCommand
-} from './constants/mc-server';
-import { noAssociationCopy } from './embeds/mc-server';
+import { announceCommand, defaultDescription, noAssociationCopy, setCommand, statusCommand } from './constants/mc-server';
 import { ServerInformation } from './interfaces/mc-server';
 import { McServer } from './mc-server';
 
@@ -60,12 +55,12 @@ describe('Minecraft server utilities', () => {
 
   beforeEach(() => {
     mockGuild = Mock.ofType<Guild>();
-    mockGuild.setup((m) => m.id).returns(() => MOCK_GUILD_ID);
-    mockGuild.setup((m) => m.name).returns(() => MOCK_GUILD_NAME);
+    mockGuild.setup(m => m.id).returns(() => MOCK_GUILD_ID);
+    mockGuild.setup(m => m.name).returns(() => MOCK_GUILD_NAME);
 
     mockChannel = Mock.ofType<TextChannel>();
-    mockChannel.setup((m) => m.id).returns(() => MOCK_CHANNEL_ID);
-    mockChannel.setup((m) => m.name).returns(() => MOCK_CHANNEL_NAME);
+    mockChannel.setup(m => m.id).returns(() => MOCK_CHANNEL_ID);
+    mockChannel.setup(m => m.name).returns(() => MOCK_CHANNEL_NAME);
 
     mockClient = Mock.ofType<Client>();
 
@@ -93,16 +88,14 @@ describe('Minecraft server utilities', () => {
   });
 
   describe(`${statusCommand} messages`, () => {
-    it('should return embed with error if no server associated', (done) => {
+    it('should return embed with error if no server associated', done => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => statusCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
@@ -111,59 +104,89 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it('should return embed with server info if server associated', (done) => {
+    it('should return embed with server info if server associated', done => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => statusCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toContain('online');
+        expect(embed.description).toContain('online');
         done();
       });
     });
 
-    it('should reflect offline status if server offline', (done) => {
+    it('should reflect offline status if server offline', done => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => statusCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(null)
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toContain('offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
 
-    it('should reflect online status if server offline', (done) => {
+    it('should reflect online status if server online', done => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => statusCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
-        expect(embed.title).toContain('online');
+        expect(embed.description).toContain('online');
+        done();
+      });
+    });
+
+    it('should provide default description if one is not provided by server', done => {
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
+
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+
+      personality.onMessage(mockMessage.object).then(response => {
+        expect(response).toBeTruthy();
+        const embed = response as MessageEmbed;
+        expect(embed.description).toContain(defaultDescription);
+        done();
+      });
+    });
+
+    it('should parse description if one is provided by server', done => {
+      const descriptionText = 'my server description';
+      const infoClone = Object.assign({ description: { descriptionText } }, MOCK_RUNNING_STATUS);
+      personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
+
+      const mockMessage = Mock.ofType<Message>();
+      mockMessage.setup(m => m.content).returns(() => statusCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
+
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(infoClone));
+
+      personality.onMessage(mockMessage.object).then(response => {
+        expect(response).toBeTruthy();
+        const embed = response as MessageEmbed;
+        expect(embed.description).toContain(descriptionText);
         done();
       });
     });
@@ -175,12 +198,12 @@ describe('Minecraft server utilities', () => {
       spyOn(fs, 'writeFile');
     });
 
-    it('should return embed with usage instructions if no param provided', (done) => {
+    it('should return embed with usage instructions if no param provided', done => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => setCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => setCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.description).toContain('Usage:');
@@ -188,16 +211,14 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it('should set server url for current guild', (done) => {
+    it('should set server url for current guild', done => {
       const mockUrl = 'my-url.is-not-a.real-url';
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage
-        .setup((m) => m.content)
-        .returns(() => `${setCommand} ${mockUrl}`);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => `${setCommand} ${mockUrl}`);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.fields[0].value).toContain(mockUrl);
@@ -217,12 +238,12 @@ describe('Minecraft server utilities', () => {
       spyOn(fs, 'writeFile');
     });
 
-    it('should return embed with error if no server associated', (done) => {
+    it('should return embed with error if no server associated', done => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => announceCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => announceCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.title).toBeTruthy();
@@ -231,15 +252,15 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it('should store channel id for guild if server associated', (done) => {
+    it('should store channel id for guild if server associated', done => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => announceCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
-      mockMessage.setup((m) => m.channel).returns(() => mockChannel.object);
+      mockMessage.setup(m => m.content).returns(() => announceCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.channel).returns(() => mockChannel.object);
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
         const embed = response as MessageEmbed;
         expect(embed.description).toContain('Announcing');
@@ -260,10 +281,8 @@ describe('Minecraft server utilities', () => {
       expect(personality.hasTimer()).toBe(true);
     });
 
-    it('should fetch server status for known servers', (done) => {
-      const statusUpdateHandler = spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
+    it('should fetch server status for known servers', done => {
+      const statusUpdateHandler = spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
@@ -274,15 +293,11 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it('should post status to channel if server comes online', (done) => {
+    it('should post status to channel if server comes online', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
-      mockClient
-        .setup((m) => m.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
-      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = false;
@@ -291,20 +306,16 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.title).toContain('online');
+        expect(embed.description).toContain('online');
         done();
       });
     });
 
-    it('should post status to channel if server goes offline', (done) => {
+    it('should post status to channel if server goes offline', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(null)
-      );
-      mockClient
-        .setup((m) => m.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
-      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
+      mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -313,18 +324,16 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.title).toContain('offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
 
-    it('should post offline status to channel if server becomes unreachable', (done) => {
+    it('should post offline status to channel if server becomes unreachable', done => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.reject(null));
-      mockClient
-        .setup((m) => m.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
-      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+      mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -333,20 +342,16 @@ describe('Minecraft server utilities', () => {
       personality.invokeFetch();
       setTimeout(() => {
         expect(embed).toBeTruthy();
-        expect(embed.title).toContain('offline');
+        expect(embed.description).toContain('offline');
         done();
       });
     });
 
-    it('should not post status to channel if server is online and status does not change', (done) => {
+    it('should not post status to channel if server is online and status does not change', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS)
-      );
-      mockClient
-        .setup((m) => m.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
-      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -359,15 +364,11 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it('should not post status to channel if server is offline and status does not change', (done) => {
+    it('should not post status to channel if server is offline and status does not change', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(null)
-      );
-      mockClient
-        .setup((m) => m.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
-      mockChannel.setup((m) => m.send(It.isAny())).callback((e) => (embed = e));
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
+      mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = false;
@@ -391,69 +392,57 @@ describe('Minecraft server utilities', () => {
       } as StatusResponse;
     }
 
-    it('should provide valid status if server is reporting two part version', (done) => {
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion('1.17'))
-      );
+    it('should provide valid status if server is reporting two part version', done => {
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('1.17')));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
         done();
       });
     });
 
-    it('should provide valid status if server is reporting three part version', (done) => {
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion('1.16.5'))
-      );
+    it('should provide valid status if server is reporting three part version', done => {
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('1.16.5')));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
         done();
       });
     });
 
-    it('should provide valid status if server is reporting three part version with custom software', (done) => {
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion('Paper 1.16.2'))
-      );
+    it('should provide valid status if server is reporting three part version with custom software', done => {
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('Paper 1.16.2')));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
         done();
       });
     });
 
-    it('should provide null status if server is reporting Exaroton-style sleeping text', (done) => {
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion('§9◉ Sleeping'))
-      );
+    it('should provide null status if server is reporting Exaroton-style sleeping text', done => {
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('§9◉ Sleeping')));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response).toBeNull();
         done();
       });
     });
 
-    it('should extract correct version if server is reporting three part version', (done) => {
+    it('should extract correct version if server is reporting three part version', done => {
       const semVer = '1.16.2';
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion(semVer))
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion(semVer)));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response.version).toBe(semVer);
         done();
       });
     });
 
-    it('should extract correct version if server is reporting three part version with custom software', (done) => {
+    it('should extract correct version if server is reporting three part version with custom software', done => {
       const semVer = '1.16.2';
-      spyOn(util, 'status').and.callFake(() =>
-        Promise.resolve<StatusResponse>(mapVersion(`Paper ${semVer}`))
-      );
+      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion(`Paper ${semVer}`)));
 
-      personality.invokeGetServerStatus().then((response) => {
+      personality.invokeGetServerStatus().then(response => {
         expect(response.version).toBe(semVer);
         done();
       });
@@ -471,17 +460,10 @@ describe('Minecraft server utilities', () => {
     it('should load settings on initialise', () => {
       const mockUrl = 'mock-url';
       const mockChannelId = 'mock-id';
-      const fakeReadFile = (
-        path: string,
-        enc: string,
-        cb: (err: Error, data: string) => void
-      ) => {
+      const fakeReadFile = (path: string, enc: string, cb: (err: Error, data: string) => void) => {
         expect(path).toBeTruthy();
         expect(enc).toBeTruthy();
-        cb(
-          null,
-          `{ "${MOCK_GUILD_ID}": { "url": "${mockUrl}", "channelId": "${mockChannelId}" } }`
-        );
+        cb(null, `{ "${MOCK_GUILD_ID}": { "url": "${mockUrl}", "channelId": "${mockChannelId}" } }`);
       };
 
       spyOn(fs, 'readFile').and.callFake(fakeReadFile as any);
@@ -496,14 +478,12 @@ describe('Minecraft server utilities', () => {
       expect(serverInfo.lastKnownOnline).toBe(false);
     });
 
-    it(`should persist settings on ${setCommand}`, (done) => {
+    it(`should persist settings on ${setCommand}`, done => {
       const mockUrl = 'my-url.is-not-a.real-url';
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage
-        .setup((m) => m.content)
-        .returns(() => `${setCommand} ${mockUrl}`);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.content).returns(() => `${setCommand} ${mockUrl}`);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
       personality.onMessage(mockMessage.object).then(() => {
         expect(writeSpy).toHaveBeenCalled();
@@ -511,13 +491,13 @@ describe('Minecraft server utilities', () => {
       });
     });
 
-    it(`should persist settings on ${announceCommand}`, (done) => {
+    it(`should persist settings on ${announceCommand}`, done => {
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => announceCommand);
-      mockMessage.setup((m) => m.guild).returns(() => mockGuild.object);
-      mockMessage.setup((m) => m.channel).returns(() => mockChannel.object);
+      mockMessage.setup(m => m.content).returns(() => announceCommand);
+      mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
+      mockMessage.setup(m => m.channel).returns(() => mockChannel.object);
 
       personality.onMessage(mockMessage.object).then(() => {
         expect(writeSpy).toHaveBeenCalled();
@@ -527,8 +507,8 @@ describe('Minecraft server utilities', () => {
   });
 
   describe('Addressed messages', () => {
-    it('should resolve to null', (done) => {
-      personality.onAddressed().then((response) => {
+    it('should resolve to null', done => {
+      personality.onAddressed().then(response => {
         expect(response).toBeNull();
         done();
       });
@@ -536,8 +516,8 @@ describe('Minecraft server utilities', () => {
   });
 
   describe('Help messages', () => {
-    it('should resolve to embed', (done) => {
-      personality.onHelp().then((response) => {
+    it('should resolve to embed', done => {
+      personality.onHelp().then(response => {
         expect(response).not.toBeNull();
         done();
       });

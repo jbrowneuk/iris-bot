@@ -1,3 +1,7 @@
+Release 0.2.2 - Adjust layout of Minecraft server status embed
+This release adds the ability to show the server MOTD/Description text in the
+server status messages.
+
 Release 0.2.1 - Hangman game fixes
 From this release forward, we'll switch to using PRs as change history. Using
 commits is not useful for users, and developers can already see these in the repo.
