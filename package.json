@@ -1,7 +1,11 @@
 {
   "name": "iris-bot",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Discord chatbot",
+  "engines": {
+    "npm": ">=7.0.0",
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "prebuild": "node src/scripts/prebuild.js",
     "build": "tsc",
