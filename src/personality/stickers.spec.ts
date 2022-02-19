@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 import { Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -13,12 +14,12 @@ describe('Improved Discord stickers', () => {
   beforeEach(() => {
     const mockLogger = Mock.ofType<Logger>();
     const mockDependencies = Mock.ofType<DependencyContainer>();
-    mockDependencies.setup((s) => s.logger).returns(() => mockLogger.object);
+    mockDependencies.setup(s => s.logger).returns(() => mockLogger.object);
     personality = new Stickers(mockDependencies.object);
   });
 
-  it('should not respond to addressed messages', (done) => {
-    personality.onAddressed().then((response) => {
+  it('should not respond to addressed messages', done => {
+    personality.onAddressed().then(response => {
       expect(response).toBeNull();
       done();
     });
@@ -26,51 +27,51 @@ describe('Improved Discord stickers', () => {
 
   describe('Sticker command', () => {
     beforeEach(() => {
-      fetchSpy = spyOn(nodeFetch, 'default');
+      fetchSpy = spyOn(axios.default, 'get');
     });
 
-    it('should request sticker on command and post if found', (done) => {
+    it('should request sticker on command and post if found', done => {
       const mockSticker = 'http://localhost/sticker';
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => `${prefix}sticker`);
+      mockMessage.setup(m => m.content).returns(() => `${prefix}sticker`);
 
       const mockFetchResponse = {
-        ok: true,
-        json: () => Promise.resolve({ url: mockSticker })
+        status: StatusCodes.OK,
+        data: { name: 'any', url: mockSticker }
       };
       fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();
         expect(response).toBe(mockSticker);
         done();
       });
     });
 
-    it('should request sticker on command and respond if not found', (done) => {
+    it('should request sticker on command and respond if not found', done => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => `${prefix}sticker`);
+      mockMessage.setup(m => m.content).returns(() => `${prefix}sticker`);
 
       fetchSpy.and.returnValue(Promise.reject('A rejection'));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();
         expect(response).toContain('Cannot find');
         done();
       });
     });
 
-    it('should request sticker on command and respond if invalid data', (done) => {
+    it('should request sticker on command and respond if invalid data', done => {
       const mockMessage = Mock.ofType<Message>();
-      mockMessage.setup((m) => m.content).returns(() => `${prefix}sticker`);
+      mockMessage.setup(m => m.content).returns(() => `${prefix}sticker`);
 
       const mockFetchResponse = {
-        ok: true,
-        json: () => Promise.resolve('text value')
+        status: StatusCodes.OK,
+        data: 'text value'
       };
       fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
 
-      personality.onMessage(mockMessage.object).then((response) => {
+      personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();
         expect(response).toContain('Cannot find');
         done();
@@ -79,8 +80,8 @@ describe('Improved Discord stickers', () => {
   });
 
   describe('Help functionality', () => {
-    it('should return embed with help text', (done) => {
-      personality.onHelp().then((response) => {
+    it('should return embed with help text', done => {
+      personality.onHelp().then(response => {
         const embed = response as MessageEmbed;
         expect(embed.description).toBe(helpText);
         done();

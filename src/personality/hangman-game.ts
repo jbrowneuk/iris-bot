@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 
 import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -52,12 +53,12 @@ export class HangmanGame implements Personality {
   }
 
   private fetchWordFromApi(): Promise<WordData> {
-    return nodeFetch.default(apiUrl).then(response => {
-      if (!response.ok) {
+    return axios.default.get<WordData>(apiUrl).then(response => {
+      if (response.status !== StatusCodes.OK) {
         throw new Error(`Unable to fetch API: ${response.status}`);
       }
 
-      return response.json();
+      return response.data;
     });
   }
 

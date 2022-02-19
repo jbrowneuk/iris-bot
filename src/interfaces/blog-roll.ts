@@ -20,3 +20,11 @@ export interface PostData {
   /** Post slug, used in the URL */
   slug: string;
 }
+
+/**
+ * A simplified representation of the post data wrapper
+ */
+export interface PostWrapper {
+  /** Collection of posts */
+  posts: PostData[];
+}

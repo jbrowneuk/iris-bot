@@ -1,7 +1,9 @@
+import * as axios from 'axios';
 import { Message, TextChannel } from 'discord.js';
 import { readFileSync, unlink } from 'fs';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock, Times } from 'typemoq';
+import { PostData, PostWrapper } from '../interfaces/blog-roll';
 
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -44,6 +46,8 @@ class TestableBlogRoll extends BlogRoll {
   }
 }
 
+type MockResponseType = Partial<axios.AxiosResponse<PostWrapper>>;
+
 describe('Blog roll', () => {
   let mockClient: IMock<Client>;
   let mockLogger: IMock<Logger>;
@@ -64,11 +68,11 @@ describe('Blog roll', () => {
     };
   });
 
-  afterEach((done) => {
+  afterEach(done => {
     personality.destroy();
 
     // Clean up test output file
-    unlink(testOutputFile, (err) => {
+    unlink(testOutputFile, err => {
       if (err && err.code !== 'ENOENT') {
         fail(err);
       }
@@ -84,7 +88,7 @@ describe('Blog roll', () => {
       personality = new TestableBlogRoll(mockDependencies, testInputFile);
     });
 
-    it('should read configuration on initialise', (done) => {
+    it('should read configuration on initialise', done => {
       expect(personality.lastPost).toBe(0);
       expect(personality.channel).toBeFalsy();
 
@@ -97,7 +101,7 @@ describe('Blog roll', () => {
       }, 200);
     });
 
-    it('should set interval timer on initialise', (done) => {
+    it('should set interval timer on initialise', done => {
       expect(personality.updateInterval).toBeFalsy();
 
       personality.initialise();
@@ -114,11 +118,11 @@ describe('Blog roll', () => {
       personality = new TestableBlogRoll(mockDependencies);
     });
 
-    it('should resolve to null', (done) => {
+    it('should resolve to null', done => {
       const message = Mock.ofType<Message>();
-      message.setup((m) => m.content).returns(() => 'anything');
+      message.setup(m => m.content).returns(() => 'anything');
 
-      personality.onAddressed().then((value) => {
+      personality.onAddressed().then(value => {
         expect(value).toBeNull();
         done();
       });
@@ -130,15 +134,15 @@ describe('Blog roll', () => {
       personality = new TestableBlogRoll(mockDependencies);
     });
 
-    it('should cache channel when set channel command invoked', (done) => {
+    it('should cache channel when set channel command invoked', done => {
       const channelId = 'ABC1234567890';
 
       const channel = Mock.ofType<TextChannel>();
-      channel.setup((c) => c.id).returns(() => channelId);
+      channel.setup(c => c.id).returns(() => channelId);
 
       const message = Mock.ofType<Message>();
-      message.setup((m) => m.content).returns(() => '+set channel');
-      message.setup((m) => m.channel).returns(() => channel.object);
+      message.setup(m => m.content).returns(() => '+set channel');
+      message.setup(m => m.channel).returns(() => channel.object);
 
       const saveSpy = spyOn(personality as any, 'saveSettings');
 
@@ -149,15 +153,15 @@ describe('Blog roll', () => {
       });
     });
 
-    it('should write config when set channel command invoked', (done) => {
+    it('should write config when set channel command invoked', done => {
       const channelId = 'ABC1234567890';
 
       const channel = Mock.ofType<TextChannel>();
-      channel.setup((c) => c.id).returns(() => channelId);
+      channel.setup(c => c.id).returns(() => channelId);
 
       const message = Mock.ofType<Message>();
-      message.setup((m) => m.content).returns(() => '+set channel');
-      message.setup((m) => m.channel).returns(() => channel.object);
+      message.setup(m => m.content).returns(() => '+set channel');
+      message.setup(m => m.channel).returns(() => channel.object);
 
       personality.onMessage(message.object);
 
@@ -175,20 +179,18 @@ describe('Blog roll', () => {
     let mockChannel: IMock<TextChannel>;
 
     beforeEach(() => {
-      fetchSpy = spyOn(nodeFetch, 'default');
+      fetchSpy = spyOn(axios.default, 'get');
       personality = new TestableBlogRoll(mockDependencies);
 
       mockChannel = Mock.ofType<TextChannel>();
 
-      mockClient
-        .setup((c) => c.findChannelById(It.isAny()))
-        .returns(() => mockChannel.object);
+      mockClient.setup(c => c.findChannelById(It.isAny())).returns(() => mockChannel.object);
     });
 
     it('should fetch journal data', () => {
-      const mockResponse = {
-        json: () => Promise.resolve({ posts: [] }),
-        ok: true
+      const mockResponse: MockResponseType = {
+        data: { posts: [] },
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -198,10 +200,10 @@ describe('Blog roll', () => {
       expect(fetchSpy.calls.first().args[0]).toContain('api/?posts');
     });
 
-    it('should not send message if invalid response data', (done) => {
+    it('should not send message if invalid response data', done => {
       const mockResponse = {
-        json: () => Promise.resolve({}),
-        ok: true
+        data: {},
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -209,19 +211,16 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify((c) => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(
-          (c) => c.send(It.isAny(), It.isAny()),
-          Times.never()
-        );
+        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
         done();
       });
     });
 
-    it('should not send message if response is not OK', (done) => {
-      const mockResponse = {
-        json: () => Promise.reject(),
-        ok: false
+    it('should not send message if response is not OK', done => {
+      const mockResponse: MockResponseType = {
+        data: { posts: [] },
+        status: StatusCodes.NOT_FOUND
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -229,19 +228,16 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify((c) => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(
-          (c) => c.send(It.isAny(), It.isAny()),
-          Times.never()
-        );
+        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
         done();
       });
     });
 
-    it('should not send message if no posts', (done) => {
-      const mockResponse = {
-        json: () => Promise.resolve({ posts: [] }),
-        ok: true
+    it('should not send message if no posts', done => {
+      const mockResponse: MockResponseType = {
+        data: { posts: [] },
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -249,22 +245,19 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify((c) => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(
-          (c) => c.send(It.isAny(), It.isAny()),
-          Times.never()
-        );
+        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
         done();
       });
     });
 
-    it('should not send message if first post ID is equal to cached value', (done) => {
+    it('should not send message if first post ID is equal to cached value', done => {
       const postId = 123;
       personality.lastPost = postId;
 
-      const mockResponse = {
-        json: () => Promise.resolve({ posts: [{ postId }] }),
-        ok: true
+      const mockResponse: MockResponseType = {
+        data: { posts: [{ postId } as PostData] },
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -272,31 +265,27 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify((c) => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(
-          (c) => c.send(It.isAny(), It.isAny()),
-          Times.never()
-        );
+        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
         done();
       });
     });
 
-    it('should not send message if new posts retrieved and no channel specified', (done) => {
-      const mockResponse = {
-        json: () =>
-          Promise.resolve({
-            posts: [
-              {
-                content: 'test',
-                date: 1234566,
-                postId: 123,
-                slug: 'test',
-                tags: [],
-                title: 'test'
-              }
-            ]
-          }),
-        ok: true
+    it('should not send message if new posts retrieved and no channel specified', done => {
+      const mockResponse: MockResponseType = {
+        data: {
+          posts: [
+            {
+              content: 'test',
+              date: 1234566,
+              postId: 123,
+              slug: 'test',
+              tags: [],
+              title: 'test'
+            }
+          ]
+        },
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
 
@@ -304,32 +293,28 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify((c) => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(
-          (c) => c.send(It.isAny(), It.isAny()),
-          Times.never()
-        );
+        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
         done();
       });
     });
 
-    it('should send message if new posts retrieved and channel specified', (done) => {
+    it('should send message if new posts retrieved and channel specified', done => {
       const channelId = 'abc123';
-      const mockResponse = {
-        json: () =>
-          Promise.resolve({
-            posts: [
-              {
-                content: 'test',
-                date: 1234566,
-                postId: 123,
-                slug: 'test',
-                tags: [],
-                title: 'test'
-              }
-            ]
-          }),
-        ok: true
+      const mockResponse: MockResponseType = {
+        data: {
+          posts: [
+            {
+              content: 'test',
+              date: 1234566,
+              postId: 123,
+              slug: 'test',
+              tags: [],
+              title: 'test'
+            }
+          ]
+        },
+        status: StatusCodes.OK
       };
       fetchSpy.and.returnValue(Promise.resolve(mockResponse));
       personality.lastPost = 0;
@@ -339,11 +324,8 @@ describe('Blog roll', () => {
 
       setTimeout(() => {
         expect().nothing();
-        mockClient.verify(
-          (c) => c.findChannelById(It.isValue(channelId)),
-          Times.once()
-        );
-        mockChannel.verify((c) => c.send(It.isAny(), It.isAny()), Times.once());
+        mockClient.verify(c => c.findChannelById(It.isValue(channelId)), Times.once());
+        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.once());
         done();
       });
     });

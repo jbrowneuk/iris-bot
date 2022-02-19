@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Guild, Message } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Database } from '../interfaces/database';
@@ -36,11 +37,11 @@ describe('Hangman Game - start game behaviour', () => {
 
     // Test deps
     const mockFetchResponse = {
-      ok: true,
-      json: () => Promise.resolve(mockWord)
+      status: StatusCodes.OK,
+      data: mockWord
     };
 
-    fetchSpy = spyOn(nodeFetch, 'default');
+    fetchSpy = spyOn(axios.default, 'get');
     fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
 
     mockMessage = Mock.ofType<Message>();

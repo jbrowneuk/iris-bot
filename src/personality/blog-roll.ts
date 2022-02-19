@@ -1,8 +1,9 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import { readFile, writeFile } from 'fs';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 
-import { PostData } from '../interfaces/blog-roll';
+import { PostData, PostWrapper } from '../interfaces/blog-roll';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { calculateReadTime, formatTimestamp } from './utilities/blog-roll';
@@ -20,19 +21,12 @@ export class BlogRoll implements Personality {
   protected lastPostId: number;
   protected cachedUpdateInterval: number;
 
-  constructor(
-    private dependencies: DependencyContainer,
-    private settingsFilePath: string = defaultSettingsFile
-  ) {
+  constructor(private dependencies: DependencyContainer, private settingsFilePath: string = defaultSettingsFile) {
     this.lastPostId = 0;
   }
 
   public initialise(): void {
-    readFile(
-      this.settingsFilePath,
-      settingsFileEnc,
-      this.parseSettings.bind(this)
-    );
+    readFile(this.settingsFilePath, settingsFileEnc, this.parseSettings.bind(this));
   }
 
   public destroy(): void {
@@ -51,9 +45,7 @@ export class BlogRoll implements Personality {
       const textChannel = message.channel as TextChannel;
       this.channelId = textChannel.id;
       this.saveSettings();
-      return Promise.resolve(
-        `Sure, I’ll use the channel *#${textChannel.name}* for blog updates.`
-      );
+      return Promise.resolve(`Sure, I’ll use the channel *#${textChannel.name}* for blog updates.`);
     }
 
     return Promise.resolve(null);
@@ -63,17 +55,16 @@ export class BlogRoll implements Personality {
    * Fetches data from the journal API
    */
   protected fetchJournal(): void {
-    nodeFetch
-      .default(`${siteRoot}${apiPath}`)
-      .then((response) => {
-        if (!response.ok) {
+    axios.default
+      .get<PostWrapper>(`${siteRoot}${apiPath}`)
+      .then(response => {
+        if (response.status !== StatusCodes.OK) {
           throw new Error('Unable to fetch API');
         }
 
-        return response.json();
+        return this.handlePostResponse(response.data);
       })
-      .then((rawData) => this.handlePostResponse(rawData))
-      .catch((e) => this.dependencies.logger.error(e));
+      .catch(e => this.dependencies.logger.error(e));
   }
 
   /**
@@ -102,10 +93,7 @@ export class BlogRoll implements Personality {
    */
   private setupInterval(minutes: number): void {
     const updateInterval = minutes * 60 * 1000; // Convert to msec
-    this.timerInterval = setInterval(
-      this.fetchJournal.bind(this),
-      updateInterval
-    );
+    this.timerInterval = setInterval(this.fetchJournal.bind(this), updateInterval);
   }
 
   /**
@@ -118,16 +106,11 @@ export class BlogRoll implements Personality {
       updateInterval: this.cachedUpdateInterval
     };
 
-    writeFile(
-      this.settingsFilePath,
-      JSON.stringify(settingsObj),
-      settingsFileEnc,
-      (err) => {
-        if (err) {
-          return this.dependencies.logger.error(err);
-        }
+    writeFile(this.settingsFilePath, JSON.stringify(settingsObj), settingsFileEnc, err => {
+      if (err) {
+        return this.dependencies.logger.error(err);
       }
-    );
+    });
   }
 
   /**
@@ -138,9 +121,7 @@ export class BlogRoll implements Personality {
       return null;
     }
 
-    const channel = this.dependencies.client.findChannelById(
-      this.channelId
-    ) as TextChannel;
+    const channel = this.dependencies.client.findChannelById(this.channelId) as TextChannel;
 
     if (!channel) {
       this.dependencies.logger.error('Channel with stored ID not found!');
@@ -156,7 +137,7 @@ export class BlogRoll implements Personality {
    *
    * @param rawData raw data from API
    */
-  private handlePostResponse(rawData: { posts: PostData[] }) {
+  private handlePostResponse(rawData: PostWrapper) {
     if (!rawData) {
       this.dependencies.logger.log('No API response');
       return;
@@ -211,9 +192,7 @@ export class BlogRoll implements Personality {
     const tags = postData.tags.join(', ');
 
     embed.setTitle(postData.title);
-    embed.setDescription(
-      `Posted on ${postedOn}\nTagged ${tags}\n\n${readTime}`
-    );
+    embed.setDescription(`Posted on ${postedOn}\nTagged ${tags}\n\n${readTime}`);
 
     return embed;
   }
