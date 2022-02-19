@@ -1,14 +1,8 @@
-import { Message } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import {
-  Mood,
-  MoodEngine,
-  MoodletDelta,
-  MoodletSize
-} from '../interfaces/mood-engine';
+import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import * as utils from '../utils';
 import { BotActivity, MoodControl, moodSummaryCommands } from './mood-control';
@@ -46,7 +40,7 @@ class TestableMoodControl extends MoodControl {
     this.activity = {
       name: 'mock',
       active: false,
-      activityType: null,
+      type: null,
       moodlet: Mood.Positive,
       size: MoodletSize.Medium,
       minMinutes: 1,
@@ -75,9 +69,7 @@ describe('Mood control', () => {
     mockClient = Mock.ofType<Client>();
     mockMoodEngine = Mock.ofType<MoodEngine>();
     mockResponses = Mock.ofType<ResponseGenerator>();
-    mockResponses
-      .setup((r) => r.generateResponse(It.isAny()))
-      .returns(() => Promise.resolve(mockResponse));
+    mockResponses.setup(r => r.generateResponse(It.isAny())).returns(() => Promise.resolve(mockResponse));
 
     mockDependencies = {
       client: mockClient.object,
@@ -88,10 +80,7 @@ describe('Mood control', () => {
       settings: null
     };
 
-    moodControl = new TestableMoodControl(
-      mockDependencies,
-      mockMoodEngine.object
-    );
+    moodControl = new TestableMoodControl(mockDependencies, mockMoodEngine.object);
   });
 
   afterEach(() => {
@@ -107,8 +96,8 @@ describe('Mood control', () => {
   });
 
   describe('onMessage interaction', () => {
-    it('should return promise resolving to null', (done) => {
-      moodControl.onMessage().then((value) => {
+    it('should return promise resolving to null', done => {
+      moodControl.onMessage().then(value => {
         expect(value).toBeNull();
         done();
       });
@@ -116,17 +105,17 @@ describe('Mood control', () => {
   });
 
   describe('onAddressed interaction', () => {
-    moodSummaryCommands.forEach((command) => {
-      it(`should respond to “${command}” when addressed`, (done) => {
-        moodControl.onAddressed(null, command).then((response) => {
+    moodSummaryCommands.forEach(command => {
+      it(`should respond to “${command}” when addressed`, done => {
+        moodControl.onAddressed(null, command).then(response => {
           expect(response).toBe(mockResponse);
           done();
         });
       });
     });
 
-    it('should return promise resolving to null if no interaction', (done) => {
-      moodControl.onAddressed(null, 'nothing').then((response) => {
+    it('should return promise resolving to null if no interaction', done => {
+      moodControl.onAddressed(null, 'nothing').then(response => {
         expect(response).toBeNull();
         done();
       });
@@ -135,12 +124,10 @@ describe('Mood control', () => {
 
   describe('beginActivity', () => {
     beforeEach(() => {
-      spyOn(utils, 'randomFloat').and.callFake((min) => min);
-      spyOn(utils, 'randomInteger').and.callFake((min) => min);
+      spyOn(utils, 'randomFloat').and.callFake(min => min);
+      spyOn(utils, 'randomInteger').and.callFake(min => min);
 
-      mockMoodEngine
-        .setup((s) => s.calculateDelta(It.isAny(), It.isAny()))
-        .returns(() => ({ sizeRepresentation: null, delta: 1 }));
+      mockMoodEngine.setup(s => s.calculateDelta(It.isAny(), It.isAny())).returns(() => ({ sizeRepresentation: null, delta: 1 }));
     });
 
     it('should set an activity', () => {
@@ -173,7 +160,7 @@ describe('Mood control', () => {
       moodControl.runBeginActivity();
 
       expect(moodControl.currentActivityDetails.activity).toBeTruthy();
-      mockClient.verify((m) => m.setPresence(It.isAny()), Times.once());
+      mockClient.verify(m => m.setPresence(It.isAny()), Times.once());
     });
   });
 
@@ -184,14 +171,7 @@ describe('Mood control', () => {
 
       moodControl.runSustainActivity();
 
-      mockMoodEngine.verify(
-        (m) =>
-          m.addMoodlet(
-            It.isValue(expectedActivity.activity.moodlet),
-            It.isValue(expectedActivity.delta)
-          ),
-        Times.once()
-      );
+      mockMoodEngine.verify(m => m.addMoodlet(It.isValue(expectedActivity.activity.moodlet), It.isValue(expectedActivity.delta)), Times.once());
       expect().nothing();
     });
 
@@ -202,7 +182,7 @@ describe('Mood control', () => {
 
       const actualActivity = moodControl.currentActivityDetails;
       expect(actualActivity.activity).toBeNull();
-      mockClient.verify((m) => m.setPresence(It.isValue({})), Times.once());
+      mockClient.verify(m => m.setPresence(It.isValue({})), Times.once());
     });
   });
 
@@ -235,7 +215,7 @@ describe('Mood control', () => {
 
       moodControl.runActivityUpdate();
 
-      mockMoodEngine.verify((m) => m.neutraliseMood(), Times.once());
+      mockMoodEngine.verify(m => m.neutraliseMood(), Times.once());
       expect().nothing();
     });
   });

@@ -17,11 +17,13 @@ const MOCK_CHAN_2_NAME = 'chan2 name';
 const MOCK_CHANNELS = new Map<string, any>();
 MOCK_CHANNELS.set(MOCK_CHAN_1_ID, {
   id: MOCK_CHAN_1_ID,
-  name: MOCK_CHAN_1_NAME
+  name: MOCK_CHAN_1_NAME,
+  isText: true
 });
 MOCK_CHANNELS.set(MOCK_CHAN_2_ID, {
   id: MOCK_CHAN_2_ID,
-  name: MOCK_CHAN_2_NAME
+  name: MOCK_CHAN_2_NAME,
+  isText: true
 });
 
 const MOCK_BOT_USERNAME = 'mock-bot';
@@ -34,15 +36,13 @@ describe('Discord client wrapper', () => {
 
   beforeEach(() => {
     clientUserMock = Mock.ofType<discord.ClientUser>();
-    clientUserMock.setup((u) => u.username).returns(() => MOCK_BOT_USERNAME);
+    clientUserMock.setup(u => u.username).returns(() => MOCK_BOT_USERNAME);
 
     discordMock = Mock.ofType<discord.Client>();
-    discordMock.setup((s) => s.user).returns(() => clientUserMock.object);
+    discordMock.setup(s => s.user).returns(() => clientUserMock.object);
 
     mockChannels = Mock.ofType<discord.ChannelManager>();
-    mockChannels
-      .setup((c) => c.resolve(It.isAnyString()))
-      .returns((id) => MOCK_CHANNELS.get(id));
+    mockChannels.setup(c => c.resolve(It.isAnyString())).returns(id => MOCK_CHANNELS.get(id));
 
     client = new DiscordClient(console);
     spyOn(client as any, 'generateClient').and.returnValue(discordMock.object);
@@ -50,25 +50,19 @@ describe('Discord client wrapper', () => {
 
   describe('not connected state', () => {
     it('should connect with token', () => {
-      discordMock.setup((m) => m.login(It.isAnyString()));
+      discordMock.setup(m => m.login(It.isAnyString()));
 
       client.connect(MOCK_TOKEN);
 
-      discordMock.verify((m) => m.login(It.isValue(MOCK_TOKEN)), Times.once());
+      discordMock.verify(m => m.login(It.isValue(MOCK_TOKEN)), Times.once());
     });
 
     it('should initialise event listeners on connect', () => {
       client.connect(MOCK_TOKEN);
 
       // Connected and message
-      discordMock.verify(
-        (m) => m.on(It.isValue(readyEvent), It.isAny()),
-        Times.once()
-      );
-      discordMock.verify(
-        (m) => m.on(It.isValue(messageEvent), It.isAny()),
-        Times.once()
-      );
+      discordMock.verify(m => m.on(It.isValue(readyEvent), It.isAny()), Times.once());
+      discordMock.verify(m => m.on(It.isValue(messageEvent), It.isAny()), Times.once());
     });
 
     it('should add connection event handler on connection', () => {
@@ -76,14 +70,14 @@ describe('Discord client wrapper', () => {
       spyOn(untypedClient, 'onConnected');
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
-        .setup((m) => m.on(It.isAny(), It.isAny()))
+        .setup(m => m.on(It.isAny(), It.isAny()))
         .callback((evt: string, cb: () => void) => {
           callbacks.push({ evt, cb });
         });
 
       client.connect(MOCK_TOKEN);
 
-      const relatedHandler = callbacks.find((cb) => cb.evt === readyEvent);
+      const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
       relatedHandler.cb.call(client);
 
       expect(untypedClient.onConnected).toHaveBeenCalled();
@@ -94,14 +88,14 @@ describe('Discord client wrapper', () => {
       spyOn(untypedClient, 'onMessage');
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
-        .setup((m) => m.on(It.isAny(), It.isAny()))
+        .setup(m => m.on(It.isAny(), It.isAny()))
         .callback((evt: string, cb: () => void) => {
           callbacks.push({ evt, cb });
         });
 
       client.connect(MOCK_TOKEN);
 
-      const relatedHandler = callbacks.find((cb) => cb.evt === messageEvent);
+      const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
       relatedHandler.cb.call(client);
 
       expect(untypedClient.onMessage).toHaveBeenCalled();
@@ -114,15 +108,15 @@ describe('Discord client wrapper', () => {
     });
 
     it('should disconnect if connected', () => {
-      discordMock.setup((m) => m.destroy());
+      discordMock.setup(m => m.destroy());
 
       client.disconnect();
 
-      discordMock.verify((m) => m.destroy(), Times.once());
+      discordMock.verify(m => m.destroy(), Times.once());
     });
 
     it('should find channel by id', () => {
-      discordMock.setup((m) => m.channels).returns(() => mockChannels.object);
+      discordMock.setup(m => m.channels).returns(() => mockChannels.object);
 
       const channel = client.findChannelById(MOCK_CHAN_1_ID);
 
@@ -131,7 +125,7 @@ describe('Discord client wrapper', () => {
     });
 
     it('should return null if cannot find channel by id', () => {
-      discordMock.setup((m) => m.channels).returns(() => mockChannels.object);
+      discordMock.setup(m => m.channels).returns(() => mockChannels.object);
 
       const channel = client.findChannelById('SomethingThatDoesNotExist');
 
@@ -179,9 +173,7 @@ describe('Discord client wrapper', () => {
       const messages = ['{£user} {£user} {£user}'];
       client.queueMessages(messages);
 
-      expect(lastMessage).toBe(
-        `${expectedName} ${expectedName} ${expectedName}`
-      );
+      expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
     });
 
     it('should replace name string with bot user name', () => {
@@ -216,7 +208,7 @@ describe('Discord client wrapper', () => {
       let eventRaised = false;
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
-        .setup((m) => m.on(It.isAny(), It.isAny()))
+        .setup(m => m.on(It.isAny(), It.isAny()))
         .callback((evt: string, cb: () => void) => {
           callbacks.push({ evt, cb });
         });
@@ -226,7 +218,7 @@ describe('Discord client wrapper', () => {
 
       client.connect(MOCK_TOKEN);
 
-      const relatedHandler = callbacks.find((cb) => cb.evt === readyEvent);
+      const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
       relatedHandler.cb.call(client);
 
       expect(eventRaised).toBeTruthy();
@@ -236,7 +228,7 @@ describe('Discord client wrapper', () => {
       let eventRaised = false;
       const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
       discordMock
-        .setup((m) => m.on(It.isAny(), It.isAny()))
+        .setup(m => m.on(It.isAny(), It.isAny()))
         .callback((evt: string, cb: () => void) => {
           callbacks.push({ evt, cb });
         });
@@ -245,7 +237,7 @@ describe('Discord client wrapper', () => {
         eventRaised = true;
       });
 
-      const relatedHandler = callbacks.find((cb) => cb.evt === messageEvent);
+      const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
       relatedHandler.cb.call(client, mockMessage);
 
       return eventRaised;
@@ -253,7 +245,7 @@ describe('Discord client wrapper', () => {
 
     it('should handle incoming message event from text channel', () => {
       const mockMessage = {
-        channel: { type: 'text' },
+        channel: { isText: true },
         content: 'text message',
         user: {}
       };
@@ -274,14 +266,11 @@ describe('Discord client wrapper', () => {
     });
 
     it('should set presence data', () => {
-      const mockPresence = { activity: {} };
+      const mockPresence = { activities: [{ name: 'anything' }] };
 
       client.setPresence(mockPresence);
 
-      clientUserMock.verify(
-        (u) => u.setPresence(It.isValue(mockPresence)),
-        Times.once()
-      );
+      clientUserMock.verify(u => u.setPresence(It.isValue(mockPresence)), Times.once());
     });
   });
 });

@@ -16,16 +16,13 @@ describe('Mood engine', () => {
         { mood: 10, random: () => 0.1, result: Mood.Neutral }
       ];
 
-      tests.forEach((test) => {
+      tests.forEach(test => {
         const moodEngine = new MoodEngineImpl(test.random);
         moodEngine.setMood(test.mood);
 
         const actual = moodEngine.getMood();
 
-        expect(actual).toBe(
-          test.result,
-          `F: ${test.mood} with ${test.random()}`
-        );
+        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
       });
     });
 
@@ -42,16 +39,13 @@ describe('Mood engine', () => {
         { mood: -10, random: () => 0.1, result: Mood.Neutral }
       ];
 
-      tests.forEach((test) => {
+      tests.forEach(test => {
         const moodEngine = new MoodEngineImpl(test.random);
         moodEngine.setMood(test.mood);
 
         const actual = moodEngine.getMood();
 
-        expect(actual).toBe(
-          test.result,
-          `F: ${test.mood} with ${test.random()}`
-        );
+        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
       });
     });
 
@@ -62,16 +56,13 @@ describe('Mood engine', () => {
         { mood: 0, random: () => 0.1, result: Mood.Neutral }
       ];
 
-      tests.forEach((test) => {
+      tests.forEach(test => {
         const moodEngine = new MoodEngineImpl(test.random);
         moodEngine.setMood(test.mood);
 
         const actual = moodEngine.getMood();
 
-        expect(actual).toBe(
-          test.result,
-          `F: ${test.mood} with ${test.random()}`
-        );
+        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
       });
     });
   });
@@ -92,7 +83,7 @@ describe('Mood engine', () => {
     });
 
     it('should add to mood value when moodlet is positive', () => {
-      magnitudes.forEach((magnitude) => {
+      magnitudes.forEach(magnitude => {
         moodEngine.setMood(0);
         moodEngine.addMoodlet(Mood.Positive, magnitude);
         expect(moodEngine.getRawMood()).toBeGreaterThan(0);
@@ -100,7 +91,7 @@ describe('Mood engine', () => {
     });
 
     it('should subtract from mood value when moodlet is negative', () => {
-      magnitudes.forEach((magnitude) => {
+      magnitudes.forEach(magnitude => {
         moodEngine.setMood(0);
         moodEngine.addMoodlet(Mood.Negative, magnitude);
         expect(moodEngine.getRawMood()).toBeLessThan(0);
@@ -108,7 +99,7 @@ describe('Mood engine', () => {
     });
 
     it('should neutralise mood value when moodlet is neutral and mood is positive', () => {
-      magnitudes.forEach((magnitude) => {
+      magnitudes.forEach(magnitude => {
         const initialMood = 50;
         moodEngine.setMood(initialMood);
         moodEngine.addMoodlet(Mood.Neutral, magnitude);
@@ -117,7 +108,7 @@ describe('Mood engine', () => {
     });
 
     it('should neutralise mood value when moodlet is neutral and mood is positive', () => {
-      magnitudes.forEach((magnitude) => {
+      magnitudes.forEach(magnitude => {
         const initialMood = -50;
         moodEngine.setMood(initialMood);
         moodEngine.addMoodlet(Mood.Neutral, magnitude);

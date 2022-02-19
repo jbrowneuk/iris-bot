@@ -29,11 +29,13 @@
   "homepage": "https://github.com/jbrowneuk/iris-bot#readme",
   "dependencies": {
     "axios": "^0.26.0",
-    "discord.js": "12.5.1",
+    "bufferutil": "^4.0.6",
+    "discord.js": "^13.6.0",
     "http-status-codes": "^2.2.0",
     "minecraft-server-util": "^3.5.0",
     "node-cleanup": "^2.1.2",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "utf-8-validate": "^5.0.8"
   },
   "devDependencies": {
     "@types/jasmine": "^3.6.4",

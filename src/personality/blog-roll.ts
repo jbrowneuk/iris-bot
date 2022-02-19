@@ -1,5 +1,5 @@
 import * as axios from 'axios';
-import { Message, MessageEmbed, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, MessageOptions, TextChannel } from 'discord.js';
 import { readFile, writeFile } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 
@@ -173,7 +173,7 @@ export class BlogRoll implements Personality {
     this.lastPostId = post.postId;
     this.saveSettings();
 
-    channel.send('New post!', this.formatPostData(post));
+    channel.send(this.formatPostData(post));
   }
 
   /**
@@ -181,7 +181,7 @@ export class BlogRoll implements Personality {
    *
    * @param postData post information from API
    */
-  private formatPostData(postData: PostData): MessageEmbed {
+  private formatPostData(postData: PostData): MessageOptions {
     const embed = new MessageEmbed();
     embed.setColor('#48647F');
     embed.setURL(`${siteRoot}journal/post/${postData.slug}`);
@@ -194,6 +194,6 @@ export class BlogRoll implements Personality {
     embed.setTitle(postData.title);
     embed.setDescription(`Posted on ${postedOn}\nTagged ${tags}\n\n${readTime}`);
 
-    return embed;
+    return { content: 'New post!', embeds: [embed] };
   }
 }

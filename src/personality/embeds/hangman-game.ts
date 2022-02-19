@@ -43,9 +43,9 @@ export function generateStatsEmbed(gameData: GameData): MessageEmbed {
   const embed = generateBaseEmbed();
   embed.setDescription('Statistics for this Discord server');
 
-  embed.addField('Streak', gameData.currentStreak, true);
-  embed.addField('Wins', gameData.totalWins, true);
-  embed.addField('Losses', gameData.totalLosses, true);
+  embed.addField('Streak', gameData.currentStreak.toString(), true);
+  embed.addField('Wins', gameData.totalWins.toString(), true);
+  embed.addField('Losses', gameData.totalLosses.toString(), true);
 
   return embed;
 }

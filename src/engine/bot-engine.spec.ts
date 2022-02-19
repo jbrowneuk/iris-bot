@@ -24,29 +24,18 @@ describe('Bot engine', () => {
 
   beforeEach(() => {
     mockUserInfo = Mock.ofType<User>();
-    mockUserInfo.setup((m) => m.username).returns(() => MOCK_USERNAME);
-    mockUserInfo.setup((m) => m.id).returns(() => MOCK_ID);
+    mockUserInfo.setup(m => m.username).returns(() => MOCK_USERNAME);
+    mockUserInfo.setup(m => m.id).returns(() => MOCK_ID);
 
     client = Mock.ofType<Client>();
-    client
-      .setup((c) => c.getUserInformation())
-      .returns(() => mockUserInfo.object);
+    client.setup(c => c.getUserInformation()).returns(() => mockUserInfo.object);
 
     responseGenerator = Mock.ofType<ResponseGenerator>();
-    responseGenerator
-      .setup((m) => m.generateResponse(It.isAnyString()))
-      .returns((phrase: string) => Promise.resolve(phrase));
+    responseGenerator.setup(m => m.generateResponse(It.isAnyString())).returns((phrase: string) => Promise.resolve(phrase));
     settings = Mock.ofType<Settings>();
-    settings
-      .setup((s) => s.getSettings())
-      .returns(() => ({ token: 'bot-token' }));
+    settings.setup(s => s.getSettings()).returns(() => ({ token: 'bot-token' }));
 
-    engine = new BotEngine(
-      client.object,
-      responseGenerator.object,
-      settings.object,
-      console
-    );
+    engine = new BotEngine(client.object, responseGenerator.object, settings.object, console);
     untypedEngine = engine;
   });
 
@@ -55,27 +44,21 @@ describe('Bot engine', () => {
   });
 
   it('should connect on run', () => {
-    client.setup((m) => m.connect(It.isAnyString()));
+    client.setup(m => m.connect(It.isAnyString()));
 
     engine.run();
 
-    client.verify((m) => m.connect(It.isAnyString()), Times.once());
+    client.verify(m => m.connect(It.isAnyString()), Times.once());
   });
 
   it('should initialise event listeners on run', () => {
-    client.setup((m) => m.on(It.isAnyString(), It.isAny()));
+    client.setup(m => m.on(It.isAnyString(), It.isAny()));
 
     engine.run();
 
     // Connected and message
-    client.verify(
-      (m) => m.on(It.isValue(LifecycleEvents.CONNECTED), It.isAny()),
-      Times.once()
-    );
-    client.verify(
-      (m) => m.on(It.isValue(LifecycleEvents.MESSAGE), It.isAny()),
-      Times.once()
-    );
+    client.verify(m => m.on(It.isValue(LifecycleEvents.CONNECTED), It.isAny()), Times.once());
+    client.verify(m => m.on(It.isValue(LifecycleEvents.MESSAGE), It.isAny()), Times.once());
   });
 
   it('should add connection event handler on connection', () => {
@@ -83,16 +66,14 @@ describe('Bot engine', () => {
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
-      .setup((m) => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAnyString(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 
     engine.run();
 
-    const relatedHandler = callbacks.find(
-      (cb) => cb.evt === LifecycleEvents.CONNECTED
-    );
+    const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.CONNECTED);
     relatedHandler.cb.call(client);
 
     expect(untypedEngine.onConnected).toHaveBeenCalled();
@@ -103,16 +84,14 @@ describe('Bot engine', () => {
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
-      .setup((m) => m.on(It.isAnyString(), It.isAny()))
+      .setup(m => m.on(It.isAnyString(), It.isAny()))
       .callback((evt: string, cb: () => void) => {
         callbacks.push({ evt, cb });
       });
 
     engine.run();
 
-    const relatedHandler = callbacks.find(
-      (cb) => cb.evt === LifecycleEvents.MESSAGE
-    );
+    const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.MESSAGE);
     relatedHandler.cb.call(client);
 
     expect(untypedEngine.onMessage).toHaveBeenCalled();
@@ -173,7 +152,7 @@ describe('Bot engine', () => {
   it('should disconnect on destroy', () => {
     engine.destroy();
 
-    client.verify((c) => c.disconnect(), Times.once());
+    client.verify(c => c.disconnect(), Times.once());
   });
 
   it('should handle ambient messages when message received', () => {
@@ -196,39 +175,26 @@ describe('Bot engine', () => {
 
   it('should send message when one is generated as a response', (done: DoneFn) => {
     const mockMessage = 'hello world';
-    const fakeMessageFns = [
-      Promise.resolve(mockMessage),
-      Promise.resolve(null)
-    ];
+    const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
 
-    untypedEngine
-      .dequeuePromises(fakeMessageFns)
-      .catch((err: Error) =>
-        expect(err instanceof HandledResponseError).toBeTruthy()
-      );
+    untypedEngine.dequeuePromises(fakeMessageFns).catch((err: Error) => expect(err instanceof HandledResponseError).toBeTruthy());
 
     setTimeout(() => {
-      client.verify(
-        (c) => c.queueMessages(It.isValue([mockMessage])),
-        Times.once()
-      );
+      client.verify(c => c.queueMessages(It.isValue([mockMessage])), Times.once());
       done();
     }, 100);
   });
 
   it('should handle an exception being thrown', (done: DoneFn) => {
     const failureMessage = 'I am a failure';
-    const fakeMessageFns = [
-      Promise.reject(failureMessage),
-      Promise.resolve(null)
-    ];
+    const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
 
     untypedEngine
       .dequeuePromises(fakeMessageFns)
       .then(() => fail('should not get here'))
       .catch((err: string) => {
         expect(err).toBe(failureMessage);
-        client.verify((c) => c.queueMessages(It.isAny()), Times.never());
+        client.verify(c => c.queueMessages(It.isAny()), Times.never());
         done();
       });
   });
@@ -241,9 +207,7 @@ describe('Bot engine', () => {
       return Promise.resolve(null);
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
-    mockPersonalityCore
-      .setup((m) => m.onMessage(It.isAny()))
-      .returns(() => Promise.resolve(null));
+    mockPersonalityCore.setup(m => m.onMessage(It.isAny())).returns(() => Promise.resolve(null));
     untypedEngine.personalityConstructs = [mockPersonalityCore.object];
 
     untypedEngine.handleAmbientMessage(mockMessage);
@@ -274,9 +238,7 @@ describe('Bot engine', () => {
     ];
 
     messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
-      client
-        .setup((m) => m.getUserInformation())
-        .returns(() => mockUserInfo.object);
+      client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
       const mockMessage = {
         content: kvp.input,
         guild: { members: { resolve: (): GuildMember => null } }
@@ -289,9 +251,7 @@ describe('Bot engine', () => {
   it('should detect if addressed and username overriden in guild', () => {
     const overridenUsername = 'totally_not_a_bot';
 
-    client
-      .setup((m) => m.getUserInformation())
-      .returns(() => mockUserInfo.object);
+    client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
     const mockMessage = {
       content: `${overridenUsername}, hello`,
       guild: { members: { resolve: () => ({ nickname: overridenUsername }) } }
@@ -310,9 +270,7 @@ describe('Bot engine', () => {
       return Promise.resolve(null);
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
-    mockPersonalityCore
-      .setup((m) => m.onAddressed(It.isAny(), It.isAnyString()))
-      .returns(() => Promise.resolve(null));
+    mockPersonalityCore.setup(m => m.onAddressed(It.isAny(), It.isAnyString())).returns(() => Promise.resolve(null));
     untypedEngine.personalityConstructs = [mockPersonalityCore.object];
 
     untypedEngine.handleAddressedMessage(mockMessage, messageText);
@@ -323,7 +281,7 @@ describe('Bot engine', () => {
 
   // Run all help tests with each help command
   // This is disgusting but can't think of a cleaner way to do it
-  helpCommands.forEach((helpCommand) => {
+  helpCommands.forEach(helpCommand => {
     describe(`Help functionality using ${helpCommand}`, () => {
       const helpText = 'I’m helping';
       const coreWithHelp: Personality = {
@@ -338,7 +296,7 @@ describe('Bot engine', () => {
       beforeEach(() => {
         const mockGuild = Mock.ofType<Guild>();
         mockGuild
-          .setup((g) => g.members)
+          .setup(g => g.members)
           .returns(
             () =>
               ({
@@ -347,19 +305,17 @@ describe('Bot engine', () => {
           );
 
         mockMessage = Mock.ofType<Message>();
-        mockMessage.setup((msg) => msg.guild).returns(() => mockGuild.object);
+        mockMessage.setup(msg => msg.guild).returns(() => mockGuild.object);
 
         messageQueue = [];
-        client
-          .setup((c) => c.queueMessages(It.isAny()))
-          .callback((messages) => messageQueue.push(...messages));
+        client.setup(c => c.queueMessages(It.isAny())).callback(messages => messageQueue.push(...messages));
       });
 
       it('should respond with help and plugin summary if no personality core supplied and core loaded', () => {
         const messageText = `${MOCK_USERNAME} ${helpCommand}`;
         engine.addPersonality(coreWithHelp);
 
-        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        mockMessage.setup(msg => msg.content).returns(() => messageText);
         untypedEngine.onMessage(mockMessage.object);
 
         expect(messageQueue.length).toBe(2);
@@ -377,7 +333,7 @@ describe('Bot engine', () => {
       it('should respond with help and no topics if no personality core supplied and no cores loaded', () => {
         const messageText = `${MOCK_USERNAME} ${helpCommand}`;
 
-        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        mockMessage.setup(msg => msg.content).returns(() => messageText);
         untypedEngine.onMessage(mockMessage.object);
 
         expect(messageQueue.length).toBe(2);
@@ -393,12 +349,12 @@ describe('Bot engine', () => {
         expect(embed.fields[0].value).toBe('No topics');
       });
 
-      it('should respond with plugin help if personality core supplied and loaded', (done) => {
+      it('should respond with plugin help if personality core supplied and loaded', done => {
         const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
 
         engine.addPersonality(coreWithHelp);
 
-        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        mockMessage.setup(msg => msg.content).returns(() => messageText);
         untypedEngine.onMessage(mockMessage.object);
 
         setTimeout(() => {
@@ -409,10 +365,10 @@ describe('Bot engine', () => {
         });
       });
 
-      it('should respond with generic text if personality core supplied but not loaded', (done) => {
+      it('should respond with generic text if personality core supplied but not loaded', done => {
         const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
 
-        mockMessage.setup((msg) => msg.content).returns(() => messageText);
+        mockMessage.setup(msg => msg.content).returns(() => messageText);
         untypedEngine.onMessage(mockMessage.object);
 
         setTimeout(() => {

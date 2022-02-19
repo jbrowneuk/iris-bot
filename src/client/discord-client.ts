@@ -1,4 +1,4 @@
-import * as discord from 'discord.js';
+import { Client as DiscordApiClient, ClientOptions, Intents, Message, MessageEmbed, PresenceData, TextBasedChannel, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
@@ -8,8 +8,8 @@ import { MessageType } from '../types';
 import { messageEvent, readyEvent } from './discord-events';
 
 export class DiscordClient extends EventEmitter implements Client {
-  private client: discord.Client;
-  private lastMessage: discord.Message;
+  private client: DiscordApiClient;
+  private lastMessage: Message;
   private connected: boolean;
 
   constructor(private logger: Logger) {
@@ -23,9 +23,7 @@ export class DiscordClient extends EventEmitter implements Client {
   public connect(token: string): void {
     this.client = this.generateClient();
     this.client.on(readyEvent, () => this.onConnected());
-    this.client.on(messageEvent, (message: discord.Message) =>
-      this.onMessage(message)
-    );
+    this.client.on(messageEvent, (message: Message) => this.onMessage(message));
 
     this.client.login(token);
   }
@@ -38,11 +36,16 @@ export class DiscordClient extends EventEmitter implements Client {
     return this.connected;
   }
 
-  public findChannelById(channelId: string): discord.Channel {
-    return this.client.channels.resolve(channelId) || null;
+  public findChannelById(channelId: string): TextBasedChannel {
+    const relatedChannel = this.client.channels.resolve(channelId);
+    if (!relatedChannel || !relatedChannel.isText) {
+      return null;
+    }
+
+    return relatedChannel as TextBasedChannel;
   }
 
-  public getUserInformation(): discord.User {
+  public getUserInformation(): User {
     return this.client.user;
   }
 
@@ -50,12 +53,16 @@ export class DiscordClient extends EventEmitter implements Client {
     messages.forEach((message: MessageType) => this.sendMessage(message));
   }
 
-  public setPresence(data: discord.PresenceData): void {
+  public setPresence(data: PresenceData): void {
     this.client.user.setPresence(data);
   }
 
-  private generateClient(): discord.Client {
-    return new discord.Client();
+  private generateClient(): DiscordApiClient {
+    const clientOptions: ClientOptions = {
+      intents: [Intents.FLAGS.GUILDS | Intents.FLAGS.GUILD_MESSAGES]
+    };
+
+    return new DiscordApiClient(clientOptions);
   }
 
   private onConnected(): void {
@@ -63,11 +70,8 @@ export class DiscordClient extends EventEmitter implements Client {
     this.emit(LifecycleEvents.CONNECTED);
   }
 
-  private onMessage(message: discord.Message): void {
-    if (
-      message.channel.type !== 'text' ||
-      message.author === this.client.user
-    ) {
+  private onMessage(message: Message): void {
+    if (!message.channel.isText || message.author === this.client.user) {
       return;
     }
 
@@ -80,20 +84,20 @@ export class DiscordClient extends EventEmitter implements Client {
       return;
     }
 
-    if (typeof message === 'string') {
-      if (message.length === 0) {
-        return;
-      }
-
-      if (this.lastMessage.author) {
-        message = message.replace(
-          /\{£user\}/g,
-          this.lastMessage.author.username
-        );
-      }
-
-      message = message.replace(/\{£me\}/g, this.client.user.username);
+    if (message instanceof MessageEmbed) {
+      this.lastMessage.channel.send({ embeds: [message] });
+      return;
     }
+
+    if (message.length === 0) {
+      return;
+    }
+
+    if (this.lastMessage.author) {
+      message = message.replace(/\{£user\}/g, this.lastMessage.author.username);
+    }
+
+    message = message.replace(/\{£me\}/g, this.client.user.username);
 
     this.lastMessage.channel.send(message);
   }

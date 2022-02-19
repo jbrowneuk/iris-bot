@@ -1,5 +1,5 @@
 import * as axios from 'axios';
-import { Message, TextChannel } from 'discord.js';
+import { Message, MessageOptions, TextChannel } from 'discord.js';
 import { readFileSync, unlink } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock, Times } from 'typemoq';
@@ -177,12 +177,14 @@ describe('Blog roll', () => {
   describe('Fetch Journal data', () => {
     let fetchSpy: jasmine.Spy;
     let mockChannel: IMock<TextChannel>;
+    let messageData: string | MessageOptions;
 
     beforeEach(() => {
       fetchSpy = spyOn(axios.default, 'get');
       personality = new TestableBlogRoll(mockDependencies);
 
       mockChannel = Mock.ofType<TextChannel>();
+      mockChannel.setup(m => m.send(It.isAny())).callback(data => (messageData = data));
 
       mockClient.setup(c => c.findChannelById(It.isAny())).returns(() => mockChannel.object);
     });
@@ -212,7 +214,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny()), Times.never());
         done();
       });
     });
@@ -229,7 +231,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny()), Times.never());
         done();
       });
     });
@@ -246,7 +248,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny()), Times.never());
         done();
       });
     });
@@ -266,7 +268,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny()), Times.never());
         done();
       });
     });
@@ -294,7 +296,7 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.never());
+        mockChannel.verify(c => c.send(It.isAny()), Times.never());
         done();
       });
     });
@@ -325,7 +327,16 @@ describe('Blog roll', () => {
       setTimeout(() => {
         expect().nothing();
         mockClient.verify(c => c.findChannelById(It.isValue(channelId)), Times.once());
-        mockChannel.verify(c => c.send(It.isAny(), It.isAny()), Times.once());
+        mockChannel.verify(c => c.send(It.isAny()), Times.once());
+
+        if (typeof messageData === 'string') {
+          fail('MessageData was a sting');
+          return;
+        }
+
+        const typed = messageData as MessageOptions;
+        expect(typed.content).toContain('New post');
+        expect(typed.embeds).toBeTruthy();
         done();
       });
     });

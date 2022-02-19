@@ -1,9 +1,4 @@
-import {
-  Mood,
-  MoodEngine,
-  MoodletDelta,
-  MoodletSize
-} from '../interfaces/mood-engine';
+import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 
 const maxMood = 100;
 
