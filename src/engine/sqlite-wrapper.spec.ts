@@ -1,5 +1,6 @@
-import * as sqlite from 'sqlite3';
 import { IMock, It, Mock, Times } from 'typemoq';
+
+import * as sqlite from '@vscode/sqlite3';
 
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
