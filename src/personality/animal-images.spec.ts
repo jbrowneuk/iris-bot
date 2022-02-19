@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -16,9 +17,7 @@ describe('Animal Image API', () => {
   beforeEach(() => {
     mockLogger = Mock.ofType<Logger>();
     mockResponses = Mock.ofType<ResponseGenerator>();
-    mockResponses
-      .setup((m) => m.generateResponse(It.isAnyString()))
-      .returns((input) => Promise.resolve(input));
+    mockResponses.setup(m => m.generateResponse(It.isAnyString())).returns(input => Promise.resolve(input));
 
     mockDependencies = {
       client: null,
@@ -33,8 +32,8 @@ describe('Animal Image API', () => {
   });
 
   describe('onAddressed', () => {
-    it('should resolve to null', (done) => {
-      personality.onAddressed().then((value) => {
+    it('should resolve to null', done => {
+      personality.onAddressed().then(value => {
         expect(value).toBeNull();
         done();
       });
@@ -45,51 +44,51 @@ describe('Animal Image API', () => {
     let fetchSpy: jasmine.Spy;
 
     beforeEach(() => {
-      fetchSpy = spyOn(nodeFetch, 'default');
+      fetchSpy = spyOn(axios.default, 'get');
     });
 
-    supportedApis.forEach((apiName) => {
-      it(`should call ${apiName.url} api when +${apiName.name} invoked`, (done) => {
+    supportedApis.forEach(apiName => {
+      it(`should call ${apiName.url} api when +${apiName.name} invoked`, done => {
         const messageText = `+${apiName.name}`;
         const mockSuccessResponse = {
-          json: () => Promise.resolve({ link: apiName.url }),
-          ok: true
+          data: { link: apiName.url },
+          status: StatusCodes.OK
         };
 
         fetchSpy.and.returnValue(Promise.resolve(mockSuccessResponse));
 
         const message = Mock.ofType<Message>();
-        message.setup((m) => m.content).returns(() => messageText);
+        message.setup(m => m.content).returns(() => messageText);
 
-        personality.onMessage(message.object).then((responseUrl) => {
+        personality.onMessage(message.object).then(responseUrl => {
           expect(responseUrl).toBe(apiName.url);
           expect(fetchSpy).toHaveBeenCalled();
           done();
         });
       });
 
-      it(`should handle API error for ${apiName.name}`, (done) => {
+      it(`should handle API error for ${apiName.name}`, done => {
         const messageText = `+${apiName.name}`;
-        fetchSpy.and.returnValue(Promise.resolve({ ok: false }));
+        fetchSpy.and.returnValue(Promise.resolve({ status: StatusCodes.NOT_FOUND }));
 
         const message = Mock.ofType<Message>();
-        message.setup((m) => m.content).returns(() => messageText);
+        message.setup(m => m.content).returns(() => messageText);
 
-        personality.onMessage(message.object).then((responseText) => {
+        personality.onMessage(message.object).then(responseText => {
           expect(responseText).toBe('apiError');
           expect(fetchSpy).toHaveBeenCalled();
           done();
         });
       });
 
-      it(`should handle parsing error for ${apiName.name}`, (done) => {
+      it(`should handle parsing error for ${apiName.name}`, done => {
         const messageText = `+${apiName.name}`;
         fetchSpy.and.returnValue(Promise.reject());
 
         const message = Mock.ofType<Message>();
-        message.setup((m) => m.content).returns(() => messageText);
+        message.setup(m => m.content).returns(() => messageText);
 
-        personality.onMessage(message.object).then((responseText) => {
+        personality.onMessage(message.object).then(responseText => {
           expect(responseText).toBe('apiError');
           expect(fetchSpy).toHaveBeenCalled();
           done();
@@ -99,13 +98,13 @@ describe('Animal Image API', () => {
   });
 
   describe('Help text', () => {
-    it('should respond with help text', (done) => {
-      personality.onHelp().then((response) => {
+    it('should respond with help text', done => {
+      personality.onHelp().then(response => {
         const embed = response as MessageEmbed;
         expect(embed.description).toEqual(helpText);
 
         const commandField = embed.fields[0];
-        supportedApis.forEach((api) => {
+        supportedApis.forEach(api => {
           expect(commandField.value).toContain(`+${api.name}`);
         });
 

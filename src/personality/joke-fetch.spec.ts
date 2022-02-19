@@ -1,4 +1,5 @@
-import * as nodeFetch from 'node-fetch';
+import * as axios from 'axios';
+import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock } from 'typemoq';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
@@ -15,9 +16,7 @@ describe('Joke fetching personality', () => {
   beforeEach(() => {
     mockLogger = Mock.ofType<Logger>();
     mockResponses = Mock.ofType<ResponseGenerator>();
-    mockResponses
-      .setup((m) => m.generateResponse(It.isAnyString()))
-      .returns((input) => Promise.resolve(input));
+    mockResponses.setup(m => m.generateResponse(It.isAnyString())).returns(input => Promise.resolve(input));
 
     const mockDependencies: DependencyContainer = {
       client: null,
@@ -35,48 +34,48 @@ describe('Joke fetching personality', () => {
     let fetchSpy: jasmine.Spy;
 
     beforeEach(() => {
-      fetchSpy = spyOn(nodeFetch, 'default');
+      fetchSpy = spyOn(axios.default, 'get');
     });
 
-    it('should not handle non-commands', (done) => {
+    it('should not handle non-commands', done => {
       const modifiedCommand = `${commandString} other text`;
-      personality.onAddressed(null, modifiedCommand).then((responseText) => {
+      personality.onAddressed(null, modifiedCommand).then(responseText => {
         expect(responseText).toBe(null);
         expect(fetchSpy).not.toHaveBeenCalled();
         done();
       });
     });
 
-    it('should call API when command invoked', (done) => {
+    it('should call API when command invoked', done => {
       const mockSuccessText = 'success';
       const mockSuccessResponse = {
-        json: () => Promise.resolve({ text: mockSuccessText }),
-        ok: true
+        data: { text: mockSuccessText },
+        status: StatusCodes.OK
       };
 
       fetchSpy.and.returnValue(Promise.resolve(mockSuccessResponse));
 
-      personality.onAddressed(null, commandString).then((responseText) => {
+      personality.onAddressed(null, commandString).then(responseText => {
         expect(responseText).toBe(mockSuccessText);
         expect(fetchSpy).toHaveBeenCalledWith(apiEndpoint);
         done();
       });
     });
 
-    it('should handle API error', (done) => {
-      fetchSpy.and.returnValue(Promise.resolve({ ok: false }));
+    it('should handle API error', done => {
+      fetchSpy.and.returnValue(Promise.resolve({ status: StatusCodes.NOT_FOUND }));
 
-      personality.onAddressed(null, commandString).then((responseText) => {
+      personality.onAddressed(null, commandString).then(responseText => {
         expect(responseText).toBe('apiError');
         expect(fetchSpy).toHaveBeenCalled();
         done();
       });
     });
 
-    it('should handle parsing error for API response', (done) => {
+    it('should handle parsing error for API response', done => {
       fetchSpy.and.returnValue(Promise.reject());
 
-      personality.onAddressed(null, commandString).then((responseText) => {
+      personality.onAddressed(null, commandString).then(responseText => {
         expect(responseText).toBe('apiError');
         expect(fetchSpy).toHaveBeenCalled();
         done();
@@ -85,8 +84,8 @@ describe('Joke fetching personality', () => {
   });
 
   describe('onMessage', () => {
-    it('should resolve to null', (done) => {
-      personality.onMessage().then((value) => {
+    it('should resolve to null', done => {
+      personality.onMessage().then(value => {
         expect(value).toBeNull();
         done();
       });

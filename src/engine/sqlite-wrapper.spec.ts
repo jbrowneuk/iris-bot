@@ -1,5 +1,6 @@
-import * as sqlite from 'sqlite3';
 import { IMock, It, Mock, Times } from 'typemoq';
+
+import * as sqlite from '@vscode/sqlite3';
 
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
@@ -25,9 +26,7 @@ describe('SQLite wrapper', () => {
     mockStatement = Mock.ofType<sqlite.Statement>();
 
     mockSqlite = Mock.ofType<sqlite.Database>();
-    mockSqlite
-      .setup((m) => m.prepare(It.isAnyString()))
-      .returns(() => mockStatement.object);
+    mockSqlite.setup(m => m.prepare(It.isAnyString())).returns(() => mockStatement.object);
 
     mockLogger = Mock.ofType<Logger>();
 
@@ -41,11 +40,8 @@ describe('SQLite wrapper', () => {
   describe('Connection logic', () => {
     // Can't work out a way to mock out the Database constructor cleanly so that
     // This test works properly. Disabling for now.
-    xit('should connect', (done) => {
-      const mockDbConcretion = (
-        file: string,
-        callback: (err: Error) => void
-      ) => {
+    xit('should connect', done => {
+      const mockDbConcretion = (file: string, callback: (err: Error) => void) => {
         callback(null);
       };
 
@@ -59,10 +55,10 @@ describe('SQLite wrapper', () => {
           expect(dbHandle.fileName).toBe('./bot.sqlite');
           done();
         })
-        .catch((err) => fail(err));
+        .catch(err => fail(err));
     });
 
-    it('should not attempt to reconnect if there is already a connection object', (done) => {
+    it('should not attempt to reconnect if there is already a connection object', done => {
       testObject.dbInstance = {};
 
       testObject
@@ -74,7 +70,7 @@ describe('SQLite wrapper', () => {
         });
     });
 
-    it('should disconnect if connected', (done) => {
+    it('should disconnect if connected', done => {
       const mySqlite = {
         close(cb: () => void) {
           cb();
@@ -94,7 +90,7 @@ describe('SQLite wrapper', () => {
         .catch(() => fail('Should not get here'));
     });
 
-    it('should not reject when trying to disconnect if not connected', (done) => {
+    it('should not reject when trying to disconnect if not connected', done => {
       testObject
         .disconnect()
         .then(() => {
@@ -106,7 +102,7 @@ describe('SQLite wrapper', () => {
         });
     });
 
-    it('should bubble up error and reject if disconnect fails', (done) => {
+    it('should bubble up error and reject if disconnect fails', done => {
       const expectedError = 'ERROR';
       const mySqlite = {
         close(cb: (err: Error) => void) {
@@ -128,7 +124,7 @@ describe('SQLite wrapper', () => {
   });
 
   describe('Getting records', () => {
-    it('should reject when trying to get records and not connected', (done) => {
+    it('should reject when trying to get records and not connected', done => {
       testObject
         .getRecordsFromCollection('any', {})
         .then(() => fail('Should not get here'))
@@ -138,10 +134,10 @@ describe('SQLite wrapper', () => {
         });
     });
 
-    it('should handle error returned from getting a collection', (done) => {
+    it('should handle error returned from getting a collection', done => {
       const expectedError = 'ERROR';
       mockStatement
-        .setup((m) => m.all(It.isAny(), It.isAny()))
+        .setup(m => m.all(It.isAny(), It.isAny()))
         .callback((_: unknown, cb: (err: Error) => void) => {
           cb(new Error(expectedError));
         });
@@ -157,33 +153,28 @@ describe('SQLite wrapper', () => {
         });
     });
 
-    it('should get all records from a collection', (done) => {
+    it('should get all records from a collection', done => {
       const expectedCollection = 'myCollection';
       const mockRows = [{ id: 0 }, { id: 1 }];
       mockStatement
-        .setup((m) => m.all(It.isAny(), It.isAny()))
-        .callback(
-          (_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
-            cb(null, mockRows);
-          }
-        );
+        .setup(m => m.all(It.isAny(), It.isAny()))
+        .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
+          cb(null, mockRows);
+        });
 
       testObject.dbInstance = mockSqlite.object;
 
       testObject
         .getRecordsFromCollection<KeyedObject>(expectedCollection, {})
         .then((records: KeyedObject[]) => {
-          mockSqlite.verify(
-            (m) => m.prepare(It.isValue(`SELECT * FROM ${expectedCollection}`)),
-            Times.once()
-          );
+          mockSqlite.verify(m => m.prepare(It.isValue(`SELECT * FROM ${expectedCollection}`)), Times.once());
           expect(records).toEqual(mockRows);
           done();
         })
-        .catch((err) => fail(err));
+        .catch(err => fail(err));
     });
 
-    it('should correctly build SQL statement when filter has been applied', (done) => {
+    it('should correctly build SQL statement when filter has been applied', done => {
       const filter = {
         where: [
           { field: 'a', value: 'a' },
@@ -191,25 +182,20 @@ describe('SQLite wrapper', () => {
         ]
       };
       mockStatement
-        .setup((m) => m.all(It.isAny(), It.isAny()))
-        .callback(
-          (_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
-            cb(null, []);
-          }
-        );
+        .setup(m => m.all(It.isAny(), It.isAny()))
+        .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
+          cb(null, []);
+        });
 
       testObject.dbInstance = mockSqlite.object;
 
       testObject
         .getRecordsFromCollection('col', filter)
         .then(() => {
-          mockSqlite.verify(
-            (m) => m.prepare(It.isValue(`SELECT * FROM col WHERE a=? AND b=?`)),
-            Times.once()
-          );
+          mockSqlite.verify(m => m.prepare(It.isValue(`SELECT * FROM col WHERE a=? AND b=?`)), Times.once());
           done();
         })
-        .catch((err) => fail(err));
+        .catch(err => fail(err));
     });
   });
 
@@ -218,7 +204,7 @@ describe('SQLite wrapper', () => {
       testObject.dbInstance = mockSqlite.object;
     });
 
-    it('should fix field keys that do not have $-prefix keys', (done) => {
+    it('should fix field keys that do not have $-prefix keys', done => {
       let lastQueryObject: KeyedObject;
 
       const fields = {
@@ -226,22 +212,20 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback(
-          (_: string, params: KeyedObject, cb: (err: Error) => void) => {
-            lastQueryObject = params;
-            cb(null);
-          }
-        );
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+          lastQueryObject = params;
+          cb(null);
+        });
 
       testObject.insertRecordsToCollection('anytable', fields).then(() => {
         const keys = Object.keys(lastQueryObject);
-        expect(keys.every((key) => key.startsWith('$'))).toBeTrue();
+        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
         done();
       });
     });
 
-    it('should format the input objects into a SQL prepared statement', (done) => {
+    it('should format the input objects into a SQL prepared statement', done => {
       const mockTable = 'anyTable';
 
       const fields = {
@@ -250,17 +234,14 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
           expect(tb).toContain(`INSERT INTO ${mockTable}`);
           cb(null);
         });
 
       testObject.insertRecordsToCollection(mockTable, fields).then(() => {
-        mockSqlite.verify(
-          (m) => m.run(It.isAnyString(), It.isObjectWith(fields), It.isAny()),
-          Times.once()
-        );
+        mockSqlite.verify(m => m.run(It.isAnyString(), It.isObjectWith(fields), It.isAny()), Times.once());
 
         done();
       });
@@ -272,7 +253,7 @@ describe('SQLite wrapper', () => {
       testObject.dbInstance = mockSqlite.object;
     });
 
-    it('should fix field keys that do not have $-prefix', (done) => {
+    it('should fix field keys that do not have $-prefix', done => {
       let lastQueryObject: KeyedObject;
 
       const fields = {
@@ -284,24 +265,20 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback(
-          (_: string, params: KeyedObject, cb: (err: Error) => void) => {
-            lastQueryObject = params;
-            cb(null);
-          }
-        );
-
-      testObject
-        .updateRecordsInCollection('anytable', fields, where)
-        .then(() => {
-          const keys = Object.keys(lastQueryObject);
-          expect(keys.every((key) => key.startsWith('$'))).toBeTrue();
-          done();
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+          lastQueryObject = params;
+          cb(null);
         });
+
+      testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
+        const keys = Object.keys(lastQueryObject);
+        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
+        done();
+      });
     });
 
-    it('should fix where clause keys that do not have $-prefix', (done) => {
+    it('should fix where clause keys that do not have $-prefix', done => {
       let lastQueryObject: KeyedObject;
 
       const fields = {
@@ -313,24 +290,20 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback(
-          (_: string, params: KeyedObject, cb: (err: Error) => void) => {
-            lastQueryObject = params;
-            cb(null);
-          }
-        );
-
-      testObject
-        .updateRecordsInCollection('anytable', fields, where)
-        .then(() => {
-          const keys = Object.keys(lastQueryObject);
-          expect(keys.every((key) => key.startsWith('$'))).toBeTrue();
-          done();
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+          lastQueryObject = params;
+          cb(null);
         });
+
+      testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
+        const keys = Object.keys(lastQueryObject);
+        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
+        done();
+      });
     });
 
-    it('should format the input objects into a SQL prepared statement', (done) => {
+    it('should format the input objects into a SQL prepared statement', done => {
       const mockTable = 'anyTable';
 
       const fields = {
@@ -343,30 +316,20 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
           expect(tb).toContain(`UPDATE ${mockTable}`);
           cb(null);
         });
 
-      testObject
-        .updateRecordsInCollection(mockTable, fields, where)
-        .then(() => {
-          mockSqlite.verify(
-            (m) =>
-              m.run(
-                It.isAnyString(),
-                It.isObjectWith({ ...fields, ...where }),
-                It.isAny()
-              ),
-            Times.once()
-          );
+      testObject.updateRecordsInCollection(mockTable, fields, where).then(() => {
+        mockSqlite.verify(m => m.run(It.isAnyString(), It.isObjectWith({ ...fields, ...where }), It.isAny()), Times.once());
 
-          done();
-        });
+        done();
+      });
     });
 
-    it('should reject if query raises an error', (done) => {
+    it('should reject if query raises an error', done => {
       const fields = {
         $key: 'value'
       };
@@ -376,7 +339,7 @@ describe('SQLite wrapper', () => {
       };
 
       mockSqlite
-        .setup((m) => m.run(It.isAny(), It.isAny(), It.isAny()))
+        .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((_: unknown, __: unknown, cb: (err: Error) => void) => {
           cb(new Error('Hello I am a mock error'));
         });
@@ -384,7 +347,7 @@ describe('SQLite wrapper', () => {
       testObject
         .updateRecordsInCollection('anytable', fields, where)
         .then(() => fail('Query errored but wrapper did not handle'))
-        .catch((err) => {
+        .catch(err => {
           expect(err).toBeTruthy();
           done();
         });

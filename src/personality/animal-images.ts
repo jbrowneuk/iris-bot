@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
@@ -18,8 +19,11 @@ export const supportedApis = [
   { name: 'dog', url: `${imageApiBaseUrl}dog` }
 ];
 
-export const helpText =
-  'This plugin gets random animal pictures from the internet.';
+export const helpText = 'This plugin gets random animal pictures from the internet.';
+
+export interface ImageData {
+  link?: string;
+}
 
 export class AnimalImages implements Personality {
   constructor(private dependencies: DependencyContainer) {}
@@ -34,24 +38,22 @@ export class AnimalImages implements Personality {
     }
 
     const apiReq = message.content.substring(1).trim();
-    const apiEndpoint = supportedApis.find((api) =>
-      api.name.startsWith(apiReq)
-    );
+    const apiEndpoint = supportedApis.find(api => api.name.startsWith(apiReq));
     if (!apiEndpoint) {
       return Promise.resolve(null);
     }
 
-    return nodeFetch
-      .default(apiEndpoint.url)
-      .then((response) => {
-        if (!response.ok) {
+    return axios.default
+      .get<ImageData>(apiEndpoint.url)
+      .then(response => {
+        if (response.status !== StatusCodes.OK || !response.data.link) {
           throw new Error('Unable to fetch API');
         }
 
-        return response.json();
+        return response.data;
       })
-      .then((rawData) => rawData && rawData.link)
-      .catch((e) => {
+      .then(rawData => rawData && rawData.link)
+      .catch(e => {
         this.dependencies.logger.error(e);
         return this.dependencies.responses.generateResponse('apiError');
       });
@@ -62,7 +64,7 @@ export class AnimalImages implements Personality {
     embed.setTitle('Animal Images');
     embed.setDescription(helpText);
 
-    const commands = supportedApis.map((api) => `\`+${api.name}\``);
+    const commands = supportedApis.map(api => `\`+${api.name}\``);
     embed.addField('Commands', commands.join('\n'));
 
     return Promise.resolve(embed);

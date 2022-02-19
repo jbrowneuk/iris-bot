@@ -44,13 +44,8 @@ export class SettingsManager implements Settings {
   }
 
   private saveToFile(): void {
-    fs.writeFile(
-      this.path,
-      JSON.stringify(this.settingsData),
-      encoding,
-      (err) => {
-        err && this.logger.error(err);
-      }
-    );
+    fs.writeFile(this.path, JSON.stringify(this.settingsData), encoding, err => {
+      err && this.logger.error(err);
+    });
   }
 }

@@ -1,5 +1,6 @@
+import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
-import * as nodeFetch from 'node-fetch';
+import { StatusCodes } from 'http-status-codes';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
@@ -11,7 +12,7 @@ const apiUrl = 'https://jbrowne.io/api/stickers/index.php';
 export const prefix = '+s ';
 export const helpText = `Posts a large sticker image to chat. All image names can be found at ${stickerReferenceUrl}`;
 
-interface Sticker {
+export interface Sticker {
   name: string;
   url: string;
 }
@@ -45,17 +46,16 @@ export class Stickers implements Personality {
   }
 
   private fetchSticker(stickerName: string): Promise<string> {
-    return nodeFetch
-      .default(apiUrl + stickerName)
-      .then((response) => {
-        if (!response.ok) {
+    return axios.default
+      .get<Sticker>(apiUrl + stickerName)
+      .then(response => {
+        if (response.status !== StatusCodes.OK || !response.data.url) {
           throw new Error('Unable to fetch API');
         }
 
-        return response.json();
+        return this.handleStickerResponse(response.data);
       })
-      .then((rawData) => this.handleStickerResponse(rawData))
-      .catch((e) => {
+      .catch(e => {
         this.dependencies.logger.error(e);
         return 'Cannot find that sticker';
       });

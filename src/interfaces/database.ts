@@ -41,10 +41,7 @@ export interface Database {
    * @param collectionName the collection to get
    * @param filter a filter for results
    */
-  getRecordsFromCollection<T>(
-    collectionName: string,
-    filter: QueryFilter
-  ): Promise<T[]>;
+  getRecordsFromCollection<T>(collectionName: string, filter: QueryFilter): Promise<T[]>;
 
   /**
    * Inserts a record into a collection
@@ -52,10 +49,7 @@ export interface Database {
    * @param collectionName the collection to add to
    * @param values the key-value pairs
    */
-  insertRecordsToCollection(
-    collectionName: string,
-    values: KeyedObject
-  ): Promise<void>;
+  insertRecordsToCollection(collectionName: string, values: KeyedObject): Promise<void>;
 
   /**
    * Updates a set of records in a table
@@ -64,9 +58,5 @@ export interface Database {
    * @param fields records to update with values
    * @param where query filter
    */
-  updateRecordsInCollection(
-    collectionName: string,
-    fields: KeyedObject,
-    where: KeyedObject
-  ): Promise<void>;
+  updateRecordsInCollection(collectionName: string, fields: KeyedObject, where: KeyedObject): Promise<void>;
 }

@@ -94,7 +94,7 @@ export class McServer implements Personality {
           return;
         }
 
-        channel.send(generateServerEmbed(serverDetails.url, response));
+        channel.send({ embeds: [generateServerEmbed(serverDetails.url, response)] });
       });
     });
   }

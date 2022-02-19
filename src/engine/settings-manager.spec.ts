@@ -65,7 +65,7 @@ describe('Simple settings manager', () => {
     expect(testObject.getSettingsForKey(testKey)).toBe(testValue);
   });
 
-  it('should save settings when value set', (done) => {
+  it('should save settings when value set', done => {
     const mockFilePath = 'config-test.json';
     const testObject = new TestableSettingsManager(null);
     testObject.mockOutSettings({});

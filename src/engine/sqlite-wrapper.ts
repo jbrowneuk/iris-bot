@@ -1,4 +1,4 @@
-import * as sqlite from 'sqlite3';
+import * as sqlite from '@vscode/sqlite3';
 
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 import { KeyedObject } from '../interfaces/keyed-object';
@@ -19,7 +19,7 @@ export class SqliteWrapper implements Database {
     }
 
     return new Promise((resolve, reject) => {
-      this.db = new sqlite.Database(databaseFile, (err) => {
+      this.db = new sqlite.Database(databaseFile, err => {
         if (err) {
           reject(err);
         }
@@ -50,10 +50,7 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  public getRecordsFromCollection<T>(
-    collectionName: string,
-    filter: QueryFilter
-  ): Promise<T[]> {
+  public getRecordsFromCollection<T>(collectionName: string, filter: QueryFilter): Promise<T[]> {
     if (this.db === null) {
       return Promise.reject(new Error('No connection established'));
     }
@@ -74,7 +71,7 @@ export class SqliteWrapper implements Database {
             return `${logic}${op.field}${comparisonOperator}`;
           })
           .join('');
-      vals = filter.where.map((op) => op.value);
+      vals = filter.where.map(op => op.value);
     } else {
       where = '';
       vals = [];
@@ -96,16 +93,13 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  public insertRecordsToCollection(
-    collectionName: string,
-    valuesRaw: KeyedObject
-  ): Promise<void> {
+  public insertRecordsToCollection(collectionName: string, valuesRaw: KeyedObject): Promise<void> {
     const values = this.prepareObject(valuesRaw);
     const insertLogic = Object.keys(values).join();
     const sql = `INSERT INTO ${collectionName} VALUES (${insertLogic})`;
 
     return new Promise((resolve, reject) => {
-      this.db.run(sql, values, (err) => {
+      this.db.run(sql, values, err => {
         if (err === null) {
           resolve();
         }
@@ -115,11 +109,7 @@ export class SqliteWrapper implements Database {
     });
   }
 
-  public updateRecordsInCollection(
-    collectionName: string,
-    fieldsRaw: KeyedObject,
-    whereRaw: KeyedObject
-  ): Promise<void> {
+  public updateRecordsInCollection(collectionName: string, fieldsRaw: KeyedObject, whereRaw: KeyedObject): Promise<void> {
     const fields = this.prepareObject(fieldsRaw);
     const where = this.prepareObject(whereRaw);
 
@@ -129,7 +119,7 @@ export class SqliteWrapper implements Database {
     const sql = `UPDATE ${collectionName} SET ${setStr} WHERE ${whereStr}`;
 
     return new Promise((resolve, reject) => {
-      this.db.run(sql, queryObject, (err) => {
+      this.db.run(sql, queryObject, err => {
         if (err === null) {
           return resolve();
         }
@@ -149,7 +139,7 @@ export class SqliteWrapper implements Database {
   private prepareObject(rawInput: KeyedObject): KeyedObject {
     const preparedObject: KeyedObject = {};
     const rawKeys = Object.keys(rawInput);
-    rawKeys.forEach((key) => {
+    rawKeys.forEach(key => {
       const preparedKey = key.startsWith('$') ? key : `$${key}`;
       preparedObject[preparedKey] = rawInput[key];
     });
@@ -165,7 +155,7 @@ export class SqliteWrapper implements Database {
    */
   private prepareSqlField(fields: KeyedObject): string {
     const fieldKeys = Object.keys(fields);
-    const statements = fieldKeys.map((key) => {
+    const statements = fieldKeys.map(key => {
       const tableKey = key.substring(1);
       return `${tableKey} = ${key}`;
     });

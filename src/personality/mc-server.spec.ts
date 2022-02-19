@@ -297,7 +297,7 @@ describe('Minecraft server utilities', () => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
-      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = false;
@@ -315,7 +315,7 @@ describe('Minecraft server utilities', () => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
-      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -333,7 +333,7 @@ describe('Minecraft server utilities', () => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.reject(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
-      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -351,7 +351,7 @@ describe('Minecraft server utilities', () => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
-      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = true;
@@ -368,7 +368,7 @@ describe('Minecraft server utilities', () => {
       let embed: MessageEmbed;
       spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
-      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e));
+      mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
       mockServerInfo.channelId = MOCK_CHANNEL_ID;
       mockServerInfo.lastKnownOnline = false;

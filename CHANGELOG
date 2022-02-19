@@ -1,3 +1,11 @@
+Release 0.3.0 - Vulnerability reduction, package version bump
+This release switches out vulnerable packages for non-vulnerable (at time of
+writing). It also bumps the disccord.js version to latest. Due to this, the
+minimum NodeJS version has been increased to 16.
+
+- node-fetch was replaced with axios
+- sqlite3 was replaced with the vscode fork
+
 Release 0.2.2 - Adjust layout of Minecraft server status embed
 This release adds the ability to show the server MOTD/Description text in the
 server status messages.

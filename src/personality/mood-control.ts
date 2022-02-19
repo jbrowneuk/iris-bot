@@ -1,22 +1,15 @@
-import { ActivityType, Message } from 'discord.js';
+import { ActivitiesOptions, Message, PresenceData } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import {
-  Mood,
-  MoodEngine,
-  MoodletDelta,
-  MoodletSize
-} from '../interfaces/mood-engine';
+import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith, randomFloat, randomInteger } from '../utils';
 
 const defaultInterval = 1000 * 60; // Fires every minute
 const activityStartThreshold = 0.25; // TODO: adjust this based on mood/eagerness
 
-export interface BotActivity {
-  name: string;
+export interface BotActivity extends ActivitiesOptions {
   active: boolean;
-  activityType: ActivityType | null;
   moodlet: Mood;
   size: MoodletSize;
   minMinutes: number;
@@ -27,7 +20,7 @@ const activities: BotActivity[] = [
   {
     name: 'music',
     active: false,
-    activityType: 'LISTENING',
+    type: 'LISTENING',
     moodlet: Mood.Positive,
     size: MoodletSize.Small,
     minMinutes: 3,
@@ -36,7 +29,7 @@ const activities: BotActivity[] = [
   {
     name: 'movies',
     active: false,
-    activityType: null,
+    type: null,
     moodlet: Mood.Positive,
     size: MoodletSize.Large,
     minMinutes: 60,
@@ -45,7 +38,7 @@ const activities: BotActivity[] = [
   {
     name: 'puzzles',
     active: true,
-    activityType: 'PLAYING',
+    type: 'PLAYING',
     moodlet: Mood.Positive,
     size: MoodletSize.Medium,
     minMinutes: 15,
@@ -53,12 +46,7 @@ const activities: BotActivity[] = [
   }
 ];
 
-export const moodSummaryCommands = [
-  'how are you',
-  'how do you feel',
-  "what's up",
-  "how's life"
-];
+export const moodSummaryCommands = ['how are you', 'how do you feel', "what's up", "how's life"];
 
 export class MoodControl implements Personality {
   protected timerInterval: number | NodeJS.Timer;
@@ -66,18 +54,12 @@ export class MoodControl implements Personality {
   protected activityDelta: MoodletDelta;
   protected activityEnd: Date;
 
-  constructor(
-    private dependencies: DependencyContainer,
-    private moodEngine: MoodEngine
-  ) {
+  constructor(private dependencies: DependencyContainer, private moodEngine: MoodEngine) {
     this.activity = null;
   }
 
   public initialise(): void {
-    this.timerInterval = setInterval(
-      this.activityUpdate.bind(this),
-      defaultInterval
-    );
+    this.timerInterval = setInterval(this.activityUpdate.bind(this), defaultInterval);
   }
 
   public destroy(): void {
@@ -88,10 +70,7 @@ export class MoodControl implements Personality {
   }
 
   public onAddressed(_: Message, addressedMessage: string): Promise<string> {
-    const startsWithCommand = getValueStartedWith(
-      addressedMessage,
-      moodSummaryCommands
-    );
+    const startsWithCommand = getValueStartedWith(addressedMessage, moodSummaryCommands);
     if (!startsWithCommand) {
       return Promise.resolve(null);
     }
@@ -117,30 +96,22 @@ export class MoodControl implements Personality {
   }
 
   protected beginActivity(): void {
-    const positiveActs = activities.filter((a) => a.moodlet === Mood.Positive); // TODO passive & active
+    const positiveActs = activities.filter(a => a.moodlet === Mood.Positive); // TODO passive & active
     const activityChoice = randomInteger(0, positiveActs.length);
     this.activity = positiveActs[activityChoice];
 
     // Calculate delta and time until end
-    const mins = randomInteger(
-      this.activity.minMinutes,
-      this.activity.maxMinutes
-    );
+    const mins = randomInteger(this.activity.minMinutes, this.activity.maxMinutes);
     const timeMsec = mins * 60 * 1000;
     this.activityEnd = new Date(Date.now() + timeMsec);
-    this.activityDelta = this.moodEngine.calculateDelta(
-      this.activity.size,
-      mins
-    );
+    this.activityDelta = this.moodEngine.calculateDelta(this.activity.size, mins);
 
     // Set presence
-    if (this.activity.activityType !== null) {
-      const presence = {
-        activity: {
-          name: this.activity.name,
-          type: this.activity.activityType
-        }
+    if (this.activity.type !== null) {
+      const presence: PresenceData = {
+        activities: [this.activity]
       };
+
       this.dependencies.client.setPresence(presence);
     }
   }

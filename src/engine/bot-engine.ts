@@ -16,12 +16,7 @@ export const helpCommands = ['help', '+help'];
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
 
-  constructor(
-    private client: Client,
-    private responses: ResponseGenerator,
-    private settings: Settings,
-    private logger: Logger
-  ) {
+  constructor(private client: Client, private responses: ResponseGenerator, private settings: Settings, private logger: Logger) {
     this.personalityConstructs = [];
   }
 
@@ -30,7 +25,7 @@ export class BotEngine implements Engine {
   }
 
   public initialise(): void {
-    this.personalityConstructs.forEach((personality) => {
+    this.personalityConstructs.forEach(personality => {
       if (typeof personality.initialise === 'function') {
         personality.initialise();
       }
@@ -38,7 +33,7 @@ export class BotEngine implements Engine {
   }
 
   public destroy(): void {
-    this.personalityConstructs.forEach((personality) => {
+    this.personalityConstructs.forEach(personality => {
       if (typeof personality.destroy === 'function') {
         personality.destroy();
       }
@@ -54,9 +49,7 @@ export class BotEngine implements Engine {
 
   private attachEvents(): void {
     this.client.on(LifecycleEvents.CONNECTED, () => this.onConnected());
-    this.client.on(LifecycleEvents.MESSAGE, (message: Message) =>
-      this.onMessage(message)
-    );
+    this.client.on(LifecycleEvents.MESSAGE, (message: Message) => this.onMessage(message));
   }
 
   private onConnected(): void {
@@ -73,27 +66,22 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(
-    funcs: Array<Promise<MessageType>>
-  ): Promise<MessageType> {
+  private dequeuePromises(funcs: Array<Promise<MessageType>>): Promise<MessageType> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
-    return funcs.reduce(
-      (prev: Promise<MessageType>, curr: Promise<MessageType>) => {
-        if (!prev) {
-          return null;
+    return funcs.reduce((prev: Promise<MessageType>, curr: Promise<MessageType>) => {
+      if (!prev) {
+        return null;
+      }
+
+      return prev.then((result: MessageType) => {
+        if (result !== null) {
+          this.client.queueMessages([result]);
+          return Promise.reject(new HandledResponseError());
         }
 
-        return prev.then((result: MessageType) => {
-          if (result !== null) {
-            this.client.queueMessages([result]);
-            return Promise.reject(new HandledResponseError());
-          }
-
-          return curr;
-        });
-      },
-      Promise.resolve(null)
-    );
+        return curr;
+      });
+    }, Promise.resolve(null));
   }
 
   private onDequeueCatch(err: Error): void {
@@ -105,16 +93,11 @@ export class BotEngine implements Engine {
   }
 
   private handleAmbientMessage(message: Message): void {
-    const funcs = this.personalityConstructs.map((c: Personality) =>
-      c.onMessage(message)
-    );
+    const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
     this.dequeuePromises(funcs).catch(this.onDequeueCatch.bind(this));
   }
 
-  private handleAddressedMessage(
-    message: Message,
-    addressedMessage: string
-  ): void {
+  private handleAddressedMessage(message: Message, addressedMessage: string): void {
     // Check if requesting help
     const selectedHelp = getValueStartedWith(addressedMessage, helpCommands);
     if (selectedHelp) {
@@ -124,26 +107,20 @@ export class BotEngine implements Engine {
 
     // Check if bot was simply mentioned
     if (addressedMessage.length === 0) {
-      this.responses
-        .generateResponse('addressedNoCommand')
-        .then((response: string) => {
-          this.client.queueMessages([response]);
-        });
+      this.responses.generateResponse('addressedNoCommand').then((response: string) => {
+        this.client.queueMessages([response]);
+      });
       return;
     }
 
     const unhandledResponse = () =>
-      this.responses
-        .generateResponse('addressedNoResponse')
-        .then((response: string) => {
-          this.client.queueMessages([response]);
-        });
+      this.responses.generateResponse('addressedNoResponse').then((response: string) => {
+        this.client.queueMessages([response]);
+      });
 
-    const funcs = this.personalityConstructs.map((c: Personality) =>
-      c.onAddressed(message, addressedMessage)
-    );
+    const funcs = this.personalityConstructs.map((c: Personality) => c.onAddressed(message, addressedMessage));
     this.dequeuePromises(funcs)
-      .then((response) => {
+      .then(response => {
         if (response !== null) {
           return;
         }
@@ -159,9 +136,7 @@ export class BotEngine implements Engine {
 
     const atUsername = `@${username}`;
     const botId = new RegExp(`<@!?${botInfo.id}>`);
-    const messageText = message.content
-      .replace(botId, username)
-      .replace(atUsername, username);
+    const messageText = message.content.replace(botId, username).replace(atUsername, username);
 
     const lowercaseMessage = messageText.toLowerCase();
     const lowercaseUsername = username.toLowerCase();
@@ -173,20 +148,13 @@ export class BotEngine implements Engine {
 
     if (usernameLocation > 0) {
       const attentionGrabbers = ['hey', 'okay', 'ok'];
-      const attentionGrabber = getValueStartedWith(
-        lowercaseMessage,
-        attentionGrabbers
-      );
+      const attentionGrabber = getValueStartedWith(lowercaseMessage, attentionGrabbers);
       if (!attentionGrabber) {
         return null;
       }
 
-      const characterAfterAttentionGrabber = messageText.charAt(
-        attentionGrabber.length
-      );
-      const hasAttentionGrabber =
-        characterAfterAttentionGrabber === ' ' &&
-        usernameLocation === attentionGrabber.length + 1;
+      const characterAfterAttentionGrabber = messageText.charAt(attentionGrabber.length);
+      const hasAttentionGrabber = characterAfterAttentionGrabber === ' ' && usernameLocation === attentionGrabber.length + 1;
 
       if (!hasAttentionGrabber) {
         return null;
@@ -198,9 +166,7 @@ export class BotEngine implements Engine {
       return '';
     }
 
-    const messageStartsWithPunctuation = isPunctuation(
-      messageText.charAt(messageLocation)
-    );
+    const messageStartsWithPunctuation = isPunctuation(messageText.charAt(messageLocation));
     if (messageStartsWithPunctuation) {
       messageLocation += 1;
     }
@@ -211,11 +177,7 @@ export class BotEngine implements Engine {
   private calculateUserName(botInfo: User, message: Message): string {
     // If the bot is in a "server" but has been renamed, update the value of the username
     const guildMemberInfo = message.guild.members.resolve(botInfo.id);
-    if (
-      guildMemberInfo &&
-      guildMemberInfo.nickname &&
-      guildMemberInfo.nickname.length > 0
-    ) {
+    if (guildMemberInfo && guildMemberInfo.nickname && guildMemberInfo.nickname.length > 0) {
       return guildMemberInfo.nickname;
     }
 
@@ -229,11 +191,7 @@ export class BotEngine implements Engine {
    * @param text relevant text content from the user's message
    * @param helpCommand the detected help command from the text content
    */
-  private handleHelpCommand(
-    message: Message,
-    text: string,
-    helpCommand: string
-  ): void {
+  private handleHelpCommand(message: Message, text: string, helpCommand: string): void {
     message.react('🆗');
     const trimText = text.trim();
 
@@ -252,17 +210,15 @@ export class BotEngine implements Engine {
    * Provides general help for the bot, i.e. listing personality plugins
    */
   private handleBotHelp(): void {
-    const coresWithHelp = this.personalityConstructs.filter((core) => {
+    const coresWithHelp = this.personalityConstructs.filter(core => {
       return typeof core.onHelp === 'function';
     });
 
-    const coreNames = coresWithHelp.map((core) => `${core.constructor.name}`);
+    const coreNames = coresWithHelp.map(core => `${core.constructor.name}`);
 
     const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
     const messageEmbed = new MessageEmbed();
-    const topics = coreNames.length
-      ? '`' + coreNames.join('`\n`') + '`'
-      : 'No topics';
+    const topics = coreNames.length ? '`' + coreNames.join('`\n`') + '`' : 'No topics';
     messageEmbed.addField('Help topics', topics);
 
     this.client.queueMessages([responseText, messageEmbed]);
@@ -275,16 +231,13 @@ export class BotEngine implements Engine {
    * @param personality the requested personality plugin name (i.e. contructor)
    */
   private handlePersonalityHelp(message: Message, personality: string): void {
-    const helpingCore = this.personalityConstructs.find(
-      (core) =>
-        core.constructor.name.toUpperCase() === personality.toUpperCase()
-    );
+    const helpingCore = this.personalityConstructs.find(core => core.constructor.name.toUpperCase() === personality.toUpperCase());
 
     if (!helpingCore) {
       return this.client.queueMessages(['No help for that!']);
     }
 
-    helpingCore.onHelp(message).then((response) => {
+    helpingCore.onHelp(message).then(response => {
       this.client.queueMessages([response]);
     });
   }

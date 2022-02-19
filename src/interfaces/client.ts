@@ -1,4 +1,4 @@
-import { Channel, PresenceData, User } from 'discord.js';
+import { TextBasedChannel, PresenceData, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import { MessageType } from '../types';
@@ -27,7 +27,7 @@ export interface Client extends EventEmitter {
    * @param channelId the channel ID to use in the lookup
    * @returns (Channel) the channel if found, null otherwise
    */
-  findChannelById(channelId: string): Channel;
+  findChannelById(channelId: string): TextBasedChannel;
 
   /**
    * Gets the client's user information
