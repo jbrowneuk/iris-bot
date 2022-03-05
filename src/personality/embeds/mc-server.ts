@@ -44,8 +44,8 @@ export function generateServerEmbed(url: string, status: ServerResponse): Messag
   const statusText = isOnline ? 'online' : 'offline';
 
   const embed = new MessageEmbed();
-  embed.setTitle(url);
-  embed.setDescription(`${description}\n\nNow ${statusText}`);
+  embed.setTitle(`${url} is ${statusText}`);
+  embed.setDescription(description);
   embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
 
   // Version field

@@ -29,10 +29,10 @@ describe('Embed formatting for Minecraft server utilities', () => {
 
     const offlineEmbed = embeds.generateServerEmbed(serverUrl, null);
 
-    it('should have status in description', () => {
-      expect(onlinePlayersEmbed.description).toContain('online');
-      expect(onlineEmptyEmbed.description).toContain('online');
-      expect(offlineEmbed.description).toContain('offline');
+    it('should have status in title', () => {
+      expect(onlinePlayersEmbed.title).toContain('online');
+      expect(onlineEmptyEmbed.title).toContain('online');
+      expect(offlineEmbed.title).toContain('offline');
     });
 
     it('should have server address in title', () => {
