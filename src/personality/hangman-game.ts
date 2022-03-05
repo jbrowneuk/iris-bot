@@ -6,9 +6,19 @@ import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
-import { apiUrl, blankDisplayChar, guessCommand, prefix, sqlCollection, startCommand, statsCommand, summaryCommand } from './constants/hangman-game';
-import { generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
-import { GameData, SerialisableGameData, WordData } from './interfaces/hangman-game';
+import {
+  apiUrl,
+  blankDisplayChar,
+  dictionaryCommand,
+  guessCommand,
+  prefix,
+  sqlCollection,
+  startCommand,
+  statsCommand,
+  summaryCommand
+} from './constants/hangman-game';
+import { generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
+import { DictionaryInfo, GameData, SerialisableGameData, WordData } from './interfaces/hangman-game';
 import { deserialiseGameData, isGameActive, serialiseGameData } from './utilities/hangman-game';
 
 export class HangmanGame implements Personality {
@@ -43,6 +53,10 @@ export class HangmanGame implements Personality {
 
     if (text.startsWith(summaryCommand)) {
       return this.handleSummaryCommand(message.guild.id, generateGameEmbed);
+    }
+
+    if (text.startsWith(dictionaryCommand)) {
+      return this.handleDictionaryRequest();
     }
 
     return this.onHelp();
@@ -269,6 +283,16 @@ export class HangmanGame implements Personality {
       }
 
       return embedGen(gameData);
+    });
+  }
+
+  private handleDictionaryRequest(): Promise<MessageType> {
+    return axios.default.get<DictionaryInfo>(`${apiUrl}?stats`).then(response => {
+      if (response.status !== StatusCodes.OK) {
+        throw new Error(`Unable to fetch API: ${response.status}`);
+      }
+
+      return generateDictionaryEmbed(response.data);
     });
   }
 }
