@@ -1,6 +1,6 @@
 import { guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
-import { GameData } from '../interfaces/hangman-game';
-import { embedColor, embedTitle, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
+import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
+import { embedColor, embedTitle, generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
 
 const mockStats = {
   totalWins: 5,
@@ -143,5 +143,29 @@ describe('Hangman Game Summary embed', () => {
 
     expect(streakField.value).toBe('' + mockStats.currentStreak);
     expect(streakField.inline).toBeTrue();
+  });
+});
+
+describe('Hangman Game Dictionary Stats embed', () => {
+  const fakeDictStats: DictionaryInfo = {
+    totalWords: 16,
+    wordLengths: [
+      { 'word-length': 4, count: 3 },
+      { 'word-length': 5, count: 4 },
+      { 'word-length': 6, count: 4 },
+      { 'word-length': 7, count: 5 }
+    ]
+  };
+
+  it('should state total number of words in description', () => {
+    const embed = generateDictionaryEmbed(fakeDictStats);
+    expect(embed.description).toContain(`${fakeDictStats.totalWords} words`);
+  });
+
+  it('should state total number of words for each letter length', () => {
+    const embed = generateDictionaryEmbed(fakeDictStats);
+    fakeDictStats.wordLengths.forEach(lengthData => {
+      expect(embed.description).toContain(`*${lengthData.count}* ${lengthData['word-length']} letter words`);
+    });
   });
 });

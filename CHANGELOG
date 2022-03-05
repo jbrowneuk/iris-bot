@@ -1,3 +1,8 @@
+Release 0.3.1 - personality plugin bugfixes
+
+- The Minecraft Server Status plugin now shows the status in the embed title again.
+- The Hangman Game plugin can now fetch information about the words from the API.
+
 Release 0.3.0 - Vulnerability reduction, package version bump
 This release switches out vulnerable packages for non-vulnerable (at time of
 writing). It also bumps the disccord.js version to latest. Due to this, the

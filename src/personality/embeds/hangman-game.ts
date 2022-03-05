@@ -1,7 +1,7 @@
 import { MessageEmbed } from 'discord.js';
 
 import { guessCommand, prefix, startCommand, statsCommand, summaryCommand } from '../constants/hangman-game';
-import { GameData } from '../interfaces/hangman-game';
+import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 
 export const embedTitle = 'Hangman';
 export const embedColor = '#0080ff';
@@ -47,5 +47,17 @@ export function generateStatsEmbed(gameData: GameData): MessageEmbed {
   embed.addField('Wins', gameData.totalWins.toString(), true);
   embed.addField('Losses', gameData.totalLosses.toString(), true);
 
+  return embed;
+}
+
+export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageEmbed {
+  const embed = generateBaseEmbed();
+  const lines: string[] = [];
+  statsResponse.wordLengths.forEach(data => {
+    const formattedData = `• *${data.count}* ${data['word-length']} letter words`;
+    lines.push(formattedData);
+  });
+
+  embed.setDescription(`There are ${statsResponse.totalWords} words available.\n\n${lines.join('\n')}`);
   return embed;
 }
