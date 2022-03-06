@@ -54,7 +54,7 @@ export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageE
   const embed = generateBaseEmbed();
   const lines: string[] = [];
   statsResponse.wordLengths.forEach(data => {
-    const formattedData = `• *${data.count}* ${data['word-length']} letter words`;
+    const formattedData = `• ${data['word-length']}-letter words: **${data.count}**`;
     lines.push(formattedData);
   });
 

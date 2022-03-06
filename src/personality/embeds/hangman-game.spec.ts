@@ -165,7 +165,7 @@ describe('Hangman Game Dictionary Stats embed', () => {
   it('should state total number of words for each letter length', () => {
     const embed = generateDictionaryEmbed(fakeDictStats);
     fakeDictStats.wordLengths.forEach(lengthData => {
-      expect(embed.description).toContain(`*${lengthData.count}* ${lengthData['word-length']} letter words`);
+      expect(embed.description).toContain(`${lengthData['word-length']}-letter words: **${lengthData.count}**`);
     });
   });
 });
