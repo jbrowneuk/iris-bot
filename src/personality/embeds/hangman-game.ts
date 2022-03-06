@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 
-import { guessCommand, prefix, startCommand, statsCommand, summaryCommand } from '../constants/hangman-game';
+import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 
 export const embedTitle = 'Hangman';
@@ -20,6 +20,7 @@ export function generateHelpEmbed(): MessageEmbed {
   embed.addField('Starting a game', `Use \`${prefix} ${startCommand}\` to start a game.`);
   embed.addField('Making guesses', `Use \`${prefix} ${guessCommand} <your guess>\` to guess a letter or word.`);
   embed.addField('Viewing stats', `Use \`${prefix} ${statsCommand}\` to see the current server stats.`);
+  embed.addField('Dictionary', `Use \`${prefix} ${dictionaryCommand}\` to see the current dictionary information.`);
 
   return embed;
 }
@@ -54,7 +55,7 @@ export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageE
   const embed = generateBaseEmbed();
   const lines: string[] = [];
   statsResponse.wordLengths.forEach(data => {
-    const formattedData = `• *${data.count}* ${data['word-length']} letter words`;
+    const formattedData = `• ${data['word-length']}-letter words: **${data.count}**`;
     lines.push(formattedData);
   });
 

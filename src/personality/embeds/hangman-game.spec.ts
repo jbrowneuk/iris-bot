@@ -1,4 +1,4 @@
-import { guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
+import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 import { embedColor, embedTitle, generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
 
@@ -111,6 +111,14 @@ describe('Hangman Game Help embed', () => {
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(statsCommand);
   });
+
+  it('should contain instructions to view dictionary information', () => {
+    const helpEmbed = generateHelpEmbed();
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('DICTIONARY'));
+
+    expect(summaryField).toBeDefined();
+    expect(summaryField.value).toContain(dictionaryCommand);
+  });
 });
 
 describe('Hangman Game Summary embed', () => {
@@ -165,7 +173,7 @@ describe('Hangman Game Dictionary Stats embed', () => {
   it('should state total number of words for each letter length', () => {
     const embed = generateDictionaryEmbed(fakeDictStats);
     fakeDictStats.wordLengths.forEach(lengthData => {
-      expect(embed.description).toContain(`*${lengthData.count}* ${lengthData['word-length']} letter words`);
+      expect(embed.description).toContain(`${lengthData['word-length']}-letter words: **${lengthData.count}**`);
     });
   });
 });
