@@ -1,4 +1,4 @@
-import { guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
+import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 import { embedColor, embedTitle, generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
 
@@ -110,6 +110,14 @@ describe('Hangman Game Help embed', () => {
 
     expect(summaryField).toBeDefined();
     expect(summaryField.value).toContain(statsCommand);
+  });
+
+  it('should contain instructions to view dictionary information', () => {
+    const helpEmbed = generateHelpEmbed();
+    const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('DICTIONARY'));
+
+    expect(summaryField).toBeDefined();
+    expect(summaryField.value).toContain(dictionaryCommand);
   });
 });
 
