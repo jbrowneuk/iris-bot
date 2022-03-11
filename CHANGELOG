@@ -1,3 +1,13 @@
+# Release 0.4.0 - Enabling more complex messages using the MessageOptions interface
+
+Discord.JS allows developers to send messages to channels using the
+MessageOptions interface. This interface encapsulates a much more complicated
+message to a channel; for example a text string and an embed. This functionality
+will be useful for more dynamic responses from plugins. Just remember that with
+great power comes great responsibility!
+
+The interface documentation can be found on the [DiscordJS website](https://discord.js.org/#/docs/discord.js/stable/typedef/MessageOptions).
+
 # Release 0.3.2 - Hangman Game plugin: word statistics
 
 This release simply the dictionary information embed (#81) visible in the help
