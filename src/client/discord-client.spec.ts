@@ -32,6 +32,7 @@ describe('Discord client wrapper', () => {
   let discordMock: IMock<discord.Client>;
   let clientUserMock: IMock<discord.ClientUser>;
   let client: DiscordClient;
+  let untypedClient: any; // TODO: make a more unit-testable version
   let mockChannels: IMock<discord.ChannelManager>;
 
   beforeEach(() => {
@@ -45,7 +46,8 @@ describe('Discord client wrapper', () => {
     mockChannels.setup(c => c.resolve(It.isAnyString())).returns(id => MOCK_CHANNELS.get(id));
 
     client = new DiscordClient(console);
-    spyOn(client as any, 'generateClient').and.returnValue(discordMock.object);
+    untypedClient = client;
+    spyOn(untypedClient, 'generateClient').and.returnValue(discordMock.object);
   });
 
   describe('not connected state', () => {
@@ -66,7 +68,6 @@ describe('Discord client wrapper', () => {
     });
 
     it('should add connection event handler on connection', () => {
-      const untypedClient = client as any;
       spyOn(untypedClient, 'onConnected');
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
@@ -84,7 +85,6 @@ describe('Discord client wrapper', () => {
     });
 
     it('should add message event handler on connection', () => {
-      const untypedClient = client as any;
       spyOn(untypedClient, 'onMessage');
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
@@ -104,173 +104,208 @@ describe('Discord client wrapper', () => {
 
   describe('connected state', () => {
     beforeEach(() => {
-      (client as any).client = discordMock.object; // This is set when connected
+      untypedClient.client = discordMock.object; // This is set when connected
     });
 
-    it('should disconnect if connected', () => {
-      discordMock.setup(m => m.destroy());
-
-      client.disconnect();
-
-      discordMock.verify(m => m.destroy(), Times.once());
-    });
-
-    it('should find channel by id', () => {
-      discordMock.setup(m => m.channels).returns(() => mockChannels.object);
-
-      const channel = client.findChannelById(MOCK_CHAN_1_ID);
-
-      // It's not possible to mock channels using their type definition
-      expect((channel as any).name).toBe(MOCK_CHAN_1_NAME);
-    });
-
-    it('should return null if cannot find channel by id', () => {
-      discordMock.setup(m => m.channels).returns(() => mockChannels.object);
-
-      const channel = client.findChannelById('SomethingThatDoesNotExist');
-
-      expect(channel).toBeNull();
-    });
-
-    it('should queue messages', () => {
-      const untypedClient = client as any;
-      spyOn(untypedClient, 'sendMessage');
-
-      const messages = ['one', 'two', 'three'];
-      client.queueMessages(messages);
-
-      expect(untypedClient.sendMessage).toHaveBeenCalledTimes(messages.length);
-    });
-
-    it('should send queued messages', () => {
-      let sendCount = 0;
-      const mockChannel = {
-        send: (message: string) => {
-          sendCount += 1;
-        }
-      };
-      const untypedClient = client as any;
-      untypedClient.lastMessage = { channel: mockChannel };
-
-      const messages = ['one', 'two', 'three'];
-      client.queueMessages(messages);
-
-      expect(sendCount).toBe(3);
-    });
-
-    it('should replace user string with last message user name', () => {
-      const expectedName = 'bob-bobertson';
-      let lastMessage: string = null;
-      const mockChannel = {
-        send: (message: string) => (lastMessage = message)
-      };
-      const untypedClient = client as any;
-      untypedClient.lastMessage = {
-        channel: mockChannel,
-        author: { username: expectedName }
-      };
-
-      const messages = ['{£user} {£user} {£user}'];
-      client.queueMessages(messages);
-
-      expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
-    });
-
-    it('should replace name string with bot user name', () => {
-      let lastMessage: string = null;
-      const mockChannel = {
-        send: (message: string) => (lastMessage = message)
-      };
-      const untypedClient = client as any;
-      untypedClient.lastMessage = { channel: mockChannel };
-
-      const messages = ['{£me}'];
-      client.queueMessages(messages);
-
-      expect(lastMessage).toBe(MOCK_BOT_USERNAME);
-    });
-
-    it('should get user information', () => {
-      const user = client.getUserInformation();
-
-      expect(user.username).toBe(MOCK_BOT_USERNAME);
-    });
-
-    it('should get online status', () => {
-      const states = [true, false];
-      states.forEach((state: boolean) => {
-        (client as any).connected = state;
-        expect(client.isConnected()).toBe(state);
-      });
-    });
-
-    it('should handle connection event', () => {
-      let eventRaised = false;
-      const callbacks: Array<{ evt: string; cb: () => void }> = [];
-      discordMock
-        .setup(m => m.on(It.isAny(), It.isAny()))
-        .callback((evt: string, cb: () => void) => {
-          callbacks.push({ evt, cb });
+    describe('connecting/disconnecting', () => {
+      it('should handle connection event', () => {
+        let eventRaised = false;
+        const callbacks: Array<{ evt: string; cb: () => void }> = [];
+        discordMock
+          .setup(m => m.on(It.isAny(), It.isAny()))
+          .callback((evt: string, cb: () => void) => {
+            callbacks.push({ evt, cb });
+          });
+        client.on(LifecycleEvents.CONNECTED, () => {
+          eventRaised = true;
         });
-      client.on(LifecycleEvents.CONNECTED, () => {
-        eventRaised = true;
+
+        client.connect(MOCK_TOKEN);
+
+        const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
+        relatedHandler.cb.call(client);
+
+        expect(eventRaised).toBeTruthy();
       });
 
-      client.connect(MOCK_TOKEN);
+      it('should disconnect if connected', () => {
+        discordMock.setup(m => m.destroy());
 
-      const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
-      relatedHandler.cb.call(client);
+        client.disconnect();
 
-      expect(eventRaised).toBeTruthy();
+        discordMock.verify(m => m.destroy(), Times.once());
+      });
     });
 
-    function messageHandlerTest(mockMessage: any): boolean {
-      let eventRaised = false;
-      const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
-      discordMock
-        .setup(m => m.on(It.isAny(), It.isAny()))
-        .callback((evt: string, cb: () => void) => {
-          callbacks.push({ evt, cb });
+    describe('bot user details', () => {
+      it('should get user information', () => {
+        const user = client.getUserInformation();
+
+        expect(user.username).toBe(MOCK_BOT_USERNAME);
+      });
+
+      it('should get online status', () => {
+        const states = [true, false];
+        states.forEach((state: boolean) => {
+          untypedClient.connected = state;
+          expect(client.isConnected()).toBe(state);
         });
-      client.connect(MOCK_TOKEN);
-      client.on(LifecycleEvents.MESSAGE, () => {
-        eventRaised = true;
       });
 
-      const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
-      relatedHandler.cb.call(client, mockMessage);
+      it('should set presence data', () => {
+        const mockPresence = { activities: [{ name: 'anything' }] };
 
-      return eventRaised;
-    }
+        client.setPresence(mockPresence);
 
-    it('should handle incoming message event from text channel', () => {
-      const mockMessage = {
-        channel: { isText: true },
-        content: 'text message',
-        user: {}
-      };
-
-      const eventRaised = messageHandlerTest(mockMessage);
-      expect(eventRaised).toBeTruthy();
+        clientUserMock.verify(u => u.setPresence(It.isValue(mockPresence)), Times.once());
+      });
     });
 
-    it('should not handle incoming message event from non-text channel', () => {
-      const mockMessage = {
-        channel: { type: 'dm' },
-        content: 'text message',
-        user: {}
-      };
+    describe('channel finding', () => {
+      it('should find channel by id', () => {
+        discordMock.setup(m => m.channels).returns(() => mockChannels.object);
 
-      const eventRaised = messageHandlerTest(mockMessage);
-      expect(eventRaised).toBeFalsy();
+        const channel = client.findChannelById(MOCK_CHAN_1_ID);
+
+        expect((channel as discord.TextChannel).name).toBe(MOCK_CHAN_1_NAME);
+      });
+
+      it('should return null if cannot find channel by id', () => {
+        discordMock.setup(m => m.channels).returns(() => mockChannels.object);
+
+        const channel = client.findChannelById('SomethingThatDoesNotExist');
+
+        expect(channel).toBeNull();
+      });
     });
 
-    it('should set presence data', () => {
-      const mockPresence = { activities: [{ name: 'anything' }] };
+    describe('message sending', () => {
+      it('should queue messages', () => {
+        spyOn(untypedClient, 'sendMessage');
 
-      client.setPresence(mockPresence);
+        const messages = ['one', 'two', 'three'];
+        client.queueMessages(messages);
 
-      clientUserMock.verify(u => u.setPresence(It.isValue(mockPresence)), Times.once());
+        expect(untypedClient.sendMessage).toHaveBeenCalledTimes(messages.length);
+      });
+
+      it('should send queued messages', () => {
+        let sendCount = 0;
+        const mockChannel = {
+          send: () => {
+            sendCount += 1;
+          }
+        };
+        untypedClient.lastMessage = { channel: mockChannel };
+
+        const messages = ['one', 'two', 'three'];
+        client.queueMessages(messages);
+
+        expect(sendCount).toBe(3);
+      });
+
+      it('should replace user string with last message user name if message is string', () => {
+        const expectedName = 'bob-bobertson';
+        let lastMessage: string = null;
+        const mockChannel = {
+          send: (message: string) => (lastMessage = message)
+        };
+        untypedClient.lastMessage = {
+          channel: mockChannel,
+          author: { username: expectedName }
+        };
+
+        const messages = ['{£user} {£user} {£user}'];
+        client.queueMessages(messages);
+
+        expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
+      });
+
+      it('should replace name string with bot user name if message is string', () => {
+        let lastMessage: string = null;
+        const mockChannel = {
+          send: (message: string) => (lastMessage = message)
+        };
+        untypedClient.lastMessage = { channel: mockChannel };
+
+        const messages = ['{£me}'];
+        client.queueMessages(messages);
+
+        expect(lastMessage).toBe(MOCK_BOT_USERNAME);
+      });
+
+      it('should replace user string with last message user name in content if message is MessageOptions', () => {
+        const expectedName = 'bob-bobertson';
+        let lastMessage: string = null;
+        const mockChannel = {
+          send: (message: discord.MessageOptions) => (lastMessage = message.content)
+        };
+        untypedClient.lastMessage = {
+          channel: mockChannel,
+          author: { username: expectedName }
+        };
+
+        const messageOptions = { content: '{£user} {£user} {£user}' };
+        client.queueMessages([messageOptions]);
+
+        expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
+      });
+
+      it('should replace name string with bot user name in content if message is MessageOptions', () => {
+        let lastMessage: string = null;
+        const mockChannel = {
+          send: (message: discord.MessageOptions) => (lastMessage = message.content)
+        };
+        untypedClient.lastMessage = { channel: mockChannel };
+
+        const messageOptions = { content: '{£me}' };
+        client.queueMessages([messageOptions]);
+
+        expect(lastMessage).toBe(MOCK_BOT_USERNAME);
+      });
+    });
+
+    describe('incoming message handling', () => {
+      function messageHandlerTest(mockMessage: any): boolean {
+        let eventRaised = false;
+        const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
+        discordMock
+          .setup(m => m.on(It.isAny(), It.isAny()))
+          .callback((evt: string, cb: () => void) => {
+            callbacks.push({ evt, cb });
+          });
+        client.connect(MOCK_TOKEN);
+        client.on(LifecycleEvents.MESSAGE, () => {
+          eventRaised = true;
+        });
+
+        const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
+        relatedHandler.cb.call(client, mockMessage);
+
+        return eventRaised;
+      }
+
+      it('should handle incoming message event from text channel', () => {
+        const mockMessage = {
+          channel: { isText: true },
+          content: 'text message',
+          user: {}
+        };
+
+        const eventRaised = messageHandlerTest(mockMessage);
+        expect(eventRaised).toBeTruthy();
+      });
+
+      it('should not handle incoming message event from non-text channel', () => {
+        const mockMessage = {
+          channel: { type: 'dm' },
+          content: 'text message',
+          user: {}
+        };
+
+        const eventRaised = messageHandlerTest(mockMessage);
+        expect(eventRaised).toBeFalsy();
+      });
     });
   });
 });

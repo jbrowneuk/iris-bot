@@ -1,4 +1,4 @@
-import { Client as DiscordApiClient, ClientOptions, Intents, Message, MessageEmbed, PresenceData, TextBasedChannel, User } from 'discord.js';
+import { Client as DiscordApiClient, ClientOptions, Intents, Message, MessageEmbed, MessageOptions, PresenceData, TextBasedChannel, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
@@ -79,26 +79,45 @@ export class DiscordClient extends EventEmitter implements Client {
     this.emit(LifecycleEvents.MESSAGE, message);
   }
 
+  private performTextExpansion(input: string): string {
+    if (this.lastMessage.author) {
+      input = input.replace(/\{£user\}/g, this.lastMessage.author.username);
+    }
+
+    input = input.replace(/\{£me\}/g, this.client.user.username);
+
+    return input;
+  }
+
   private sendMessage(message: MessageType): void {
     if (!message) {
       return;
     }
 
+    // Handle string-only content
+    if (typeof message === 'string') {
+      if (message.length === 0) {
+        return;
+      }
+
+      this.lastMessage.channel.send(this.performTextExpansion(message));
+      return;
+    }
+
+    let messageOptions: MessageOptions;
+
+    // Handle embed-only content
+    // Deprecated - prefer using MessageOptions moving forward
     if (message instanceof MessageEmbed) {
-      this.lastMessage.channel.send({ embeds: [message] });
-      return;
+      messageOptions = { embeds: [message] };
+    } else {
+      messageOptions = message;
     }
 
-    if (message.length === 0) {
-      return;
+    if (messageOptions.content) {
+      messageOptions.content = this.performTextExpansion(messageOptions.content);
     }
 
-    if (this.lastMessage.author) {
-      message = message.replace(/\{£user\}/g, this.lastMessage.author.username);
-    }
-
-    message = message.replace(/\{£me\}/g, this.client.user.username);
-
-    this.lastMessage.channel.send(message);
+    this.lastMessage.channel.send(messageOptions);
   }
 }
