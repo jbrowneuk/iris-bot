@@ -1,6 +1,14 @@
 import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
-import { embedColor, embedTitle, generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './hangman-game';
+import {
+  embedColorError,
+  embedColorNormal,
+  embedTitle,
+  generateDictionaryEmbed,
+  generateGameEmbed,
+  generateHelpEmbed,
+  generateStatsEmbed
+} from './hangman-game';
 
 const mockStats = {
   totalWins: 5,
@@ -33,7 +41,13 @@ describe('Hangman Game Status embed', () => {
     const gameData: GameData = mockGame;
     const embed = generateGameEmbed(gameData);
     expect(embed.title).toBe(embedTitle);
-    expect(embed.hexColor).toBe(embedColor);
+    expect(embed.hexColor).toBe(embedColorNormal);
+  });
+
+  it('should set colour to error if optional defaultColor param is false', () => {
+    const gameData: GameData = mockGame;
+    const embed = generateGameEmbed(gameData, false);
+    expect(embed.hexColor).toBe(embedColorError);
   });
 
   it('should display current guessed letters', () => {
@@ -77,7 +91,7 @@ describe('Hangman Game Help embed', () => {
   it('should have title and colour defined', () => {
     const embed = generateHelpEmbed();
     expect(embed.title).toBe(embedTitle);
-    expect(embed.hexColor).toBe(embedColor);
+    expect(embed.hexColor).toBe(embedColorNormal);
   });
 
   it('should contain game summary instructions', () => {
@@ -126,7 +140,7 @@ describe('Hangman Game Summary embed', () => {
     const gameData: GameData = mockGame;
     const embed = generateStatsEmbed(gameData);
     expect(embed.title).toBe(embedTitle);
-    expect(embed.hexColor).toBe(embedColor);
+    expect(embed.hexColor).toBe(embedColorNormal);
   });
 
   it('should display total wins', () => {

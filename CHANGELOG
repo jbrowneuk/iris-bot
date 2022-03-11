@@ -1,3 +1,8 @@
+# Release 0.4.1 - Show Hangman Game state on incorrect word guess
+
+This change shows the game state on an incorrect guess so that the show command
+does not need to be run as often.
+
 # Release 0.4.0 - Enabling more complex messages using the MessageOptions interface
 
 Discord.JS allows developers to send messages to channels using the
