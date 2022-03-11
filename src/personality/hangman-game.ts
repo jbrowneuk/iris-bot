@@ -194,7 +194,7 @@ export class HangmanGame implements Personality {
 
     if (guess.length !== gameData.currentWord.length) {
       const wordText = `Your guess has ${guess.length} letters, the word has ${gameData.currentWord.length}.`;
-      return Promise.resolve(`${wordText}Think about that for a while.`);
+      return Promise.resolve(wordText);
     }
 
     if (guess === gameData.currentWord) {
@@ -219,7 +219,10 @@ export class HangmanGame implements Personality {
       return this.updateGameForGuild(guildId, gameData).then(() => `You’ve lost! The word was “${gameData.currentWord}”`);
     }
 
-    return this.updateGameForGuild(guildId, gameData).then(() => `Nope, it’s not “${guess}”`);
+    return this.updateGameForGuild(guildId, gameData).then(() => ({
+      content: `Nope, it’s not “${guess}”`,
+      embeds: [generateGameEmbed(gameData, false)]
+    }));
   }
 
   private onGuessLetter(guildId: string, guess: string, gameData: GameData): Promise<MessageType> {
@@ -237,7 +240,10 @@ export class HangmanGame implements Personality {
       gameData.livesRemaining -= 1;
 
       if (gameData.livesRemaining > 0) {
-        return this.updateGameForGuild(guildId, gameData).then(() => `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`);
+        return this.updateGameForGuild(guildId, gameData).then(() => ({
+          content: `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`,
+          embeds: [generateGameEmbed(gameData, false)]
+        }));
       }
 
       gameData.currentStreak = 0;

@@ -4,12 +4,13 @@ import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand, su
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 
 export const embedTitle = 'Hangman';
-export const embedColor = '#0080ff';
+export const embedColorNormal = '#0080ff';
+export const embedColorError = '#ff8000';
 
-function generateBaseEmbed(): MessageEmbed {
+function generateBaseEmbed(useDefaultColor = true): MessageEmbed {
   const embed = new MessageEmbed();
   embed.setTitle(embedTitle);
-  embed.setColor(embedColor);
+  embed.setColor(useDefaultColor ? embedColorNormal : embedColorError);
   return embed;
 }
 
@@ -25,8 +26,8 @@ export function generateHelpEmbed(): MessageEmbed {
   return embed;
 }
 
-export function generateGameEmbed(gameData: GameData): MessageEmbed {
-  const embed = generateBaseEmbed();
+export function generateGameEmbed(gameData: GameData, useDefaultColor?: boolean): MessageEmbed {
+  const embed = generateBaseEmbed(useDefaultColor);
   const letterDisplay = `\`${gameData.currentDisplay}\``;
   const countDisplay = `(${gameData.currentDisplay.length} letters)`;
   const chanceDisplay = `${gameData.livesRemaining} chances left`;

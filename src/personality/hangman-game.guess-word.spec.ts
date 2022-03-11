@@ -1,4 +1,4 @@
-import { Guild, Message } from 'discord.js';
+import { Guild, Message, MessageEmbed, MessageOptions } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Database } from '../interfaces/database';
@@ -6,6 +6,7 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
 import { guessCommand, prefix, sqlCollection } from './constants/hangman-game';
+import * as embeds from './embeds/hangman-game';
 import { HangmanGame } from './hangman-game';
 import { mockActiveGame, mockGuildId } from './hangman-game.specdata';
 import { GameData, SerialisableGameData } from './interfaces/hangman-game';
@@ -84,7 +85,35 @@ describe('Hangman Game - guessing behaviour for words', () => {
     mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessWord}`);
 
     personality.onMessage(mockMessage.object).then(response => {
-      expect(response).toContain(guessWord.toUpperCase());
+      const messageOpts = response as MessageOptions;
+      expect(messageOpts.content).toContain(guessWord.toUpperCase());
+      done();
+    });
+  });
+
+  it('should respond with game embed on incorrect guess', done => {
+    const embedSpy = spyOn(embeds, 'generateGameEmbed').and.returnValue(new MessageEmbed());
+    const guessWord = 'bottle';
+    const expectedDefaultColour = false;
+
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessWord}`);
+
+    personality.onMessage(mockMessage.object).then(response => {
+      const messageOpts = response as MessageOptions;
+      expect(messageOpts.embeds.length).toBe(1);
+      expect(embedSpy).toHaveBeenCalledWith(jasmine.anything(), expectedDefaultColour);
+      done();
+    });
+  });
+
+  it('should remove life on incorrect word', done => {
+    const guessWord = 'bottle';
+    const beforeLives = beforeState.livesRemaining;
+
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessWord}`);
+
+    personality.onMessage(mockMessage.object).then(() => {
+      expect(afterState.livesRemaining).toBe(beforeLives - 1);
       done();
     });
   });
