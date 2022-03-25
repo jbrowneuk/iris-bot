@@ -1,3 +1,5 @@
+import { MessageButton } from 'discord.js';
+
 import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 import {
@@ -6,6 +8,7 @@ import {
   embedTitle,
   generateDictionaryEmbed,
   generateGameEmbed,
+  generateGameEndMesage,
   generateHelpEmbed,
   generateStatsEmbed
 } from './hangman-game';
@@ -188,6 +191,120 @@ describe('Hangman Game Dictionary Stats embed', () => {
     const embed = generateDictionaryEmbed(fakeDictStats);
     fakeDictStats.wordLengths.forEach(lengthData => {
       expect(embed.description).toContain(`${lengthData['word-length']}-letter words: **${lengthData.count}**`);
+    });
+  });
+});
+
+describe('Hangman Game Won/Lost state message', () => {
+  const endStateBase = {
+    timeStarted: Date.now() - 1024,
+    currentWord: 'EGG',
+    wrongLetters: ['a'],
+    wrongWords: ['air'],
+    ...mockStats
+  };
+
+  describe('won state', () => {
+    const winGameData: GameData = {
+      ...endStateBase,
+      currentDisplay: 'EGG',
+      livesRemaining: 1
+    };
+
+    it('should have win message in content', () => {
+      const message = generateGameEndMesage(winGameData);
+      expect(message.content).toContain('win');
+    });
+
+    it('should have single embed message in embeds', () => {
+      const message = generateGameEndMesage(winGameData);
+      expect(message.embeds).toBeTruthy();
+      expect(message.embeds.length).toBe(1);
+    });
+
+    it('should have word in embed description', () => {
+      const message = generateGameEndMesage(winGameData);
+      const stateEmbed = message.embeds[0];
+      expect(stateEmbed.description).toBe(winGameData.currentWord);
+    });
+
+    it('should have fields for game time, wins and losses in embed', () => {
+      const message = generateGameEndMesage(winGameData);
+      const stateEmbed = message.embeds[0];
+      expect(stateEmbed.fields.length).toBe(3);
+
+      const gameTimeField = stateEmbed.fields.find(f => f.name === 'Time taken');
+      expect(gameTimeField).toBeTruthy();
+
+      const winsField = stateEmbed.fields.find(f => f.name === 'Wins');
+      expect(winsField).toBeTruthy();
+      expect(winsField.value).toBe(`${mockStats.totalWins}`);
+
+      const lossesField = stateEmbed.fields.find(f => f.name === 'Losses');
+      expect(lossesField).toBeTruthy();
+      expect(lossesField.value).toBe(`${mockStats.totalLosses}`);
+    });
+
+    it('should have a word definition button', () => {
+      const message = generateGameEndMesage(winGameData);
+      expect(message.components.length).toBe(1);
+
+      const button = message.components[0].components[0] as MessageButton;
+      expect(button.style).toBe('LINK');
+      expect(button.label).toBe('Word definition');
+      expect(button.url).toContain(winGameData.currentWord.toLowerCase());
+    });
+  });
+
+  describe('lost state', () => {
+    const loseGameData: GameData = {
+      ...endStateBase,
+      currentDisplay: '---',
+      livesRemaining: 0
+    };
+
+    it('should have loss message in content', () => {
+      const message = generateGameEndMesage(loseGameData);
+      expect(message.content).toContain('lost');
+    });
+
+    it('should have single embed message in embeds', () => {
+      const message = generateGameEndMesage(loseGameData);
+      expect(message.embeds).toBeTruthy();
+      expect(message.embeds.length).toBe(1);
+    });
+
+    it('should have word in embed description', () => {
+      const message = generateGameEndMesage(loseGameData);
+      const stateEmbed = message.embeds[0];
+      expect(stateEmbed.description).toBe(loseGameData.currentWord);
+    });
+
+    it('should have fields for game time, wins and losses in embed', () => {
+      const message = generateGameEndMesage(loseGameData);
+      const stateEmbed = message.embeds[0];
+      expect(stateEmbed.fields.length).toBe(3);
+
+      const gameTimeField = stateEmbed.fields.find(f => f.name === 'Time taken');
+      expect(gameTimeField).toBeTruthy();
+
+      const winsField = stateEmbed.fields.find(f => f.name === 'Wins');
+      expect(winsField).toBeTruthy();
+      expect(winsField.value).toBe(`${mockStats.totalWins}`);
+
+      const lossesField = stateEmbed.fields.find(f => f.name === 'Losses');
+      expect(lossesField).toBeTruthy();
+      expect(lossesField.value).toBe(`${mockStats.totalLosses}`);
+    });
+
+    it('should have a word definition button', () => {
+      const message = generateGameEndMesage(loseGameData);
+      expect(message.components.length).toBe(1);
+
+      const button = message.components[0].components[0] as MessageButton;
+      expect(button.style).toBe('LINK');
+      expect(button.label).toBe('Word definition');
+      expect(button.url).toContain(loseGameData.currentWord.toLowerCase());
     });
   });
 });

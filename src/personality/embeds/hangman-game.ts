@@ -1,11 +1,13 @@
-import { MessageEmbed } from 'discord.js';
+import { MessageActionRow, MessageButton, MessageEmbed, MessageOptions } from 'discord.js';
+import { MessageButtonStyles } from 'discord.js/typings/enums';
 
 import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
+import { convertMsecToHumanReadable } from '../utilities/hangman-game';
 
 export const embedTitle = 'Hangman';
 export const embedColorNormal = '#0080ff';
-export const embedColorError = '#ff8000';
+export const embedColorError = '#ff0000';
 
 function generateBaseEmbed(useDefaultColor = true): MessageEmbed {
   const embed = new MessageEmbed();
@@ -62,4 +64,33 @@ export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageE
 
   embed.setDescription(`There are ${statsResponse.totalWords} words available.\n\n${lines.join('\n')}`);
   return embed;
+}
+
+export function generateGameEndMesage(gameData: GameData): MessageOptions {
+  const isLoss = gameData.livesRemaining === 0;
+  const content = isLoss ? `You’ve lost - bad luck!` : `Yup, that’s a win - congrats!`;
+
+  const summaryEmbed = generateBaseEmbed(!isLoss);
+  summaryEmbed.setDescription(gameData.currentWord);
+
+  const timeTaken = Date.now() - gameData.timeStarted;
+
+  summaryEmbed.addField('Time taken', convertMsecToHumanReadable(timeTaken), false);
+  summaryEmbed.addField('Wins', gameData.totalWins.toString(), true);
+  summaryEmbed.addField('Losses', gameData.totalLosses.toString(), true);
+
+  const definitionButton = new MessageButton({
+    style: MessageButtonStyles.LINK,
+    url: `https://dictionary.cambridge.org/dictionary/english/${gameData.currentWord.toLowerCase()}`,
+    label: 'Word definition'
+  });
+
+  const buttonRow = new MessageActionRow();
+  buttonRow.addComponents(definitionButton);
+
+  return {
+    content,
+    embeds: [summaryEmbed],
+    components: [buttonRow]
+  };
 }

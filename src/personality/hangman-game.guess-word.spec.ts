@@ -165,4 +165,19 @@ describe('Hangman Game - guessing behaviour for words', () => {
       done();
     });
   });
+
+  it('should win game with correct guess of last letter', done => {
+    const winMessage = 'you win';
+    const endGameSpy = spyOn(embeds, 'generateGameEndMesage').and.returnValue({ content: winMessage });
+    const guessWord = beforeState.currentWord;
+
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessWord}`);
+
+    personality.onMessage(mockMessage.object).then(response => {
+      expect(endGameSpy).toHaveBeenCalled();
+      const responseObject = response as MessageOptions;
+      expect(responseObject.content).toBe(winMessage);
+      done();
+    });
+  });
 });

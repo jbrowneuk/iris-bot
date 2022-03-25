@@ -35,3 +35,8 @@ export interface DictionaryInfo {
   totalWords: number;
   wordLengths: WordLength[];
 }
+
+export interface TimeTextUnit {
+  value: number;
+  unit: string;
+}

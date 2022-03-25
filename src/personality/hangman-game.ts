@@ -17,7 +17,7 @@ import {
   statsCommand,
   summaryCommand
 } from './constants/hangman-game';
-import { generateDictionaryEmbed, generateGameEmbed, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
+import { generateDictionaryEmbed, generateGameEmbed, generateGameEndMesage, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
 import { DictionaryInfo, GameData, SerialisableGameData, WordData } from './interfaces/hangman-game';
 import { deserialiseGameData, isGameActive, serialiseGameData } from './utilities/hangman-game';
 
@@ -202,7 +202,7 @@ export class HangmanGame implements Personality {
       gameData.currentStreak += 1;
       gameData.totalWins += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(() => `Yup, it’s “${guess}”`);
+      return this.updateGameForGuild(guildId, gameData).then(() => generateGameEndMesage(gameData));
     }
 
     if (gameData.wrongWords.indexOf(guess) !== -1) {
@@ -216,7 +216,7 @@ export class HangmanGame implements Personality {
       gameData.currentStreak = 0;
       gameData.totalLosses += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(() => `You’ve lost! The word was “${gameData.currentWord}”`);
+      return this.updateGameForGuild(guildId, gameData).then(() => generateGameEndMesage(gameData));
     }
 
     return this.updateGameForGuild(guildId, gameData).then(() => ({
@@ -249,7 +249,7 @@ export class HangmanGame implements Personality {
       gameData.currentStreak = 0;
       gameData.totalLosses += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(() => `Bad luck! The word was “${gameData.currentWord}”`);
+      return this.updateGameForGuild(guildId, gameData).then(() => generateGameEndMesage(gameData));
     }
 
     if (gameData.currentDisplay.indexOf(guess) >= 0) {
@@ -276,7 +276,7 @@ export class HangmanGame implements Personality {
       gameData.currentStreak += 1;
       gameData.totalWins += 1;
 
-      return this.updateGameForGuild(guildId, gameData).then(() => `Yup, it’s “${gameData.currentWord}” - congrats!`);
+      return this.updateGameForGuild(guildId, gameData).then(() => generateGameEndMesage(gameData));
     }
 
     return this.updateGameForGuild(guildId, gameData).then(() => generateGameEmbed(gameData));

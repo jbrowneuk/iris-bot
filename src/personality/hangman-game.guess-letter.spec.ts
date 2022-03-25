@@ -189,4 +189,19 @@ describe('Hangman Game - guessing behaviour for single letters', () => {
       done();
     });
   });
+
+  it('should win game with correct guess of last letter', done => {
+    const winMessage = 'you win';
+    const endGameSpy = spyOn(embeds, 'generateGameEndMesage').and.returnValue({ content: winMessage });
+    const guessLetter = 'f';
+
+    mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessLetter}`);
+
+    personality.onMessage(mockMessage.object).then(response => {
+      expect(endGameSpy).toHaveBeenCalled();
+      const responseObject = response as MessageOptions;
+      expect(responseObject.content).toBe(winMessage);
+      done();
+    });
+  });
 });
