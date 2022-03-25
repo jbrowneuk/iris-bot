@@ -1,3 +1,8 @@
+# Release 0.4.2 - Better end-game Hangman Game response
+
+Updates the message that appears when the game is won or lost to show the full
+word, game time and a link to look up the word definition.
+
 # Release 0.4.1 - Show Hangman Game state on incorrect word guess
 
 This change shows the game state on an incorrect guess so that the show command
