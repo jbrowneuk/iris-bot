@@ -1,7 +1,9 @@
 import { GameData, SerialisableGameData } from '../interfaces/hangman-game';
 import {
   arraySplitToken,
+  convertMsecToHumanReadable,
   deserialiseGameData,
+  generateTimeText,
   isGameActive,
   packArray,
   serialiseGameData,
@@ -13,7 +15,7 @@ describe('Hangman Game Utilities', () => {
     it('should return false if the game state is falsy', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const falsyStates: any[] = [undefined, null];
-      falsyStates.forEach((v) => {
+      falsyStates.forEach(v => {
         const gameActive = isGameActive(v);
         expect(gameActive).toBe(false);
       });
@@ -147,5 +149,70 @@ describe('Hangman Game Utilities', () => {
       expect(reconverted.wrongLetters).toEqual([]);
       expect(reconverted.wrongWords).toEqual([]);
     });
+  });
+});
+
+describe('Calculating time values', () => {
+  const secondLength = 1000;
+  const minuteLength = secondLength * 60;
+  const hourLength = minuteLength * 60;
+  const dayLength = hourLength * 24;
+  const yearLength = dayLength * 365;
+
+  const calcValueTests = [
+    { unit: 'year', multiplier: 2, baseLength: yearLength },
+    { unit: 'day', multiplier: 4, baseLength: dayLength },
+    { unit: 'hour', multiplier: 12, baseLength: hourLength },
+    { unit: 'minute', multiplier: 5, baseLength: minuteLength },
+    { unit: 'second', multiplier: 30, baseLength: secondLength }
+  ];
+
+  calcValueTests.forEach(({ unit, multiplier, baseLength }) => {
+    it(`should calculate correct ${unit} for a ${multiplier} ${unit} timespan`, () => {
+      const timespan = baseLength * multiplier;
+
+      const textResult = convertMsecToHumanReadable(timespan);
+      expect(textResult).toContain(`${multiplier} ${unit}`);
+    });
+  });
+
+  it('should return the string ‘less than a second’ for millisecond values less than one second', () => {
+    const timespan = 100;
+
+    const response = convertMsecToHumanReadable(timespan);
+
+    expect(response).toBe('less than a second');
+  });
+
+  it('should be able to calculate all values for a year + day + min + second value', () => {
+    const timespan = yearLength + dayLength + hourLength + minuteLength + secondLength;
+    const textResult = convertMsecToHumanReadable(timespan);
+    ['year', 'day', 'hour', 'minute', 'second'].forEach(unit => {
+      expect(textResult).toContain(`1 ${unit}`);
+    });
+  });
+});
+
+describe('Presenting human-readable time values', () => {
+  ['year', 'day', 'hour', 'minute', 'second'].forEach(unit => {
+    it(`should give correct unit for 1 ${unit}`, () => {
+      const result = generateTimeText([{ value: 1, unit }]);
+      expect(result).toBe(`1 ${unit}`);
+    });
+
+    it(`should correctly pluralise when unit is ${unit} and value is multiple`, () => {
+      const result = generateTimeText([{ value: 2, unit }]);
+      expect(result).toBe(`2 ${unit}s`);
+    });
+  });
+
+  it('should concatenate multiple units together with commas and the word ‘and’', () => {
+    const units = [
+      { value: 2, unit: 'year' },
+      { value: 4, unit: 'hour' },
+      { value: 1, unit: 'second' }
+    ];
+    const result = generateTimeText(units);
+    expect(result).toBe('2 years, 4 hours and 1 second');
   });
 });
