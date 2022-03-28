@@ -1,5 +1,7 @@
+import { COMMAND_PREFIX } from '../../constants/personality-constants';
+
 export const apiUrl = 'https://jbrowne.io/api/words/';
-export const prefix = '+HM';
+export const prefix = `${COMMAND_PREFIX}HM`;
 export const startCommand = 'START';
 export const guessCommand = 'GUESS';
 export const statsCommand = 'STATS';
