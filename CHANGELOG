@@ -1,3 +1,7 @@
+# Release 0.4.3 - Better Hangman Game state visualisation
+
+Adds a basic visualisation of the game state to the Hangman Game.
+
 # Release 0.4.2 - Better end-game Hangman Game response
 
 Updates the message that appears when the game is won or lost to show the full
