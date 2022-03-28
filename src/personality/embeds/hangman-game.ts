@@ -1,7 +1,16 @@
 import { MessageActionRow, MessageButton, MessageEmbed, MessageOptions } from 'discord.js';
 import { MessageButtonStyles } from 'discord.js/typings/enums';
 
-import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand, summaryCommand } from '../constants/hangman-game';
+import {
+  dictionaryCommand,
+  graphicsExtension,
+  graphicsRootUrl,
+  guessCommand,
+  prefix,
+  startCommand,
+  statsCommand,
+  summaryCommand
+} from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 import { convertMsecToHumanReadable } from '../utilities/hangman-game';
 
@@ -34,10 +43,10 @@ export function generateGameEmbed(gameData: GameData, useDefaultColor?: boolean)
   const countDisplay = `(${gameData.currentDisplay.length} letters)`;
   const chanceDisplay = `${gameData.livesRemaining} chances left`;
   embed.setDescription(`${letterDisplay} ${countDisplay}\n${chanceDisplay}`);
+  embed.setThumbnail(`${graphicsRootUrl}${gameData.livesRemaining}${graphicsExtension}`);
+
   const lettersSummary = gameData.wrongLetters.length > 0 ? gameData.wrongLetters.join() : '*none*';
-
   const wordsSummary = gameData.wrongWords.length > 0 ? gameData.wrongWords.join() : '*none*';
-
   embed.addField('Wrong guesses', `Letters: ${lettersSummary}\nWords: ${wordsSummary}`);
 
   return embed;
@@ -72,6 +81,7 @@ export function generateGameEndMesage(gameData: GameData): MessageOptions {
 
   const summaryEmbed = generateBaseEmbed(!isLoss);
   summaryEmbed.setDescription(gameData.currentWord);
+  summaryEmbed.setThumbnail(`${graphicsRootUrl}${gameData.livesRemaining}${graphicsExtension}`);
 
   const timeTaken = Date.now() - gameData.timeStarted;
 

@@ -1,6 +1,6 @@
-import { MessageButton } from 'discord.js';
+import { MessageButton, MessageEmbed } from 'discord.js';
 
-import { dictionaryCommand, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
+import { dictionaryCommand, graphicsExtension, graphicsRootUrl, guessCommand, prefix, startCommand, statsCommand } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
 import {
   embedColorError,
@@ -87,6 +87,12 @@ describe('Hangman Game Status embed', () => {
     const gameData: GameData = mockNew;
     const guessSummary = generateGameEmbed(gameData).fields[0];
     expect(guessSummary.value).toContain('Words: *none*');
+  });
+
+  it('should have thumbnail image', () => {
+    const gameData: GameData = mockGame;
+    const embed = generateGameEmbed(gameData);
+    expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
   });
 });
 
@@ -254,6 +260,17 @@ describe('Hangman Game Won/Lost state message', () => {
       expect(button.label).toBe('Word definition');
       expect(button.url).toContain(winGameData.currentWord.toLowerCase());
     });
+
+    it('should have correct embed colour', () => {
+      const message = generateGameEndMesage(winGameData);
+      expect((message.embeds[0] as MessageEmbed).hexColor).toBe(embedColorNormal);
+    });
+
+    it('should have thumbnail image', () => {
+      const gameData: GameData = mockGame;
+      const embed = generateGameEmbed(gameData);
+      expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
+    });
   });
 
   describe('lost state', () => {
@@ -305,6 +322,17 @@ describe('Hangman Game Won/Lost state message', () => {
       expect(button.style).toBe('LINK');
       expect(button.label).toBe('Word definition');
       expect(button.url).toContain(loseGameData.currentWord.toLowerCase());
+    });
+
+    it('should have correct embed colour', () => {
+      const message = generateGameEndMesage(loseGameData);
+      expect((message.embeds[0] as MessageEmbed).hexColor).toBe(embedColorError);
+    });
+
+    it('should have thumbnail image', () => {
+      const gameData: GameData = mockGame;
+      const embed = generateGameEmbed(gameData);
+      expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
     });
   });
 });
