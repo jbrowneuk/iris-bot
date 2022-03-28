@@ -7,3 +7,5 @@ export const summaryCommand = 'SHOW';
 export const dictionaryCommand = 'DICTIONARY';
 export const blankDisplayChar = '-';
 export const sqlCollection = 'hangman';
+export const graphicsRootUrl = 'https://jbrowne.io/iris-bot/resources/hmg-beta/';
+export const graphicsExtension = '.png';
