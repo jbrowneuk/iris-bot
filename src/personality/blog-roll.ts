@@ -3,6 +3,7 @@ import { Message, MessageEmbed, MessageOptions, TextChannel } from 'discord.js';
 import { readFile, writeFile } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { PostData, PostWrapper } from '../interfaces/blog-roll';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
@@ -41,7 +42,7 @@ export class BlogRoll implements Personality {
   }
 
   public onMessage(message: Message): Promise<string> {
-    if (message.content === '+set channel') {
+    if (message.content === COMMAND_PREFIX + 'set channel') {
       const textChannel = message.channel as TextChannel;
       this.channelId = textChannel.id;
       this.saveSettings();
