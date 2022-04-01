@@ -2,6 +2,7 @@ import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
 import { StatusCodes } from 'http-status-codes';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
@@ -9,7 +10,7 @@ import { MessageType } from '../types';
 const stickerReferenceUrl = 'https://jbrowne.io/iris-bot/stickers/';
 const apiUrl = 'https://jbrowne.io/api/stickers/index.php';
 
-export const prefix = '+s ';
+export const prefix = COMMAND_PREFIX + 's ';
 export const helpText = `Posts a large sticker image to chat. All image names can be found at ${stickerReferenceUrl}`;
 
 export interface Sticker {
