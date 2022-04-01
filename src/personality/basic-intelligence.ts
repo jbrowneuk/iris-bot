@@ -1,5 +1,6 @@
 import { Message } from 'discord.js';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 
@@ -16,10 +17,7 @@ export class BasicIntelligence implements Personality {
    * @param message the message object related to this call
    * @param addressedMessage the substring of the message text after the attention grabber
    */
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<MessageType> {
+  public onAddressed(message: Message, addressedMessage: string): Promise<MessageType> {
     return Promise.resolve(null);
   }
 
@@ -29,8 +27,8 @@ export class BasicIntelligence implements Personality {
    * @param message the message object related to this call
    */
   public onMessage(message: Message): Promise<MessageType> {
-    return new Promise((resolve) => {
-      if (message.content === '+echo') {
+    return new Promise(resolve => {
+      if (message.content === COMMAND_PREFIX + 'echo') {
         resolve('Echo!');
       }
 
