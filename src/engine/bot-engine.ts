@@ -1,6 +1,7 @@
 import { Message, MessageEmbed, User } from 'discord.js';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { Client } from '../interfaces/client';
 import { Engine } from '../interfaces/engine';
 import { Logger } from '../interfaces/logger';
@@ -11,7 +12,8 @@ import { MessageType } from '../types';
 import { getValueStartedWith, isPunctuation } from '../utils';
 import { HandledResponseError } from './handled-response-error';
 
-export const helpCommands = ['help', '+help'];
+export const helpCommands = ['help', COMMAND_PREFIX + 'help'];
+export const helpResponseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`${helpCommands[0]}\` and then a topic from the list below.`;
 
 export class BotEngine implements Engine {
   private personalityConstructs: Personality[];
@@ -216,12 +218,11 @@ export class BotEngine implements Engine {
 
     const coreNames = coresWithHelp.map(core => `${core.constructor.name}`);
 
-    const responseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`+help\` and then a topic from the list below.`;
     const messageEmbed = new MessageEmbed();
     const topics = coreNames.length ? '`' + coreNames.join('`\n`') + '`' : 'No topics';
     messageEmbed.addField('Help topics', topics);
 
-    this.client.queueMessages([responseText, messageEmbed]);
+    this.client.queueMessages([helpResponseText, messageEmbed]);
   }
 
   /**
