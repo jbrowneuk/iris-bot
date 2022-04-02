@@ -7,7 +7,7 @@ import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
 import { MessageType } from '../types';
-import { BotEngine, helpCommands } from './bot-engine';
+import { BotEngine, helpCommands, helpResponseText } from './bot-engine';
 import { HandledResponseError } from './handled-response-error';
 
 const MOCK_USERNAME = 'bot';
@@ -322,7 +322,7 @@ describe('Bot engine', () => {
 
         // Summary text
         expect(typeof messageQueue[0]).toBe('string');
-        expect(messageQueue[0]).toContain(helpCommand);
+        expect(messageQueue[0]).toBe(helpResponseText);
 
         // Embed
         const embed = messageQueue[1] as MessageEmbed;
@@ -340,7 +340,7 @@ describe('Bot engine', () => {
 
         // Summary text
         expect(typeof messageQueue[0]).toBe('string');
-        expect(messageQueue[0]).toContain(helpCommand);
+        expect(messageQueue[0]).toBe(helpResponseText);
 
         // Embed
         const embed = messageQueue[1] as MessageEmbed;

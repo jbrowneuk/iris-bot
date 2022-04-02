@@ -3,8 +3,9 @@ import { Message, MessageOptions, TextChannel } from 'discord.js';
 import { readFileSync, unlink } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock, Times } from 'typemoq';
-import { PostData, PostWrapper } from '../interfaces/blog-roll';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
+import { PostData, PostWrapper } from '../interfaces/blog-roll';
 import { Client } from '../interfaces/client';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
@@ -141,7 +142,7 @@ describe('Blog roll', () => {
       channel.setup(c => c.id).returns(() => channelId);
 
       const message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => '+set channel');
+      message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
       message.setup(m => m.channel).returns(() => channel.object);
 
       const saveSpy = spyOn(personality as any, 'saveSettings');
@@ -160,7 +161,7 @@ describe('Blog roll', () => {
       channel.setup(c => c.id).returns(() => channelId);
 
       const message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => '+set channel');
+      message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
       message.setup(m => m.channel).returns(() => channel.object);
 
       personality.onMessage(message.object);

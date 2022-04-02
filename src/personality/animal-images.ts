@@ -2,6 +2,7 @@ import * as axios from 'axios';
 import { Message, MessageEmbed } from 'discord.js';
 import { StatusCodes } from 'http-status-codes';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
@@ -33,7 +34,7 @@ export class AnimalImages implements Personality {
   }
 
   onMessage(message: Message): Promise<MessageType> {
-    if (!message.content.startsWith('+')) {
+    if (!message.content.startsWith(COMMAND_PREFIX)) {
       return Promise.resolve(null);
     }
 
@@ -64,7 +65,7 @@ export class AnimalImages implements Personality {
     embed.setTitle('Animal Images');
     embed.setDescription(helpText);
 
-    const commands = supportedApis.map(api => `\`+${api.name}\``);
+    const commands = supportedApis.map(api => `\`${COMMAND_PREFIX}${api.name}\``);
     embed.addField('Commands', commands.join('\n'));
 
     return Promise.resolve(embed);

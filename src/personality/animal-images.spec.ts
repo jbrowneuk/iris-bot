@@ -3,6 +3,7 @@ import { Message, MessageEmbed } from 'discord.js';
 import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock } from 'typemoq';
 
+import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { DependencyContainer } from '../interfaces/dependency-container';
 import { Logger } from '../interfaces/logger';
 import { ResponseGenerator } from '../interfaces/response-generator';
@@ -48,8 +49,8 @@ describe('Animal Image API', () => {
     });
 
     supportedApis.forEach(apiName => {
-      it(`should call ${apiName.url} api when +${apiName.name} invoked`, done => {
-        const messageText = `+${apiName.name}`;
+      it(`should call ${apiName.url} api when ${COMMAND_PREFIX}${apiName.name} invoked`, done => {
+        const messageText = COMMAND_PREFIX + apiName.name;
         const mockSuccessResponse = {
           data: { link: apiName.url },
           status: StatusCodes.OK
@@ -68,7 +69,7 @@ describe('Animal Image API', () => {
       });
 
       it(`should handle API error for ${apiName.name}`, done => {
-        const messageText = `+${apiName.name}`;
+        const messageText = COMMAND_PREFIX + apiName.name;
         fetchSpy.and.returnValue(Promise.resolve({ status: StatusCodes.NOT_FOUND }));
 
         const message = Mock.ofType<Message>();
@@ -82,7 +83,7 @@ describe('Animal Image API', () => {
       });
 
       it(`should handle parsing error for ${apiName.name}`, done => {
-        const messageText = `+${apiName.name}`;
+        const messageText = COMMAND_PREFIX + apiName.name;
         fetchSpy.and.returnValue(Promise.reject());
 
         const message = Mock.ofType<Message>();
@@ -105,7 +106,7 @@ describe('Animal Image API', () => {
 
         const commandField = embed.fields[0];
         supportedApis.forEach(api => {
-          expect(commandField.value).toContain(`+${api.name}`);
+          expect(commandField.value).toContain(COMMAND_PREFIX + api.name);
         });
 
         done();
