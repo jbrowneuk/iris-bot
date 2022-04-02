@@ -77,7 +77,7 @@ export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageE
 
 export function generateGameEndMesage(gameData: GameData): MessageOptions {
   const isLoss = gameData.livesRemaining === 0;
-  const content = isLoss ? `You’ve lost - bad luck!` : `Yup, that’s a win - congrats!`;
+  const content = isLoss ? `You’ve lost - bad luck!` : `That’s a win - congrats!`;
 
   const summaryEmbed = generateBaseEmbed(!isLoss);
   summaryEmbed.setDescription(gameData.currentWord);

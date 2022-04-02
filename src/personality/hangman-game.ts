@@ -241,7 +241,7 @@ export class HangmanGame implements Personality {
 
       if (gameData.livesRemaining > 0) {
         return this.updateGameForGuild(guildId, gameData).then(() => ({
-          content: `Nope, there’s no “${guess}”. You’ve got ${gameData.livesRemaining} chances remaining!`,
+          content: `Nope, there’s no “${guess}”`,
           embeds: [generateGameEmbed(gameData, false)]
         }));
       }
