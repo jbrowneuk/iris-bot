@@ -34,6 +34,11 @@ export function deserialiseGameData(rawData: SerialisableGameData): GameData {
   };
 }
 
+export function pluraliseWord(baseWord: string, count: number): string {
+  const plural = count === 1 ? '' : 's';
+  return baseWord + plural;
+}
+
 export function generateTimeText(levels: TimeTextUnit[]): string {
   let returnText = '';
   levels.forEach(({ value, unit }, idx) => {
@@ -46,8 +51,7 @@ export function generateTimeText(levels: TimeTextUnit[]): string {
       separator = idx === levels.length - 1 ? ' and ' : ', ';
     }
 
-    const plural = value > 1 ? 's' : '';
-    returnText += `${separator}${value} ${unit}${plural}`;
+    returnText += `${separator}${value} ${pluraliseWord(unit, value)}`;
   });
 
   return returnText.trim();

@@ -6,6 +6,7 @@ import {
   generateTimeText,
   isGameActive,
   packArray,
+  pluraliseWord,
   serialiseGameData,
   unpackArray
 } from './hangman-game';
@@ -149,6 +150,26 @@ describe('Hangman Game Utilities', () => {
       expect(reconverted.wrongLetters).toEqual([]);
       expect(reconverted.wrongWords).toEqual([]);
     });
+  });
+});
+
+describe('pluraliseWord', () => {
+  it('should pluralise a zero count', () => {
+    const word = 'word';
+    const result = pluraliseWord(word, 0);
+    expect(result).toBe(word + 's');
+  });
+
+  it('should not pluralise a single count', () => {
+    const word = 'word';
+    const result = pluraliseWord(word, 1);
+    expect(result).toBe(word);
+  });
+
+  it('should pluralise a positive number greater than 1', () => {
+    const word = 'word';
+    const result = pluraliseWord(word, 5);
+    expect(result).toBe(word + 's');
   });
 });
 
