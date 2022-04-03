@@ -1,6 +1,6 @@
 {
   "name": "iris-bot",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Discord chatbot",
   "engines": {
     "npm": ">=7.0.0",

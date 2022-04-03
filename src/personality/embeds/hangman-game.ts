@@ -12,7 +12,7 @@ import {
   summaryCommand
 } from '../constants/hangman-game';
 import { DictionaryInfo, GameData } from '../interfaces/hangman-game';
-import { convertMsecToHumanReadable } from '../utilities/hangman-game';
+import { convertMsecToHumanReadable, pluraliseWord } from '../utilities/hangman-game';
 
 export const embedTitle = 'Hangman';
 export const embedColorNormal = '#0080ff';
@@ -41,7 +41,7 @@ export function generateGameEmbed(gameData: GameData, useDefaultColor?: boolean)
   const embed = generateBaseEmbed(useDefaultColor);
   const letterDisplay = `\`${gameData.currentDisplay}\``;
   const countDisplay = `(${gameData.currentDisplay.length} letters)`;
-  const chanceDisplay = `${gameData.livesRemaining} chances left`;
+  const chanceDisplay = `${gameData.livesRemaining} ${pluraliseWord('chances', gameData.livesRemaining)} left`;
   embed.setDescription(`${letterDisplay} ${countDisplay}\n${chanceDisplay}`);
   embed.setThumbnail(`${graphicsRootUrl}${gameData.livesRemaining}${graphicsExtension}`);
 
@@ -77,7 +77,7 @@ export function generateDictionaryEmbed(statsResponse: DictionaryInfo): MessageE
 
 export function generateGameEndMesage(gameData: GameData): MessageOptions {
   const isLoss = gameData.livesRemaining === 0;
-  const content = isLoss ? `You’ve lost - bad luck!` : `Yup, that’s a win - congrats!`;
+  const content = isLoss ? `You’ve lost - bad luck!` : `That’s a win - congrats!`;
 
   const summaryEmbed = generateBaseEmbed(!isLoss);
   summaryEmbed.setDescription(gameData.currentWord);
