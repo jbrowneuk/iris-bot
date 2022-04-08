@@ -94,6 +94,22 @@ describe('Hangman Game Status embed', () => {
     const embed = generateGameEmbed(gameData);
     expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
   });
+
+  it('should pluralise the word chances correctly', () => {
+    const clonedGameData = { ...mockGame };
+
+    clonedGameData.livesRemaining = 0;
+    let embed = generateGameEmbed(clonedGameData);
+    expect(embed.description).toContain('0 chances');
+
+    clonedGameData.livesRemaining = 1;
+    embed = generateGameEmbed(clonedGameData);
+    expect(embed.description).toContain('1 chance');
+
+    clonedGameData.livesRemaining = 2;
+    embed = generateGameEmbed(clonedGameData);
+    expect(embed.description).toContain('2 chances');
+  });
 });
 
 describe('Hangman Game Help embed', () => {
