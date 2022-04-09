@@ -41,7 +41,7 @@ export function generateGameEmbed(gameData: GameData, useDefaultColor?: boolean)
   const embed = generateBaseEmbed(useDefaultColor);
   const letterDisplay = `\`${gameData.currentDisplay}\``;
   const countDisplay = `(${gameData.currentDisplay.length} letters)`;
-  const chanceDisplay = `${gameData.livesRemaining} ${pluraliseWord('chances', gameData.livesRemaining)} left`;
+  const chanceDisplay = `${gameData.livesRemaining} ${pluraliseWord('chance', gameData.livesRemaining)} left`;
   embed.setDescription(`${letterDisplay} ${countDisplay}\n${chanceDisplay}`);
   embed.setThumbnail(`${graphicsRootUrl}${gameData.livesRemaining}${graphicsExtension}`);
 
