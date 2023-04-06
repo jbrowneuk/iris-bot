@@ -7,8 +7,9 @@
     "emitDecoratorMetadata": true,
     "module": "commonjs",
     "strict": true,
-    "noImplicitAny": true,
     "strictNullChecks": false,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
     "outDir": "dist",
     "rootDir": "src"
   },
