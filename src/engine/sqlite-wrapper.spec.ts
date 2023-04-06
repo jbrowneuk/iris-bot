@@ -1,6 +1,5 @@
+import * as sqlite from 'sqlite3';
 import { IMock, It, Mock, Times } from 'typemoq';
-
-import * as sqlite from '@vscode/sqlite3';
 
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
@@ -42,7 +41,7 @@ describe('SQLite wrapper', () => {
     // This test works properly. Disabling for now.
     xit('should connect', done => {
       const mockDbConcretion = (file: string, callback: (err: Error) => void) => {
-        callback(null);
+        callback(new Error());
       };
 
       spyOn(sqlite, 'Database').and.returnValue(mockDbConcretion as any);
@@ -159,7 +158,7 @@ describe('SQLite wrapper', () => {
       mockStatement
         .setup(m => m.all(It.isAny(), It.isAny()))
         .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
-          cb(null, mockRows);
+          cb(new Error(), mockRows);
         });
 
       testObject.dbInstance = mockSqlite.object;
@@ -184,7 +183,7 @@ describe('SQLite wrapper', () => {
       mockStatement
         .setup(m => m.all(It.isAny(), It.isAny()))
         .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
-          cb(null, []);
+          cb(new Error(), []);
         });
 
       testObject.dbInstance = mockSqlite.object;
@@ -215,7 +214,7 @@ describe('SQLite wrapper', () => {
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
           lastQueryObject = params;
-          cb(null);
+          cb(new Error());
         });
 
       testObject.insertRecordsToCollection('anytable', fields).then(() => {
@@ -237,7 +236,7 @@ describe('SQLite wrapper', () => {
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
           expect(tb).toContain(`INSERT INTO ${mockTable}`);
-          cb(null);
+          cb(new Error());
         });
 
       testObject.insertRecordsToCollection(mockTable, fields).then(() => {
@@ -268,7 +267,7 @@ describe('SQLite wrapper', () => {
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
           lastQueryObject = params;
-          cb(null);
+          cb(new Error());
         });
 
       testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
@@ -293,7 +292,7 @@ describe('SQLite wrapper', () => {
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
           lastQueryObject = params;
-          cb(null);
+          cb(new Error());
         });
 
       testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
@@ -319,7 +318,7 @@ describe('SQLite wrapper', () => {
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
         .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
           expect(tb).toContain(`UPDATE ${mockTable}`);
-          cb(null);
+          cb(new Error());
         });
 
       testObject.updateRecordsInCollection(mockTable, fields, where).then(() => {
