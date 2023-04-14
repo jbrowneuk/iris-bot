@@ -1,5 +1,4 @@
 import { MessageActionRow, MessageButton, MessageEmbed, MessageOptions } from 'discord.js';
-import { MessageButtonStyles } from 'discord.js/typings/enums';
 
 import {
   dictionaryCommand,
@@ -28,11 +27,13 @@ function generateBaseEmbed(useDefaultColor = true): MessageEmbed {
 export function generateHelpEmbed(): MessageEmbed {
   const embed = generateBaseEmbed();
   embed.setDescription('Plays a game of hangman using words from web sources.');
-  embed.addField('Game summary', `Use \`${prefix} ${summaryCommand}\` to see a summary of the game.`);
-  embed.addField('Starting a game', `Use \`${prefix} ${startCommand}\` to start a game.`);
-  embed.addField('Making guesses', `Use \`${prefix} ${guessCommand} <your guess>\` to guess a letter or word.`);
-  embed.addField('Viewing stats', `Use \`${prefix} ${statsCommand}\` to see the current server stats.`);
-  embed.addField('Dictionary', `Use \`${prefix} ${dictionaryCommand}\` to see the current dictionary information.`);
+  embed.addFields([
+    { name: 'Game summary', value: `Use \`${prefix} ${summaryCommand}\` to see a summary of the game.` },
+    { name: 'Starting a game', value: `Use \`${prefix} ${startCommand}\` to start a game.` },
+    { name: 'Making guesses', value: `Use \`${prefix} ${guessCommand} <your guess>\` to guess a letter or word.` },
+    { name: 'Viewing stats', value: `Use \`${prefix} ${statsCommand}\` to see the current server stats.` },
+    { name: 'Dictionary', value: `Use \`${prefix} ${dictionaryCommand}\` to see the current dictionary information.` }
+  ]);
 
   return embed;
 }
@@ -47,7 +48,7 @@ export function generateGameEmbed(gameData: GameData, useDefaultColor?: boolean)
 
   const lettersSummary = gameData.wrongLetters.length > 0 ? gameData.wrongLetters.join() : '*none*';
   const wordsSummary = gameData.wrongWords.length > 0 ? gameData.wrongWords.join() : '*none*';
-  embed.addField('Wrong guesses', `Letters: ${lettersSummary}\nWords: ${wordsSummary}`);
+  embed.addFields([{ name: 'Wrong guesses', value: `Letters: ${lettersSummary}\nWords: ${wordsSummary}` }]);
 
   return embed;
 }
@@ -56,9 +57,11 @@ export function generateStatsEmbed(gameData: GameData): MessageEmbed {
   const embed = generateBaseEmbed();
   embed.setDescription('Statistics for this Discord server');
 
-  embed.addField('Streak', gameData.currentStreak.toString(), true);
-  embed.addField('Wins', gameData.totalWins.toString(), true);
-  embed.addField('Losses', gameData.totalLosses.toString(), true);
+  embed.addFields([
+    { name: 'Streak', value: gameData.currentStreak.toString(), inline: true },
+    { name: 'Wins', value: gameData.totalWins.toString(), inline: true },
+    { name: 'Losses', value: gameData.totalLosses.toString(), inline: true }
+  ]);
 
   return embed;
 }
@@ -85,12 +88,14 @@ export function generateGameEndMesage(gameData: GameData): MessageOptions {
 
   const timeTaken = Date.now() - gameData.timeStarted;
 
-  summaryEmbed.addField('Time taken', convertMsecToHumanReadable(timeTaken), false);
-  summaryEmbed.addField('Wins', gameData.totalWins.toString(), true);
-  summaryEmbed.addField('Losses', gameData.totalLosses.toString(), true);
+  summaryEmbed.addFields([
+    { name: 'Time taken', value: convertMsecToHumanReadable(timeTaken), inline: false },
+    { name: 'Wins', value: gameData.totalWins.toString(), inline: true },
+    { name: 'Losses', value: gameData.totalLosses.toString(), inline: true }
+  ]);
 
   const definitionButton = new MessageButton({
-    style: MessageButtonStyles.LINK,
+    style: 'LINK',
     url: `https://dictionary.cambridge.org/dictionary/english/${gameData.currentWord.toLowerCase()}`,
     label: 'Word definition'
   });

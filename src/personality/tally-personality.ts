@@ -73,7 +73,7 @@ export class TallyPersonality implements Personality {
         });
       })
       .catch(err => {
-        console.error(err);
+        this.dependencies.logger.error(err);
         return 'Not right now';
       });
   }
@@ -95,7 +95,7 @@ export class TallyPersonality implements Personality {
         });
       })
       .catch(err => {
-        console.error(err);
+        this.dependencies.logger.error(err);
         return 'Can’t do that right now';
       });
   }

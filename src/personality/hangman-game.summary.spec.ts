@@ -45,7 +45,6 @@ describe('Hangman Game - summary feature behaviour', () => {
       .setup(m => m.getRecordsFromCollection<SerialisableGameData>(It.isValue(sqlCollection), It.isAny()))
       .returns(() => Promise.resolve([runningGame]));
 
-    afterState = null;
     mockDatabase
       .setup(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()))
       .callback((_: string, fields: KeyedObject) => {
@@ -67,7 +66,7 @@ describe('Hangman Game - summary feature behaviour', () => {
     });
 
     it('should generate embed using appropriate embed generator', done => {
-      const embedGenSpy = spyOn(embeds, 'generateGameEmbed').and.callThrough();
+      const embedGenSpy = jest.spyOn(embeds, 'generateGameEmbed');
 
       personality.onMessage(mockMessage.object).then(() => {
         expect(embedGenSpy).toHaveBeenCalled();
@@ -78,7 +77,7 @@ describe('Hangman Game - summary feature behaviour', () => {
 
   describe('Statistics summary and behaviour', () => {
     it('should call embed generator', done => {
-      const embedGenSpy = spyOn(embeds, 'generateStatsEmbed');
+      const embedGenSpy = jest.spyOn(embeds, 'generateStatsEmbed');
 
       mockMessage.setup(s => s.content).returns(() => `${prefix} ${statsCommand}`);
 

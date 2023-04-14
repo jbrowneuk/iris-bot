@@ -1,16 +1,33 @@
 import { Guild, Message, MessageEmbed, TextChannel } from 'discord.js';
 import * as fs from 'fs';
-import { StatusResponse } from 'minecraft-server-util/dist/model/StatusResponse';
 import { IMock, It, Mock } from 'typemoq';
 
 import { Client } from '../interfaces/client';
+import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Engine } from '../interfaces/engine';
 import { Logger } from '../interfaces/logger';
+import { ResponseGenerator } from '../interfaces/response-generator';
+import { Settings } from '../interfaces/settings';
 import { announceCommand, defaultDescription, noAssociationCopy, setCommand, statusCommand } from './constants/mc-server';
 import { ServerInformation } from './interfaces/mc-server';
 import { McServer } from './mc-server';
 
-import util = require('minecraft-server-util');
+// This has to be const util = require as it breaks the build if not
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const util = require('minecraft-server-util');
+
+jest.mock('minecraft-server-util', () => ({
+  status: () => {}
+}));
+
+jest.mock('fs', () => ({
+  readFile: jest.fn().mockImplementation((path, opts, callback) => callback(null, null)),
+  writeFile: jest.fn().mockImplementation((path, data, opts, callback) => callback())
+}));
+
+type StatusResponse = { [key: string]: any } | null;
+
 class TestableMcServer extends McServer {
   public setMockServer(discordId: string, info: ServerInformation): void {
     this.servers.set(discordId, info);
@@ -25,7 +42,15 @@ class TestableMcServer extends McServer {
   }
 
   public hasTimer(): boolean {
-    return this.timerInterval && this.timerInterval > 0;
+    if (!this.timerInterval) {
+      return false;
+    }
+
+    if (typeof this.timerInterval === 'number') {
+      return this.timerInterval > 0;
+    }
+
+    return this.timerInterval.hasRef();
   }
 
   public invokeGetServerStatus() {
@@ -73,11 +98,11 @@ describe('Minecraft server utilities', () => {
     const mockLogger = Mock.ofType<Logger>();
     mockDependencies = {
       client: mockClient.object,
-      database: null,
-      engine: null,
+      database: Mock.ofType<Database>().object,
+      engine: Mock.ofType<Engine>().object,
       logger: mockLogger.object,
-      responses: null,
-      settings: null
+      responses: Mock.ofType<ResponseGenerator>().object,
+      settings: Mock.ofType<Settings>().object
     };
 
     personality = new TestableMcServer(mockDependencies);
@@ -93,7 +118,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -111,7 +136,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -128,7 +153,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(null));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -145,7 +170,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -162,7 +187,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -181,7 +206,7 @@ describe('Minecraft server utilities', () => {
       mockMessage.setup(m => m.content).returns(() => statusCommand);
       mockMessage.setup(m => m.guild).returns(() => mockGuild.object);
 
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(infoClone));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(infoClone));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(response).toBeTruthy();
@@ -195,7 +220,7 @@ describe('Minecraft server utilities', () => {
   describe(`${setCommand} messages`, () => {
     beforeEach(() => {
       // Make sure this isn't persisted to file
-      spyOn(fs, 'writeFile');
+      jest.spyOn(fs, 'writeFile').mockImplementation(() => {});
     });
 
     it('should return embed with usage instructions if no param provided', done => {
@@ -225,8 +250,8 @@ describe('Minecraft server utilities', () => {
         expect(embed.fields[0].value).toContain(MOCK_GUILD_NAME);
 
         const servers = personality.getServers();
-        expect(servers.has(MOCK_GUILD_ID)).toBeTrue();
-        expect(servers.get(MOCK_GUILD_ID).url).toBe(mockUrl);
+        expect(servers.has(MOCK_GUILD_ID)).toBe(true);
+        expect(servers.get(MOCK_GUILD_ID)?.url).toBe(mockUrl);
         done();
       });
     });
@@ -235,7 +260,7 @@ describe('Minecraft server utilities', () => {
   describe(`${announceCommand} messages`, () => {
     beforeEach(() => {
       // Make sure this isn't persisted to file
-      spyOn(fs, 'writeFile');
+      jest.spyOn(fs, 'writeFile').mockImplementation(() => {});
     });
 
     it('should return embed with error if no server associated', done => {
@@ -267,7 +292,7 @@ describe('Minecraft server utilities', () => {
 
         const storedServers = personality.getServers();
         const currentGuild = storedServers.get(MOCK_GUILD_ID);
-        expect(currentGuild.channelId).toBe(MOCK_CHANNEL_ID);
+        expect(currentGuild?.channelId).toBe(MOCK_CHANNEL_ID);
         done();
       });
     });
@@ -275,14 +300,14 @@ describe('Minecraft server utilities', () => {
 
   describe('Automatic status update', () => {
     it('should set update timer on initialise', () => {
-      spyOn(fs, 'readFile'); // block settings loading
+      jest.spyOn(fs, 'readFile').mockImplementation(() => {}); // block settings loading
 
       personality.initialise();
       expect(personality.hasTimer()).toBe(true);
     });
 
     it('should fetch server status for known servers', done => {
-      const statusUpdateHandler = spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      const statusUpdateHandler = jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
 
       personality.setMockServer(MOCK_GUILD_ID, mockServerInfo);
 
@@ -295,7 +320,7 @@ describe('Minecraft server utilities', () => {
 
     it('should post status to channel if server comes online', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
       mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
@@ -313,7 +338,7 @@ describe('Minecraft server utilities', () => {
 
     it('should post status to channel if server goes offline', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
       mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
@@ -331,7 +356,7 @@ describe('Minecraft server utilities', () => {
 
     it('should post offline status to channel if server becomes unreachable', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.reject(null));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.reject(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
       mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
@@ -349,7 +374,7 @@ describe('Minecraft server utilities', () => {
 
     it('should not post status to channel if server is online and status does not change', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(MOCK_RUNNING_STATUS));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
       mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
@@ -366,7 +391,7 @@ describe('Minecraft server utilities', () => {
 
     it('should not post status to channel if server is offline and status does not change', done => {
       let embed: MessageEmbed;
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(null));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(null));
       mockClient.setup(m => m.findChannelById(It.isAny())).returns(() => mockChannel.object);
       mockChannel.setup(m => m.send(It.isAny())).callback(e => (embed = e.embeds[0]));
 
@@ -393,7 +418,7 @@ describe('Minecraft server utilities', () => {
     }
 
     it('should provide valid status if server is reporting two part version', done => {
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('1.17')));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion('1.17')));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
@@ -402,7 +427,7 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should provide valid status if server is reporting three part version', done => {
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('1.16.5')));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion('1.16.5')));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
@@ -411,7 +436,7 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should provide valid status if server is reporting three part version with custom software', done => {
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('Paper 1.16.2')));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion('Paper 1.16.2')));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response).toBeTruthy();
@@ -420,7 +445,7 @@ describe('Minecraft server utilities', () => {
     });
 
     it('should provide null status if server is reporting Exaroton-style sleeping text', done => {
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion('§9◉ Sleeping')));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion('§9◉ Sleeping')));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response).toBeNull();
@@ -430,7 +455,7 @@ describe('Minecraft server utilities', () => {
 
     it('should extract correct version if server is reporting three part version', done => {
       const semVer = '1.16.2';
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion(semVer)));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion(semVer)));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response.version).toBe(semVer);
@@ -440,7 +465,7 @@ describe('Minecraft server utilities', () => {
 
     it('should extract correct version if server is reporting three part version with custom software', done => {
       const semVer = '1.16.2';
-      spyOn(util, 'status').and.callFake(() => Promise.resolve<StatusResponse>(mapVersion(`Paper ${semVer}`)));
+      jest.spyOn(util, 'status').mockImplementation(() => Promise.resolve<StatusResponse>(mapVersion(`Paper ${semVer}`)));
 
       personality.invokeGetServerStatus().then(response => {
         expect(response.version).toBe(semVer);
@@ -450,32 +475,32 @@ describe('Minecraft server utilities', () => {
   });
 
   describe('persisting settings', () => {
-    let writeSpy: jasmine.Spy;
+    let writeSpy: jest.SpyInstance;
 
     beforeEach(() => {
       // Make sure this isn't persisted to file
-      writeSpy = spyOn(fs, 'writeFile');
+      writeSpy = jest.spyOn(fs, 'writeFile');
     });
 
     it('should load settings on initialise', () => {
       const mockUrl = 'mock-url';
       const mockChannelId = 'mock-id';
-      const fakeReadFile = (path: string, enc: string, cb: (err: Error, data: string) => void) => {
+      const fakeReadFile = (path: string, enc: string, cb: (err: Error | null, data: string) => void) => {
         expect(path).toBeTruthy();
         expect(enc).toBeTruthy();
         cb(null, `{ "${MOCK_GUILD_ID}": { "url": "${mockUrl}", "channelId": "${mockChannelId}" } }`);
       };
 
-      spyOn(fs, 'readFile').and.callFake(fakeReadFile as any);
+      jest.spyOn(fs, 'readFile').mockImplementation(fakeReadFile as any);
 
       personality.initialise();
 
       const servers = personality.getServers();
       const serverInfo = servers.get(MOCK_GUILD_ID);
       expect(serverInfo).toBeTruthy();
-      expect(serverInfo.url).toBe(mockUrl);
-      expect(serverInfo.channelId).toBe(mockChannelId);
-      expect(serverInfo.lastKnownOnline).toBe(false);
+      expect(serverInfo?.url).toBe(mockUrl);
+      expect(serverInfo?.channelId).toBe(mockChannelId);
+      expect(serverInfo?.lastKnownOnline).toBe(false);
     });
 
     it(`should persist settings on ${setCommand}`, done => {

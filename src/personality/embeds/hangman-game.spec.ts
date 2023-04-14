@@ -92,7 +92,7 @@ describe('Hangman Game Status embed', () => {
   it('should have thumbnail image', () => {
     const gameData: GameData = mockGame;
     const embed = generateGameEmbed(gameData);
-    expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
+    expect(embed.thumbnail?.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
   });
 
   it('should pluralise the word chances correctly', () => {
@@ -124,7 +124,7 @@ describe('Hangman Game Help embed', () => {
     const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('SUMMARY'));
 
     expect(summaryField).toBeDefined();
-    expect(summaryField.value).toContain(prefix);
+    expect(summaryField?.value).toContain(prefix);
   });
 
   it('should contain game start instructions', () => {
@@ -132,7 +132,7 @@ describe('Hangman Game Help embed', () => {
     const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('START'));
 
     expect(summaryField).toBeDefined();
-    expect(summaryField.value).toContain(startCommand);
+    expect(summaryField?.value).toContain(startCommand);
   });
 
   it('should contain game play instructions', () => {
@@ -140,7 +140,7 @@ describe('Hangman Game Help embed', () => {
     const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('GUESS'));
 
     expect(summaryField).toBeDefined();
-    expect(summaryField.value).toContain(guessCommand);
+    expect(summaryField?.value).toContain(guessCommand);
   });
 
   it('should contain instructions to view statistics', () => {
@@ -148,7 +148,7 @@ describe('Hangman Game Help embed', () => {
     const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('STATS'));
 
     expect(summaryField).toBeDefined();
-    expect(summaryField.value).toContain(statsCommand);
+    expect(summaryField?.value).toContain(statsCommand);
   });
 
   it('should contain instructions to view dictionary information', () => {
@@ -156,7 +156,7 @@ describe('Hangman Game Help embed', () => {
     const summaryField = helpEmbed.fields.find(f => f.name.toUpperCase().includes('DICTIONARY'));
 
     expect(summaryField).toBeDefined();
-    expect(summaryField.value).toContain(dictionaryCommand);
+    expect(summaryField?.value).toContain(dictionaryCommand);
   });
 });
 
@@ -172,24 +172,24 @@ describe('Hangman Game Summary embed', () => {
     const embed = generateStatsEmbed(mockGame);
     const winField = embed.fields.find(f => f.name.toUpperCase().includes('WINS'));
 
-    expect(winField.value).toBe('' + mockStats.totalWins);
-    expect(winField.inline).toBeTrue();
+    expect(winField?.value).toBe('' + mockStats.totalWins);
+    expect(winField?.inline).toBe(true);
   });
 
   it('should display total wins', () => {
     const embed = generateStatsEmbed(mockGame);
     const lossField = embed.fields.find(f => f.name.toUpperCase().includes('LOSSES'));
 
-    expect(lossField.value).toBe('' + mockStats.totalLosses);
-    expect(lossField.inline).toBeTrue();
+    expect(lossField?.value).toBe('' + mockStats.totalLosses);
+    expect(lossField?.inline).toBe(true);
   });
 
   it('should display current win streak', () => {
     const embed = generateStatsEmbed(mockGame);
     const streakField = embed.fields.find(f => f.name.toUpperCase().includes('STREAK'));
 
-    expect(streakField.value).toBe('' + mockStats.currentStreak);
-    expect(streakField.inline).toBeTrue();
+    expect(streakField?.value).toBe('' + mockStats.currentStreak);
+    expect(streakField?.inline).toBe(true);
   });
 });
 
@@ -241,37 +241,37 @@ describe('Hangman Game Won/Lost state message', () => {
     it('should have single embed message in embeds', () => {
       const message = generateGameEndMesage(winGameData);
       expect(message.embeds).toBeTruthy();
-      expect(message.embeds.length).toBe(1);
+      expect(message.embeds?.length).toBe(1);
     });
 
     it('should have word in embed description', () => {
       const message = generateGameEndMesage(winGameData);
-      const stateEmbed = message.embeds[0];
+      const stateEmbed = (message.embeds || [])[0];
       expect(stateEmbed.description).toBe(winGameData.currentWord);
     });
 
     it('should have fields for game time, wins and losses in embed', () => {
       const message = generateGameEndMesage(winGameData);
-      const stateEmbed = message.embeds[0];
-      expect(stateEmbed.fields.length).toBe(3);
+      const stateEmbed = (message.embeds || [])[0];
+      expect(stateEmbed.fields?.length).toBe(3);
 
-      const gameTimeField = stateEmbed.fields.find(f => f.name === 'Time taken');
+      const gameTimeField = stateEmbed.fields?.find(f => f.name === 'Time taken');
       expect(gameTimeField).toBeTruthy();
 
-      const winsField = stateEmbed.fields.find(f => f.name === 'Wins');
+      const winsField = stateEmbed.fields?.find(f => f.name === 'Wins');
       expect(winsField).toBeTruthy();
-      expect(winsField.value).toBe(`${mockStats.totalWins}`);
+      expect(winsField?.value).toBe(`${mockStats.totalWins}`);
 
-      const lossesField = stateEmbed.fields.find(f => f.name === 'Losses');
+      const lossesField = stateEmbed.fields?.find(f => f.name === 'Losses');
       expect(lossesField).toBeTruthy();
-      expect(lossesField.value).toBe(`${mockStats.totalLosses}`);
+      expect(lossesField?.value).toBe(`${mockStats.totalLosses}`);
     });
 
     it('should have a word definition button', () => {
       const message = generateGameEndMesage(winGameData);
-      expect(message.components.length).toBe(1);
+      expect(message.components?.length).toBe(1);
 
-      const button = message.components[0].components[0] as MessageButton;
+      const button = (message.components || [])[0].components[0] as MessageButton;
       expect(button.style).toBe('LINK');
       expect(button.label).toBe('Word definition');
       expect(button.url).toContain(winGameData.currentWord.toLowerCase());
@@ -279,13 +279,13 @@ describe('Hangman Game Won/Lost state message', () => {
 
     it('should have correct embed colour', () => {
       const message = generateGameEndMesage(winGameData);
-      expect((message.embeds[0] as MessageEmbed).hexColor).toBe(embedColorNormal);
+      expect(((message.embeds || [])[0] as MessageEmbed).hexColor).toBe(embedColorNormal);
     });
 
     it('should have thumbnail image', () => {
       const gameData: GameData = mockGame;
       const embed = generateGameEmbed(gameData);
-      expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
+      expect(embed.thumbnail?.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
     });
   });
 
@@ -304,37 +304,37 @@ describe('Hangman Game Won/Lost state message', () => {
     it('should have single embed message in embeds', () => {
       const message = generateGameEndMesage(loseGameData);
       expect(message.embeds).toBeTruthy();
-      expect(message.embeds.length).toBe(1);
+      expect(message.embeds?.length).toBe(1);
     });
 
     it('should have word in embed description', () => {
       const message = generateGameEndMesage(loseGameData);
-      const stateEmbed = message.embeds[0];
+      const stateEmbed = (message.embeds || [])[0];
       expect(stateEmbed.description).toBe(loseGameData.currentWord);
     });
 
     it('should have fields for game time, wins and losses in embed', () => {
       const message = generateGameEndMesage(loseGameData);
-      const stateEmbed = message.embeds[0];
-      expect(stateEmbed.fields.length).toBe(3);
+      const stateEmbed = (message.embeds || [])[0];
+      expect(stateEmbed.fields?.length).toBe(3);
 
-      const gameTimeField = stateEmbed.fields.find(f => f.name === 'Time taken');
+      const gameTimeField = stateEmbed.fields?.find(f => f.name === 'Time taken');
       expect(gameTimeField).toBeTruthy();
 
-      const winsField = stateEmbed.fields.find(f => f.name === 'Wins');
+      const winsField = stateEmbed.fields?.find(f => f.name === 'Wins');
       expect(winsField).toBeTruthy();
-      expect(winsField.value).toBe(`${mockStats.totalWins}`);
+      expect(winsField?.value).toBe(`${mockStats.totalWins}`);
 
-      const lossesField = stateEmbed.fields.find(f => f.name === 'Losses');
+      const lossesField = stateEmbed.fields?.find(f => f.name === 'Losses');
       expect(lossesField).toBeTruthy();
-      expect(lossesField.value).toBe(`${mockStats.totalLosses}`);
+      expect(lossesField?.value).toBe(`${mockStats.totalLosses}`);
     });
 
     it('should have a word definition button', () => {
       const message = generateGameEndMesage(loseGameData);
-      expect(message.components.length).toBe(1);
+      expect(message.components?.length).toBe(1);
 
-      const button = message.components[0].components[0] as MessageButton;
+      const button = (message.components || [])[0].components[0] as MessageButton;
       expect(button.style).toBe('LINK');
       expect(button.label).toBe('Word definition');
       expect(button.url).toContain(loseGameData.currentWord.toLowerCase());
@@ -342,13 +342,13 @@ describe('Hangman Game Won/Lost state message', () => {
 
     it('should have correct embed colour', () => {
       const message = generateGameEndMesage(loseGameData);
-      expect((message.embeds[0] as MessageEmbed).hexColor).toBe(embedColorError);
+      expect(((message.embeds || [])[0] as MessageEmbed).hexColor).toBe(embedColorError);
     });
 
     it('should have thumbnail image', () => {
       const gameData: GameData = mockGame;
       const embed = generateGameEmbed(gameData);
-      expect(embed.thumbnail.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
+      expect(embed.thumbnail?.url).toBe(`${graphicsRootUrl}${mockGame.livesRemaining}${graphicsExtension}`);
     });
   });
 });

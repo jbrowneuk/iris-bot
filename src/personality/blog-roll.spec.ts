@@ -1,15 +1,30 @@
 import * as axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 import { Message, MessageOptions, TextChannel } from 'discord.js';
-import { readFileSync, unlink } from 'fs';
-import { StatusCodes } from 'http-status-codes';
+import * as fs from 'fs';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { PostData, PostWrapper } from '../interfaces/blog-roll';
 import { Client } from '../interfaces/client';
+import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Engine } from '../interfaces/engine';
 import { Logger } from '../interfaces/logger';
-import { BlogRoll } from './blog-roll';
+import { ResponseGenerator } from '../interfaces/response-generator';
+import { Settings } from '../interfaces/settings';
+import { BlogRoll, blogRollApiPath, blogRollSiteRoot } from './blog-roll';
+
+jest.mock('fs', () => ({
+  readFile: (path, opts, callback) => {
+    if (path === 'init-test') {
+      return callback(null, '{ "channelId": "1", "lastPostId": 200 }');
+    }
+
+    callback(null, null);
+  },
+  writeFile: jest.fn().mockImplementation((path, data, opts, callback) => callback())
+}));
 
 const testOutputFile = 'blog-roll.test.json';
 
@@ -42,18 +57,20 @@ class TestableBlogRoll extends BlogRoll {
     super(dependencies, pathOverride);
   }
 
-  public invokeFetch(): void {
-    this.fetchJournal();
+  public invokeFetch() {
+    return this.fetchJournal();
   }
 }
-
-type MockResponseType = Partial<axios.AxiosResponse<PostWrapper>>;
 
 describe('Blog roll', () => {
   let mockClient: IMock<Client>;
   let mockLogger: IMock<Logger>;
   let mockDependencies: DependencyContainer;
   let personality: TestableBlogRoll;
+  let mock = new MockAdapter(axios as any);
+
+  beforeAll(() => jest.useFakeTimers());
+  afterAll(() => jest.useRealTimers());
 
   beforeEach(() => {
     mockClient = Mock.ofType<Client>();
@@ -61,29 +78,21 @@ describe('Blog roll', () => {
 
     mockDependencies = {
       client: mockClient.object,
-      database: null,
-      engine: null,
+      database: Mock.ofType<Database>().object,
+      engine: Mock.ofType<Engine>().object,
       logger: mockLogger.object,
-      responses: null,
-      settings: null
+      responses: Mock.ofType<ResponseGenerator>().object,
+      settings: Mock.ofType<Settings>().object
     };
   });
 
-  afterEach(done => {
+  afterEach(() => {
     personality.destroy();
-
-    // Clean up test output file
-    unlink(testOutputFile, err => {
-      if (err && err.code !== 'ENOENT') {
-        fail(err);
-      }
-
-      done();
-    });
+    mock.reset();
   });
 
   describe('Initialisation', () => {
-    const testInputFile = './spec/mocks/blog-roll.mock.json';
+    const testInputFile = 'init-test';
 
     beforeEach(() => {
       personality = new TestableBlogRoll(mockDependencies, testInputFile);
@@ -95,11 +104,14 @@ describe('Blog roll', () => {
 
       personality.initialise();
 
+      // Parsing happens in a callback, so need setTimeout and advancing of timers
       setTimeout(() => {
         expect(personality.lastPost).not.toBe(0);
         expect(personality.channel).toBeTruthy();
         done();
-      }, 200);
+      });
+
+      jest.advanceTimersByTime(10);
     });
 
     it('should set interval timer on initialise', done => {
@@ -107,10 +119,13 @@ describe('Blog roll', () => {
 
       personality.initialise();
 
+      // Parsing happens in a callback, so need setTimeout and advancing of timers
       setTimeout(() => {
-        expect(personality.updateInterval).not.toBe(0);
+        expect(personality.updateInterval).toBeTruthy();
         done();
       });
+
+      jest.advanceTimersByTime(10);
     });
   });
 
@@ -131,57 +146,50 @@ describe('Blog roll', () => {
   });
 
   describe('onMessage', () => {
+    const channelId = 'ABC1234567890';
+
+    let channel: IMock<TextChannel>;
+    let message: IMock<Message>;
+
     beforeEach(() => {
       personality = new TestableBlogRoll(mockDependencies);
-    });
 
-    it('should cache channel when set channel command invoked', done => {
-      const channelId = 'ABC1234567890';
-
-      const channel = Mock.ofType<TextChannel>();
+      channel = Mock.ofType();
       channel.setup(c => c.id).returns(() => channelId);
 
-      const message = Mock.ofType<Message>();
-      message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
+      message = Mock.ofType();
       message.setup(m => m.channel).returns(() => channel.object);
-
-      const saveSpy = spyOn(personality as any, 'saveSettings');
-
-      personality.onMessage(message.object).then(() => {
-        expect(personality.channel).toBe(channelId);
-        expect(saveSpy).toHaveBeenCalled();
-        done();
-      });
     });
 
-    it('should write config when set channel command invoked', done => {
-      const channelId = 'ABC1234567890';
-
-      const channel = Mock.ofType<TextChannel>();
-      channel.setup(c => c.id).returns(() => channelId);
-
-      const message = Mock.ofType<Message>();
+    it('should cache channel when set channel command invoked', () => {
+      const saveSpy = jest.spyOn(personality as any, 'saveSettings').mockImplementation(() => {});
       message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
-      message.setup(m => m.channel).returns(() => channel.object);
 
       personality.onMessage(message.object);
 
-      setTimeout(() => {
-        const fileContents = readFileSync(testOutputFile, 'utf-8');
-        const parsed = JSON.parse(fileContents);
-        expect(parsed.channelId).toBe(channelId);
-        done();
-      }, 200);
+      expect(personality.channel).toBe(channelId);
+      expect(saveSpy).toHaveBeenCalled();
+
+      saveSpy.mockRestore();
+    });
+
+    it('should write config when set channel command invoked', () => {
+      const writeSpy = jest.spyOn(fs, 'writeFile');
+
+      message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
+
+      personality.onMessage(message.object);
+
+      expect(writeSpy).toHaveBeenCalled();
+      expect(writeSpy.mock.calls[0][1]).toContain(`"channelId":"${channelId}"`);
     });
   });
 
   describe('Fetch Journal data', () => {
-    let fetchSpy: jasmine.Spy;
     let mockChannel: IMock<TextChannel>;
     let messageData: string | MessageOptions;
 
     beforeEach(() => {
-      fetchSpy = spyOn(axios.default, 'get');
       personality = new TestableBlogRoll(mockDependencies);
 
       mockChannel = Mock.ofType<TextChannel>();
@@ -191,142 +199,119 @@ describe('Blog roll', () => {
     });
 
     it('should fetch journal data', () => {
-      const mockResponse: MockResponseType = {
-        data: { posts: [] },
-        status: StatusCodes.OK
-      };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+      const mockResponse: PostWrapper = { posts: [] };
+
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
       personality.invokeFetch();
 
-      expect(fetchSpy).toHaveBeenCalled();
-      expect(fetchSpy.calls.first().args[0]).toContain('api/?posts');
+      expect(getSpy).toHaveBeenCalled();
+      getSpy.mockRestore();
     });
 
-    it('should not send message if invalid response data', done => {
+    it('should not send message if invalid response data', () => {
       const mockResponse = {
-        data: {},
-        status: StatusCodes.OK
+        anything: [1, 2, 3, 4]
       };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
       personality.invokeFetch();
 
-      setTimeout(() => {
-        expect().nothing();
-        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny()), Times.never());
-        done();
-      });
+      mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+      mockChannel.verify(c => c.send(It.isAny()), Times.never());
+
+      getSpy.mockRestore();
     });
 
-    it('should not send message if response is not OK', done => {
-      const mockResponse: MockResponseType = {
-        data: { posts: [] },
-        status: StatusCodes.NOT_FOUND
-      };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+    it('should not send message if response is not OK', () => {
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.NotFound);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
       personality.invokeFetch();
 
-      setTimeout(() => {
-        expect().nothing();
-        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny()), Times.never());
-        done();
-      });
+      mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+      mockChannel.verify(c => c.send(It.isAny()), Times.never());
+
+      getSpy.mockRestore();
     });
 
-    it('should not send message if no posts', done => {
-      const mockResponse: MockResponseType = {
-        data: { posts: [] },
-        status: StatusCodes.OK
-      };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+    it('should not send message if no posts', () => {
+      const mockResponse: PostWrapper = { posts: [] };
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
       personality.invokeFetch();
 
-      setTimeout(() => {
-        expect().nothing();
-        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny()), Times.never());
-        done();
-      });
+      mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+      mockChannel.verify(c => c.send(It.isAny()), Times.never());
+
+      getSpy.mockRestore();
     });
 
-    it('should not send message if first post ID is equal to cached value', done => {
+    it('should not send message if first post ID is equal to cached value', () => {
       const postId = 123;
       personality.lastPost = postId;
 
-      const mockResponse: MockResponseType = {
-        data: { posts: [{ postId } as PostData] },
-        status: StatusCodes.OK
-      };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+      const mockResponse: PostWrapper = { posts: [{ postId } as PostData] };
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
       personality.invokeFetch();
 
-      setTimeout(() => {
-        expect().nothing();
-        mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
-        mockChannel.verify(c => c.send(It.isAny()), Times.never());
-        done();
-      });
+      mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
+      mockChannel.verify(c => c.send(It.isAny()), Times.never());
+
+      getSpy.mockRestore();
     });
 
     it('should not send message if new posts retrieved and no channel specified', done => {
-      const mockResponse: MockResponseType = {
-        data: {
-          posts: [
-            {
-              content: 'test',
-              date: 1234566,
-              postId: 123,
-              slug: 'test',
-              tags: [],
-              title: 'test'
-            }
-          ]
-        },
-        status: StatusCodes.OK
+      const mockResponse: PostWrapper = {
+        posts: [
+          {
+            content: 'test',
+            date: 1234566,
+            postId: 123,
+            slug: 'test',
+            tags: [],
+            title: 'test'
+          }
+        ]
       };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
 
-      personality.invokeFetch();
-
-      setTimeout(() => {
-        expect().nothing();
+      personality.invokeFetch().then(() => {
         mockClient.verify(c => c.findChannelById(It.isAny()), Times.never());
         mockChannel.verify(c => c.send(It.isAny()), Times.never());
+
+        getSpy.mockRestore();
+
         done();
       });
     });
 
     it('should send message if new posts retrieved and channel specified', done => {
       const channelId = 'abc123';
-      const mockResponse: MockResponseType = {
-        data: {
-          posts: [
-            {
-              content: 'test',
-              date: 1234566,
-              postId: 123,
-              slug: 'test',
-              tags: [],
-              title: 'test'
-            }
-          ]
-        },
-        status: StatusCodes.OK
+      const mockResponse: PostWrapper = {
+        posts: [
+          {
+            content: 'test',
+            date: 1234566,
+            postId: 123,
+            slug: 'test',
+            tags: [],
+            title: 'test'
+          }
+        ]
       };
-      fetchSpy.and.returnValue(Promise.resolve(mockResponse));
+      mock.onGet(blogRollSiteRoot + blogRollApiPath).reply(axios.HttpStatusCode.Ok, mockResponse);
+      const getSpy = jest.spyOn(axios.default, 'get');
       personality.lastPost = 0;
       personality.channel = channelId;
 
-      personality.invokeFetch();
-
-      setTimeout(() => {
-        expect().nothing();
+      personality.invokeFetch().then(() => {
         mockClient.verify(c => c.findChannelById(It.isValue(channelId)), Times.once());
         mockChannel.verify(c => c.send(It.isAny()), Times.once());
 
@@ -338,6 +323,8 @@ describe('Blog roll', () => {
         const typed = messageData as MessageOptions;
         expect(typed.content).toContain('New post');
         expect(typed.embeds).toBeTruthy();
+
+        getSpy.mockRestore();
         done();
       });
     });

@@ -1,9 +1,13 @@
+import { Message } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import { Client } from '../interfaces/client';
+import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Engine } from '../interfaces/engine';
 import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 import { ResponseGenerator } from '../interfaces/response-generator';
+import { Settings } from '../interfaces/settings';
 import * as utils from '../utils';
 import { BotActivity, MoodControl, moodSummaryCommands } from './mood-control';
 
@@ -40,7 +44,7 @@ class TestableMoodControl extends MoodControl {
     this.activity = {
       name: 'mock',
       active: false,
-      type: null,
+      type: 'PLAYING',
       moodlet: Mood.Positive,
       size: MoodletSize.Medium,
       minMinutes: 1,
@@ -73,11 +77,11 @@ describe('Mood control', () => {
 
     mockDependencies = {
       client: mockClient.object,
-      database: null,
-      engine: null,
+      database: Mock.ofType<Database>().object,
+      engine: Mock.ofType<Engine>().object,
       logger: console,
       responses: mockResponses.object,
-      settings: null
+      settings: Mock.ofType<Settings>().object
     };
 
     moodControl = new TestableMoodControl(mockDependencies, mockMoodEngine.object);
@@ -89,9 +93,9 @@ describe('Mood control', () => {
 
   describe('Initialisation', () => {
     it('should initialise interval timer', () => {
-      expect(moodControl.hasTimer).toBeFalse();
+      expect(moodControl.hasTimer).toBe(false);
       moodControl.initialise();
-      expect(moodControl.hasTimer).toBeTrue();
+      expect(moodControl.hasTimer).toBe(true);
     });
   });
 
@@ -107,7 +111,7 @@ describe('Mood control', () => {
   describe('onAddressed interaction', () => {
     moodSummaryCommands.forEach(command => {
       it(`should respond to “${command}” when addressed`, done => {
-        moodControl.onAddressed(null, command).then(response => {
+        moodControl.onAddressed(Mock.ofType<Message>().object, command).then(response => {
           expect(response).toBe(mockResponse);
           done();
         });
@@ -115,7 +119,7 @@ describe('Mood control', () => {
     });
 
     it('should return promise resolving to null if no interaction', done => {
-      moodControl.onAddressed(null, 'nothing').then(response => {
+      moodControl.onAddressed(Mock.ofType<Message>().object, 'nothing').then(response => {
         expect(response).toBeNull();
         done();
       });
@@ -124,10 +128,10 @@ describe('Mood control', () => {
 
   describe('beginActivity', () => {
     beforeEach(() => {
-      spyOn(utils, 'randomFloat').and.callFake(min => min);
-      spyOn(utils, 'randomInteger').and.callFake(min => min);
+      jest.spyOn(utils, 'randomFloat').mockImplementation(min => min);
+      jest.spyOn(utils, 'randomInteger').mockImplementation(min => min);
 
-      mockMoodEngine.setup(s => s.calculateDelta(It.isAny(), It.isAny())).returns(() => ({ sizeRepresentation: null, delta: 1 }));
+      mockMoodEngine.setup(s => s.calculateDelta(It.isAny(), It.isAny())).returns(() => ({ sizeRepresentation: MoodletSize.Small, delta: 1 }));
     });
 
     it('should set an activity', () => {
@@ -172,7 +176,6 @@ describe('Mood control', () => {
       moodControl.runSustainActivity();
 
       mockMoodEngine.verify(m => m.addMoodlet(It.isValue(expectedActivity.activity.moodlet), It.isValue(expectedActivity.delta)), Times.once());
-      expect().nothing();
     });
 
     it('should reset presence if activity ends', () => {
@@ -189,7 +192,7 @@ describe('Mood control', () => {
   describe('activityUpdate', () => {
     it('should sustain activity if it has one', () => {
       // Stub out the sustain activity to prevent it running
-      const sustainSpy = spyOn(moodControl as any, 'sustainActivity');
+      const sustainSpy = jest.spyOn(moodControl as any, 'sustainActivity');
 
       // Mock a high threshold
       moodControl.mockActivity(new Date());
@@ -201,8 +204,8 @@ describe('Mood control', () => {
 
     it('should start activity if it has none and value above threshold', () => {
       // Stub out the begin activity to prevent it running
-      const beginSpy = spyOn(moodControl as any, 'beginActivity');
-      spyOn(utils, 'randomFloat').and.returnValue(0.9);
+      const beginSpy = jest.spyOn(moodControl as any, 'beginActivity');
+      jest.spyOn(utils, 'randomFloat').mockReturnValue(0.9);
 
       moodControl.runActivityUpdate();
 
@@ -211,12 +214,11 @@ describe('Mood control', () => {
 
     it('should neutralise mood if it has no activity and value below threshold', () => {
       // Mock a low threshold
-      spyOn(utils, 'randomFloat').and.returnValue(0.1);
+      jest.spyOn(utils, 'randomFloat').mockReturnValue(0.1);
 
       moodControl.runActivityUpdate();
 
       mockMoodEngine.verify(m => m.neutraliseMood(), Times.once());
-      expect().nothing();
     });
   });
 });

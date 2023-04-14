@@ -1,8 +1,13 @@
 import { Message, MessageEmbed } from 'discord.js';
 import { IMock, It, Mock } from 'typemoq';
 
+import { Client } from '../interfaces/client';
+import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Engine } from '../interfaces/engine';
+import { Logger } from '../interfaces/logger';
 import { ResponseGenerator } from '../interfaces/response-generator';
+import { Settings } from '../interfaces/settings';
 import { DieRoll, helpText } from './die-roll';
 
 describe('Die Roll', () => {
@@ -10,18 +15,18 @@ describe('Die Roll', () => {
   let mockDependencies: DependencyContainer;
 
   beforeEach(() => {
-    spyOn(Math, 'random').and.returnValue(1);
+    jest.spyOn(Math, 'random').mockReturnValue(1);
 
     mockResponses = Mock.ofType<ResponseGenerator>();
     mockResponses.setup(r => r.generateResponse(It.isAny())).returns(input => Promise.resolve(input));
 
     mockDependencies = {
-      client: null,
-      database: null,
-      engine: null,
-      logger: null,
+      client: Mock.ofType<Client>().object,
+      database: Mock.ofType<Database>().object,
+      engine: Mock.ofType<Engine>().object,
+      logger: Mock.ofType<Logger>().object,
       responses: mockResponses.object,
-      settings: null
+      settings: Mock.ofType<Settings>().object
     };
   });
 

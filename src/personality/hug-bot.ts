@@ -18,10 +18,7 @@ const activities = [
 export const helpText = `This plugin lets you send virtual things to people.`;
 
 export class HugBot implements Personality {
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<string> {
+  public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     return this.commandWrapper(message, addressedMessage, 'give a ', ' to');
   }
 
@@ -34,29 +31,26 @@ export class HugBot implements Personality {
     embed.setTitle('HugBot™');
     embed.setDescription(helpText);
 
-    const commandText = `\`\`\`@bot give a *item* to @name\n\n${COMMAND_PREFIX}*item* @name\`\`\``;
-    embed.addField('Commands', commandText);
-
-    embed.addField(
-      'Things you can give',
-      activities.map((i) => i.request).join(', ')
-    );
-
-    embed.addField(
-      'Examples',
-      '```@bot give a hug to @person\n\n+cake @person```'
-    );
+    embed.addFields([
+      {
+        name: 'Commands',
+        value: `\`\`\`@bot give a *item* to @name\n\n${COMMAND_PREFIX}*item* @name\`\`\``
+      },
+      {
+        name: 'Things you can give',
+        value: activities.map(i => i.request).join(', ')
+      },
+      {
+        name: 'Examples',
+        value: '```@bot give a hug to @person\n\n+cake @person```'
+      }
+    ]);
 
     return Promise.resolve(embed);
   }
 
-  private commandWrapper(
-    message: Message,
-    text: string,
-    prefix: string,
-    suffix: string
-  ): Promise<string> {
-    return new Promise((resolve) => {
+  private commandWrapper(message: Message, text: string, prefix: string, suffix: string): Promise<string> {
+    return new Promise(resolve => {
       let sentMessage = null;
       const send = (messageText: string) => {
         if (messageText === null) {
@@ -67,26 +61,14 @@ export class HugBot implements Personality {
       };
 
       for (const activity of activities) {
-        send(
-          this.response(
-            message,
-            text,
-            `${prefix}${activity.request}${suffix}`,
-            activity.response
-          )
-        );
+        send(this.response(message, text, `${prefix}${activity.request}${suffix}`, activity.response));
       }
 
       resolve(sentMessage);
     });
   }
 
-  private response(
-    message: Message,
-    text: string,
-    command: string,
-    itemOverride?: string
-  ): string {
+  private response(message: Message, text: string, command: string, itemOverride?: string): string {
     if (!text.startsWith(command)) {
       return null;
     }
@@ -94,10 +76,7 @@ export class HugBot implements Personality {
     const item = itemOverride ? itemOverride : command;
     const bits = text.substr(command.length + 1).split(' ');
     const addressedBitIndex = 0;
-    if (
-      bits[addressedBitIndex].startsWith('<@') &&
-      bits[addressedBitIndex].endsWith('>')
-    ) {
+    if (bits[addressedBitIndex].startsWith('<@') && bits[addressedBitIndex].endsWith('>')) {
       return `Gives a ${item} to ${bits[addressedBitIndex]} from <@${message.author.id}>`;
     }
 

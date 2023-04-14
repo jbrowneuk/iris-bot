@@ -39,9 +39,10 @@ export class Stickers implements Personality {
     embed.setTitle('Stickers (large emotes) plugin');
     embed.setDescription(helpText);
 
-    embed.addField('Commands', `\`${prefix}<sticker name>\``);
-
-    embed.addField('Example', `\`${prefix}hug\``);
+    embed.addFields([
+      { name: 'Commands', value: `\`${prefix}<sticker name>\`` },
+      { name: 'Example', value: `\`${prefix}hug\`` }
+    ]);
 
     return Promise.resolve(embed);
   }

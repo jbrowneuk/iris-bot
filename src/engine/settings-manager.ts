@@ -16,7 +16,7 @@ export class SettingsManager implements Settings {
    *
    * @param path the path to the config file. Pass null to not load anything
    */
-  constructor(private logger: Logger, protected path: string = defaultPath) {
+  constructor(private logger: Logger, protected path: string | null = defaultPath) {
     this.settingsData = {};
     if (path === null) {
       return;

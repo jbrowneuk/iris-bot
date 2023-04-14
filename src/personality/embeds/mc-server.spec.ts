@@ -42,17 +42,17 @@ describe('Embed formatting for Minecraft server utilities', () => {
     });
 
     it('should contain version field if online', () => {
-      const getEmbedField = (embed: MessageEmbed): EmbedField => {
+      const getEmbedField = (embed: MessageEmbed): EmbedField | undefined => {
         return embed.fields.find(f => f.name === embeds.fieldTitleVersion);
       };
 
       const onlinePlayersVersionField = getEmbedField(onlinePlayersEmbed);
       expect(onlinePlayersVersionField).toBeTruthy();
-      expect(onlinePlayersVersionField.value).toBe(serverVersion);
+      expect(onlinePlayersVersionField?.value).toBe(serverVersion);
 
       const onlineEmptyVersionField = getEmbedField(onlineEmptyEmbed);
       expect(onlineEmptyVersionField).toBeTruthy();
-      expect(onlineEmptyVersionField.value).toBe(serverVersion);
+      expect(onlineEmptyVersionField?.value).toBe(serverVersion);
 
       expect(getEmbedField(offlineEmbed)).toBeFalsy();
     });
@@ -61,9 +61,9 @@ describe('Embed formatting for Minecraft server utilities', () => {
       expect(onlinePlayersEmbed.fields.length).toBeGreaterThan(0);
 
       const onlineServerPlayersField = onlinePlayersEmbed.fields.find(f => f.name.startsWith(embeds.fieldTitlePlayers));
-      expect(onlineServerPlayersField.name).toBe(`${embeds.fieldTitlePlayers} (${onlineWithPlayers.onlinePlayers})`);
+      expect(onlineServerPlayersField?.name).toBe(`${embeds.fieldTitlePlayers} (${onlineWithPlayers.onlinePlayers})`);
       onlineWithPlayers.samplePlayers.forEach(player => {
-        expect(onlineServerPlayersField.value).toContain(player.name);
+        expect(onlineServerPlayersField?.value).toContain(player.name);
       });
 
       const offlineServerPlayersField = onlineEmptyEmbed.fields.find(f => f.name.startsWith(embeds.fieldTitlePlayers));
@@ -78,15 +78,15 @@ describe('Embed formatting for Minecraft server utilities', () => {
 
       const setField = embed.fields.find(e => e.name.includes(setCommand));
       expect(setField).toBeTruthy();
-      expect(setField.value.length).toBeGreaterThan(0);
+      expect(setField?.value.length).toBeGreaterThan(0);
 
       const statusField = embed.fields.find(e => e.name.includes(statusCommand));
       expect(statusField).toBeTruthy();
-      expect(statusField.value.length).toBeGreaterThan(0);
+      expect(statusField?.value.length).toBeGreaterThan(0);
 
       const announceField = embed.fields.find(e => e.name.includes(announceCommand));
       expect(announceField).toBeTruthy();
-      expect(announceField.value.length).toBeGreaterThan(0);
+      expect(announceField?.value.length).toBeGreaterThan(0);
     });
 
     it('should only contain <url> for set command help', () => {
@@ -113,14 +113,14 @@ describe('Embed formatting for Minecraft server utilities', () => {
       const guildName = 'guild-name-here';
       const embed = embeds.generateSetSuccessEmbed(guildName, '');
       const field = embed.fields.find(e => e.name === linkInfoTitle);
-      expect(field.value).toContain(guildName);
+      expect(field?.value).toContain(guildName);
     });
 
     it('should contain server url in link information field', () => {
       const serverUrl = 'server.host';
       const embed = embeds.generateSetSuccessEmbed('', serverUrl);
       const field = embed.fields.find(e => e.name === linkInfoTitle);
-      expect(field.value).toContain(serverUrl);
+      expect(field?.value).toContain(serverUrl);
     });
   });
 

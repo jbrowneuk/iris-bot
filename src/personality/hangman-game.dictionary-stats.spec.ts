@@ -1,5 +1,5 @@
 import * as axios from 'axios';
-import { Guild, Message } from 'discord.js';
+import { Guild, Message, MessageEmbed } from 'discord.js';
 import { StatusCodes } from 'http-status-codes';
 import { IMock, Mock } from 'typemoq';
 
@@ -36,12 +36,12 @@ describe('Hangman Game - dictionary summary functionality', () => {
     mockMessage.setup(s => s.content).returns(() => `${prefix} ${dictionaryCommand}`);
   });
 
-  let fetchSpy: jasmine.Spy;
-  let embedSpy: jasmine.Spy;
+  let fetchSpy: jest.SpyInstance;
+  let embedSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    fetchSpy = spyOn(axios.default, 'get');
-    embedSpy = spyOn(embeds, 'generateDictionaryEmbed').and.callFake(() => null);
+    fetchSpy = jest.spyOn(axios.default, 'get');
+    embedSpy = jest.spyOn(embeds, 'generateDictionaryEmbed').mockImplementation(() => ({} as MessageEmbed));
   });
 
   it(`should generate embed on ${dictionaryCommand} command and fetched successfully`, done => {
@@ -50,7 +50,7 @@ describe('Hangman Game - dictionary summary functionality', () => {
       data: ''
     };
 
-    fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+    fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
 
     personality.onMessage(mockMessage.object).then(() => {
       expect(embedSpy).toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe('Hangman Game - dictionary summary functionality', () => {
       status: StatusCodes.NOT_FOUND
     };
 
-    fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+    fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
 
     personality.onMessage(mockMessage.object).catch(() => {
       expect(embedSpy).not.toHaveBeenCalled();

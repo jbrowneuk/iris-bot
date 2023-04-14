@@ -3,12 +3,12 @@ import * as fs from 'fs';
 import { SettingsManager } from './settings-manager';
 
 class TestableSettingsManager extends SettingsManager {
-  constructor(path: string) {
+  constructor(path: string | null) {
     super(console, path);
   }
 
   public get FilePath(): string {
-    return this.path;
+    return this.path === null ? '' : this.path;
   }
 
   public set FilePath(value: string) {
@@ -56,7 +56,7 @@ describe('Simple settings manager', () => {
     testObject.mockOutSettings(fakeSettings);
 
     // Mock saving to ensure only this unit is tested
-    spyOn(testObject as any, 'saveToFile');
+    jest.spyOn(testObject as any, 'saveToFile').mockImplementation(() => {});
 
     const testKey = 'myKeyHere';
     const testValue = 'new value';

@@ -1,6 +1,6 @@
 export interface ServerInformation {
   url: string;
-  channelId: string;
+  channelId: string | undefined | null;
   lastKnownOnline: boolean;
 }
 
