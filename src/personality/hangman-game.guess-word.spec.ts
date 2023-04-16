@@ -38,7 +38,6 @@ describe('Hangman Game - guessing behaviour for words', () => {
 
     // Test deps
     // Update state happens when a guess is made
-    afterState = null;
     mockDatabase
       .setup(m => m.updateRecordsInCollection(It.isValue(sqlCollection), It.isAny(), It.isAny()))
       .callback((collection: string, fields: KeyedObject) => {
@@ -92,7 +91,7 @@ describe('Hangman Game - guessing behaviour for words', () => {
   });
 
   it('should respond with game embed on incorrect guess', done => {
-    const embedSpy = spyOn(embeds, 'generateGameEmbed').and.returnValue(new MessageEmbed());
+    const embedSpy = jest.spyOn(embeds, 'generateGameEmbed').mockReturnValue(new MessageEmbed());
     const guessWord = 'bottle';
     const expectedDefaultColour = false;
 
@@ -100,8 +99,8 @@ describe('Hangman Game - guessing behaviour for words', () => {
 
     personality.onMessage(mockMessage.object).then(response => {
       const messageOpts = response as MessageOptions;
-      expect(messageOpts.embeds.length).toBe(1);
-      expect(embedSpy).toHaveBeenCalledWith(jasmine.anything(), expectedDefaultColour);
+      expect(messageOpts.embeds?.length).toBe(1);
+      expect(embedSpy).toHaveBeenCalledWith(expect.anything(), expectedDefaultColour);
       done();
     });
   });
@@ -168,7 +167,7 @@ describe('Hangman Game - guessing behaviour for words', () => {
 
   it('should win game with correct guess of last letter', done => {
     const winMessage = 'you win';
-    const endGameSpy = spyOn(embeds, 'generateGameEndMesage').and.returnValue({ content: winMessage });
+    const endGameSpy = jest.spyOn(embeds, 'generateGameEndMesage').mockReturnValue({ content: winMessage });
     const guessWord = beforeState.currentWord;
 
     mockMessage.setup(s => s.content).returns(() => `${prefix} ${guessCommand} ${guessWord}`);

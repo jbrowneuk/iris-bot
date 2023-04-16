@@ -14,7 +14,7 @@ import { SerialisableGameData } from './interfaces/hangman-game';
 import { serialiseGameData } from './utilities/hangman-game';
 
 describe('Hangman Game - start game behaviour', () => {
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: jest.SpyInstance;
   let personality: HangmanGame;
   let mockGuild: IMock<Guild>;
   let mockMessage: IMock<Message>;
@@ -41,8 +41,8 @@ describe('Hangman Game - start game behaviour', () => {
       data: mockWord
     };
 
-    fetchSpy = spyOn(axios.default, 'get');
-    fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+    fetchSpy = jest.spyOn(axios.default, 'get');
+    fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
 
     mockMessage = Mock.ofType<Message>();
     mockMessage.setup(s => s.content).returns(() => `${prefix} ${startCommand}`);
@@ -119,7 +119,7 @@ describe('Hangman Game - start game behaviour', () => {
       const regex = new RegExp(blankDisplayChar, 'g');
 
       const display = serialisedGameData.currentDisplay;
-      const charCount = display.match(regex).length;
+      const charCount = display.match(regex)?.length;
       expect(charCount).toBe(display.length);
 
       done();

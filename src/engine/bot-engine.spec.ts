@@ -1,4 +1,4 @@
-import { Guild, GuildMember, Message, MessageEmbed, User } from 'discord.js';
+import { Guild, Message, MessageEmbed, User } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
@@ -62,7 +62,7 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    spyOn(untypedEngine, 'onConnected');
+    jest.spyOn(untypedEngine, 'onConnected').mockImplementation(() => {});
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
@@ -74,13 +74,13 @@ describe('Bot engine', () => {
     engine.run();
 
     const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.CONNECTED);
-    relatedHandler.cb.call(client);
+    relatedHandler?.cb.call(client);
 
     expect(untypedEngine.onConnected).toHaveBeenCalled();
   });
 
   it('should add connection event handler on connection', () => {
-    spyOn(untypedEngine, 'onMessage');
+    jest.spyOn(untypedEngine, 'onMessage').mockImplementation(() => {});
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
@@ -92,7 +92,7 @@ describe('Bot engine', () => {
     engine.run();
 
     const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.MESSAGE);
-    relatedHandler.cb.call(client);
+    relatedHandler?.cb.call(client);
 
     expect(untypedEngine.onMessage).toHaveBeenCalled();
   });
@@ -117,7 +117,7 @@ describe('Bot engine', () => {
       onAddressed: () => Promise.resolve(null),
       onMessage: () => Promise.resolve(null)
     };
-    const initSpy = spyOn(coreWithInit, 'initialise');
+    const initSpy = jest.spyOn(coreWithInit, 'initialise');
 
     engine.addPersonality(coreNoInit);
     engine.addPersonality(coreWithInit);
@@ -138,7 +138,7 @@ describe('Bot engine', () => {
       onAddressed: () => Promise.resolve(null),
       onMessage: () => Promise.resolve(null)
     };
-    const destroySpy = spyOn(coreWithDestroy, 'destroy');
+    const destroySpy = jest.spyOn(coreWithDestroy, 'destroy');
 
     engine.addPersonality(coreNoInit);
     engine.addPersonality(coreWithDestroy);
@@ -156,8 +156,8 @@ describe('Bot engine', () => {
   });
 
   it('should handle ambient messages when message received', () => {
-    spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue(null);
-    spyOn(untypedEngine, 'handleAmbientMessage');
+    jest.spyOn(untypedEngine, 'calculateAddressedMessage').mockReturnValue(null);
+    jest.spyOn(untypedEngine, 'handleAmbientMessage').mockImplementation(() => {});
 
     untypedEngine.onMessage({});
 
@@ -165,15 +165,15 @@ describe('Bot engine', () => {
   });
 
   it('should handle addressed messages when message received', () => {
-    spyOn(untypedEngine, 'calculateAddressedMessage').and.returnValue('test');
-    spyOn(untypedEngine, 'handleAddressedMessage');
+    jest.spyOn(untypedEngine, 'calculateAddressedMessage').mockReturnValue('test');
+    jest.spyOn(untypedEngine, 'handleAddressedMessage').mockImplementation(() => {});
 
     untypedEngine.onMessage({});
 
     expect(untypedEngine.handleAddressedMessage).toHaveBeenCalled();
   });
 
-  it('should send message when one is generated as a response', (done: DoneFn) => {
+  it('should send message when one is generated as a response', done => {
     const mockMessage = 'hello world';
     const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
 
@@ -185,7 +185,7 @@ describe('Bot engine', () => {
     }, 100);
   });
 
-  it('should handle an exception being thrown', (done: DoneFn) => {
+  it('should handle an exception being thrown', done => {
     const failureMessage = 'I am a failure';
     const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
 
@@ -202,7 +202,7 @@ describe('Bot engine', () => {
   it('should queue messages from personality cores', () => {
     let queuedPromises = [];
     const mockMessage = { content: 'lol hello' };
-    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
+    jest.spyOn(untypedEngine, 'dequeuePromises').mockImplementation((arg: any) => {
       queuedPromises = arg;
       return Promise.resolve(null);
     });
@@ -219,7 +219,7 @@ describe('Bot engine', () => {
   it('should detect when being addressed', () => {
     interface InputOutputPair {
       input: string;
-      expectedOutput: string;
+      expectedOutput: string | null;
     }
     const messageMappedToExpectedResults: InputOutputPair[] = [
       { input: 'hehehe', expectedOutput: null },
@@ -241,7 +241,7 @@ describe('Bot engine', () => {
       client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
       const mockMessage = {
         content: kvp.input,
-        guild: { members: { resolve: (): GuildMember => null } }
+        guild: { members: { resolve: () => null } }
       };
       const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
       expect(actualResult).toBe(kvp.expectedOutput);
@@ -265,7 +265,7 @@ describe('Bot engine', () => {
     let queuedPromises = [];
     const messageText = 'lol hello';
     const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
-    spyOn(untypedEngine, 'dequeuePromises').and.callFake((arg: any[]) => {
+    jest.spyOn(untypedEngine, 'dequeuePromises').mockImplementation((arg: any) => {
       queuedPromises = arg;
       return Promise.resolve(null);
     });

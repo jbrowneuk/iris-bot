@@ -47,7 +47,7 @@ describe('Discord client wrapper', () => {
 
     client = new DiscordClient(console);
     untypedClient = client;
-    spyOn(untypedClient, 'generateClient').and.returnValue(discordMock.object);
+    jest.spyOn(untypedClient, 'generateClient').mockReturnValue(discordMock.object);
   });
 
   describe('not connected state', () => {
@@ -68,7 +68,7 @@ describe('Discord client wrapper', () => {
     });
 
     it('should add connection event handler on connection', () => {
-      spyOn(untypedClient, 'onConnected');
+      jest.spyOn(untypedClient, 'onConnected').mockImplementation(() => {});
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
         .setup(m => m.on(It.isAny(), It.isAny()))
@@ -79,13 +79,13 @@ describe('Discord client wrapper', () => {
       client.connect(MOCK_TOKEN);
 
       const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
-      relatedHandler.cb.call(client);
+      relatedHandler?.cb.call(client);
 
       expect(untypedClient.onConnected).toHaveBeenCalled();
     });
 
     it('should add message event handler on connection', () => {
-      spyOn(untypedClient, 'onMessage');
+      jest.spyOn(untypedClient, 'onMessage').mockImplementation(() => {});
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
         .setup(m => m.on(It.isAny(), It.isAny()))
@@ -96,7 +96,7 @@ describe('Discord client wrapper', () => {
       client.connect(MOCK_TOKEN);
 
       const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
-      relatedHandler.cb.call(client);
+      relatedHandler?.cb.call(client);
 
       expect(untypedClient.onMessage).toHaveBeenCalled();
     });
@@ -123,7 +123,7 @@ describe('Discord client wrapper', () => {
         client.connect(MOCK_TOKEN);
 
         const relatedHandler = callbacks.find(cb => cb.evt === readyEvent);
-        relatedHandler.cb.call(client);
+        relatedHandler?.cb.call(client);
 
         expect(eventRaised).toBeTruthy();
       });
@@ -181,7 +181,7 @@ describe('Discord client wrapper', () => {
 
     describe('message sending', () => {
       it('should queue messages', () => {
-        spyOn(untypedClient, 'sendMessage');
+        jest.spyOn(untypedClient, 'sendMessage').mockImplementation(() => {});
 
         const messages = ['one', 'two', 'three'];
         client.queueMessages(messages);
@@ -206,7 +206,7 @@ describe('Discord client wrapper', () => {
 
       it('should replace user string with last message user name if message is string', () => {
         const expectedName = 'bob-bobertson';
-        let lastMessage: string = null;
+        let lastMessage = '';
         const mockChannel = {
           send: (message: string) => (lastMessage = message)
         };
@@ -222,7 +222,7 @@ describe('Discord client wrapper', () => {
       });
 
       it('should replace name string with bot user name if message is string', () => {
-        let lastMessage: string = null;
+        let lastMessage = '';
         const mockChannel = {
           send: (message: string) => (lastMessage = message)
         };
@@ -236,7 +236,7 @@ describe('Discord client wrapper', () => {
 
       it('should replace user string with last message user name in content if message is MessageOptions', () => {
         const expectedName = 'bob-bobertson';
-        let lastMessage: string = null;
+        let lastMessage: string | null | undefined = null;
         const mockChannel = {
           send: (message: discord.MessageOptions) => (lastMessage = message.content)
         };
@@ -252,7 +252,7 @@ describe('Discord client wrapper', () => {
       });
 
       it('should replace name string with bot user name in content if message is MessageOptions', () => {
-        let lastMessage: string = null;
+        let lastMessage: string | null | undefined = null;
         const mockChannel = {
           send: (message: discord.MessageOptions) => (lastMessage = message.content)
         };
@@ -280,7 +280,7 @@ describe('Discord client wrapper', () => {
         });
 
         const relatedHandler = callbacks.find(cb => cb.evt === messageEvent);
-        relatedHandler.cb.call(client, mockMessage);
+        relatedHandler?.cb.call(client, mockMessage);
 
         return eventRaised;
       }

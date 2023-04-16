@@ -181,7 +181,7 @@ export class HangmanGame implements Personality {
         return this.onGuessLetter(guildId, guess, gameData);
       })
       .catch(e => {
-        console.error(e);
+        this.dependencies.logger.error(e);
         return 'Not doing that now';
       });
   }

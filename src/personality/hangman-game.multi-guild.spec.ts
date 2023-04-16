@@ -16,7 +16,7 @@ import { serialiseGameData } from './utilities/hangman-game';
 const altGuildId = 'myaltguild';
 
 describe('Hangman Game - multiple guild behaviour', () => {
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: jest.SpyInstance;
   let personality: HangmanGame;
   let mockGuild: IMock<Guild>;
   let mockMessage: IMock<Message>;
@@ -42,8 +42,8 @@ describe('Hangman Game - multiple guild behaviour', () => {
       data: mockWord
     };
 
-    fetchSpy = spyOn(axios.default, 'get');
-    fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+    fetchSpy = jest.spyOn(axios.default, 'get');
+    fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
   });
 
   it('should not affect existing game if new one started in alternate guild', done => {
@@ -54,7 +54,7 @@ describe('Hangman Game - multiple guild behaviour', () => {
     mockDatabase
       .setup(m => m.getRecordsFromCollection<SerialisableGameData>(It.isAny(), It.isAny()))
       .returns((c: string, filter: QueryFilter) => {
-        if (filter.where[0].value === altGuildId) {
+        if ((filter.where || [])[0].value === altGuildId) {
           return Promise.resolve([serialiseGameData(mockActiveGame)]);
         }
 

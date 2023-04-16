@@ -23,14 +23,17 @@ describe('Hangman Game Utilities', () => {
     });
 
     it('should return true if lives remaining and words don’t match', () => {
-      const state = {
+      const state: GameData = {
         timeStarted: 1,
         currentWord: 'any',
         currentDisplay: '-n-',
         livesRemaining: 3,
         wrongLetters: ['z'],
-        wrongWords: []
-      } as GameData;
+        wrongWords: [],
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
 
       const gameActive = isGameActive(state);
       expect(gameActive).toBe(true);
@@ -38,28 +41,34 @@ describe('Hangman Game Utilities', () => {
 
     it('should return false if lives remaining and words match', () => {
       const word = 'any';
-      const state = {
+      const state: GameData = {
         timeStarted: 1,
         currentWord: word,
         currentDisplay: word,
         livesRemaining: 3,
         wrongLetters: ['z'],
-        wrongWords: []
-      } as GameData;
+        wrongWords: [],
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
 
       const gameActive = isGameActive(state);
       expect(gameActive).toBe(false);
     });
 
     it('should return false if no lives remaining and words don’t match', () => {
-      const state = {
+      const state: GameData = {
         timeStarted: 1,
         currentWord: 'any',
         currentDisplay: '-n-',
         livesRemaining: 0,
         wrongLetters: ['z'],
-        wrongWords: []
-      } as GameData;
+        wrongWords: [],
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
 
       const gameActive = isGameActive(state);
       expect(gameActive).toBe(false);
@@ -68,14 +77,17 @@ describe('Hangman Game Utilities', () => {
     // Edge case check
     it('should return false if no lives remaining and words match', () => {
       const word = 'any';
-      const state = {
+      const state: GameData = {
         timeStarted: 1,
         currentWord: word,
         currentDisplay: word,
         livesRemaining: 0,
         wrongLetters: ['z'],
-        wrongWords: []
-      } as GameData;
+        wrongWords: [],
+        totalWins: 0,
+        totalLosses: 0,
+        currentStreak: 0
+      };
 
       const gameActive = isGameActive(state);
       expect(gameActive).toBe(false);

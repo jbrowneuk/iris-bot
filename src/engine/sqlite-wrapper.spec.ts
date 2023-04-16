@@ -1,6 +1,5 @@
+import * as sqlite from 'sqlite3';
 import { IMock, It, Mock, Times } from 'typemoq';
-
-import * as sqlite from '@vscode/sqlite3';
 
 import { KeyedObject } from '../interfaces/keyed-object';
 import { Logger } from '../interfaces/logger';
@@ -42,10 +41,10 @@ describe('SQLite wrapper', () => {
     // This test works properly. Disabling for now.
     xit('should connect', done => {
       const mockDbConcretion = (file: string, callback: (err: Error) => void) => {
-        callback(null);
+        callback(new Error());
       };
 
-      spyOn(sqlite, 'Database').and.returnValue(mockDbConcretion as any);
+      jest.spyOn(sqlite, 'Database').mockReturnValue(mockDbConcretion as any);
 
       testObject
         .connect()
@@ -77,7 +76,7 @@ describe('SQLite wrapper', () => {
         }
       };
 
-      const spy = spyOn(mySqlite, 'close').and.callThrough();
+      const spy = jest.spyOn(mySqlite, 'close');
 
       testObject.dbInstance = mySqlite;
 
@@ -94,7 +93,6 @@ describe('SQLite wrapper', () => {
       testObject
         .disconnect()
         .then(() => {
-          expect().nothing();
           done();
         })
         .catch(() => {
@@ -158,7 +156,7 @@ describe('SQLite wrapper', () => {
       const mockRows = [{ id: 0 }, { id: 1 }];
       mockStatement
         .setup(m => m.all(It.isAny(), It.isAny()))
-        .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
+        .callback((_: unknown, cb: (err: Error | null, rows: KeyedObject[]) => void) => {
           cb(null, mockRows);
         });
 
@@ -183,7 +181,7 @@ describe('SQLite wrapper', () => {
       };
       mockStatement
         .setup(m => m.all(It.isAny(), It.isAny()))
-        .callback((_: unknown, cb: (err: Error, rows: KeyedObject[]) => void) => {
+        .callback((_: unknown, cb: (err: Error | null, rows: KeyedObject[]) => void) => {
           cb(null, []);
         });
 
@@ -213,14 +211,14 @@ describe('SQLite wrapper', () => {
 
       mockSqlite
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+        .callback((_: string, params: KeyedObject, cb: (err: Error | null) => void) => {
           lastQueryObject = params;
           cb(null);
         });
 
       testObject.insertRecordsToCollection('anytable', fields).then(() => {
         const keys = Object.keys(lastQueryObject);
-        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
+        expect(keys.every(key => key.startsWith('$'))).toBe(true);
         done();
       });
     });
@@ -235,7 +233,7 @@ describe('SQLite wrapper', () => {
 
       mockSqlite
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
+        .callback((tb: string, _: unknown, cb: (err: Error | null) => void) => {
           expect(tb).toContain(`INSERT INTO ${mockTable}`);
           cb(null);
         });
@@ -266,14 +264,14 @@ describe('SQLite wrapper', () => {
 
       mockSqlite
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+        .callback((_: string, params: KeyedObject, cb: (err: Error | null) => void) => {
           lastQueryObject = params;
           cb(null);
         });
 
       testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
         const keys = Object.keys(lastQueryObject);
-        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
+        expect(keys.every(key => key.startsWith('$'))).toBe(true);
         done();
       });
     });
@@ -291,14 +289,14 @@ describe('SQLite wrapper', () => {
 
       mockSqlite
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback((_: string, params: KeyedObject, cb: (err: Error) => void) => {
+        .callback((_: string, params: KeyedObject, cb: (err: Error | null) => void) => {
           lastQueryObject = params;
           cb(null);
         });
 
       testObject.updateRecordsInCollection('anytable', fields, where).then(() => {
         const keys = Object.keys(lastQueryObject);
-        expect(keys.every(key => key.startsWith('$'))).toBeTrue();
+        expect(keys.every(key => key.startsWith('$'))).toBe(true);
         done();
       });
     });
@@ -317,7 +315,7 @@ describe('SQLite wrapper', () => {
 
       mockSqlite
         .setup(m => m.run(It.isAny(), It.isAny(), It.isAny()))
-        .callback((tb: string, _: unknown, cb: (err: Error) => void) => {
+        .callback((tb: string, _: unknown, cb: (err: Error | null) => void) => {
           expect(tb).toContain(`UPDATE ${mockTable}`);
           cb(null);
         });

@@ -25,14 +25,14 @@ export class BuildInfo implements Personality {
     const commit = `**Commit**: \`${GIT_COMMIT.commit}\``;
     const refs = `**Refs**: \`${GIT_COMMIT.refs}\``;
     const date = `**Date**: \`${GIT_COMMIT.date}\``;
-    embed.addField('Commit information', `${commit}\n${refs}\n${date}`);
-
-    embed.addField(
-      'Platform',
-      `Node ${process.version} (${process.platform} ${process.arch})`
-    );
-
-    embed.addField('Repository', 'https://github.com/jbrowneuk/iris-bot');
+    embed.addFields([
+      { name: 'Commit information', value: `${commit}\n${refs}\n${date}` },
+      {
+        name: 'Platform',
+        value: `Node ${process.version} (${process.platform} ${process.arch})`
+      },
+      { name: 'Repository', value: 'https://github.com/jbrowneuk/iris-bot' }
+    ]);
 
     return Promise.resolve(embed);
   }

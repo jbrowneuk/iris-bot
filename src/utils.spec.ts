@@ -58,7 +58,7 @@ describe('utilities - test whether a string starts with a value in a set', () =>
 describe('utilities - random number generation', () => {
   beforeEach(() => {
     // Mock the randomiser behaviour for consistent results
-    spyOn(Math, 'random').and.returnValue(0.5);
+    jest.spyOn(Math, 'random').mockReturnValue(0.5);
   });
 
   describe('random float', () => {

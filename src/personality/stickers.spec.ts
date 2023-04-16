@@ -8,7 +8,7 @@ import { Logger } from '../interfaces/logger';
 import { helpText, prefix, Stickers } from './stickers';
 
 describe('Improved Discord stickers', () => {
-  let fetchSpy: jasmine.Spy;
+  let fetchSpy: jest.SpyInstance;
   let personality: Stickers;
 
   beforeEach(() => {
@@ -27,7 +27,7 @@ describe('Improved Discord stickers', () => {
 
   describe('Sticker command', () => {
     beforeEach(() => {
-      fetchSpy = spyOn(axios.default, 'get');
+      fetchSpy = jest.spyOn(axios.default, 'get');
     });
 
     it('should request sticker on command and post if found', done => {
@@ -39,7 +39,7 @@ describe('Improved Discord stickers', () => {
         status: StatusCodes.OK,
         data: { name: 'any', url: mockSticker }
       };
-      fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+      fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();
@@ -52,7 +52,7 @@ describe('Improved Discord stickers', () => {
       const mockMessage = Mock.ofType<Message>();
       mockMessage.setup(m => m.content).returns(() => `${prefix}sticker`);
 
-      fetchSpy.and.returnValue(Promise.reject('A rejection'));
+      fetchSpy.mockReturnValue(Promise.reject('A rejection'));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe('Improved Discord stickers', () => {
         status: StatusCodes.OK,
         data: 'text value'
       };
-      fetchSpy.and.returnValue(Promise.resolve(mockFetchResponse));
+      fetchSpy.mockReturnValue(Promise.resolve(mockFetchResponse));
 
       personality.onMessage(mockMessage.object).then(response => {
         expect(fetchSpy).toHaveBeenCalled();

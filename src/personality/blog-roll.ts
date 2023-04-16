@@ -13,8 +13,8 @@ const defaultUpdateMins = 60;
 const defaultSettingsFile = 'blog-roll.json';
 const settingsFileEnc = 'utf-8';
 
-const siteRoot = 'https://jbrowne.io/';
-const apiPath = 'api/?posts';
+export const blogRollSiteRoot = 'https://jbrowne.io/';
+export const blogRollApiPath = 'api/?posts';
 
 export class BlogRoll implements Personality {
   protected timerInterval: number | NodeJS.Timer;
@@ -55,9 +55,9 @@ export class BlogRoll implements Personality {
   /**
    * Fetches data from the journal API
    */
-  protected fetchJournal(): void {
-    axios.default
-      .get<PostWrapper>(`${siteRoot}${apiPath}`)
+  protected fetchJournal(): Promise<void> {
+    return axios.default
+      .get<PostWrapper>(`${blogRollSiteRoot}${blogRollApiPath}`)
       .then(response => {
         if (response.status !== StatusCodes.OK) {
           throw new Error('Unable to fetch API');
@@ -185,8 +185,8 @@ export class BlogRoll implements Personality {
   private formatPostData(postData: PostData): MessageOptions {
     const embed = new MessageEmbed();
     embed.setColor('#48647F');
-    embed.setURL(`${siteRoot}journal/post/${postData.slug}`);
-    embed.setThumbnail(`${siteRoot}icons/icon-120.png`);
+    embed.setURL(`${blogRollSiteRoot}journal/post/${postData.slug}`);
+    embed.setThumbnail(`${blogRollSiteRoot}icons/icon-120.png`);
 
     const postedOn = formatTimestamp(postData.date);
     const readTime = calculateReadTime(postData.content);

@@ -38,10 +38,12 @@ export class DieRoll implements Personality {
     embed.setDescription(helpText);
 
     const multiDice = `You can combine die rolls of different types by separating them with a space; for example, \`\`\`@bot roll 4d6 5d20\`\`\``;
-    embed.addField('Multiple rolls', multiDice);
-    embed.addField('Maximum die per roll', maxNumberDice.toString());
-    embed.addField('Maximum sides per die', maxNumberSides.toString());
-    embed.addField('Maximum rolls per request', maxNumberRolls.toString());
+    embed.addFields([
+      { name: 'Multiple rolls', value: multiDice },
+      { name: 'Maximum die per roll', value: maxNumberDice.toString() },
+      { name: 'Maximum sides per die', value: maxNumberSides.toString() },
+      { name: 'Maximum rolls per request', value: maxNumberRolls.toString() }
+    ]);
 
     return Promise.resolve(embed);
   }

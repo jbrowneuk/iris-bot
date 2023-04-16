@@ -66,7 +66,7 @@ export class AnimalImages implements Personality {
     embed.setDescription(helpText);
 
     const commands = supportedApis.map(api => `\`${COMMAND_PREFIX}${api.name}\``);
-    embed.addField('Commands', commands.join('\n'));
+    embed.addFields([{ name: 'Commands', value: commands.join('\n') }]);
 
     return Promise.resolve(embed);
   }

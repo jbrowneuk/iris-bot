@@ -1,4 +1,4 @@
-import * as sqlite from '@vscode/sqlite3';
+import * as sqlite from 'sqlite3';
 
 import { Database, QueryFilter, QueryLogic } from '../interfaces/database';
 import { KeyedObject } from '../interfaces/keyed-object';

@@ -38,7 +38,7 @@ describe('Hangman Game - default behaviour', () => {
     mockMessage.setup(s => s.guild).returns(() => mockGuild.object);
     mockMessage.setup(s => s.content).returns(() => prefix);
 
-    const helpSpy = spyOn(personality, 'onHelp').and.callThrough();
+    const helpSpy = jest.spyOn(personality, 'onHelp');
     personality.onMessage(mockMessage.object).then(() => {
       expect(helpSpy).toHaveBeenCalled();
       done();

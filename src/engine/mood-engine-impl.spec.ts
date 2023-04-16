@@ -3,67 +3,41 @@ import { MoodEngineImpl } from './mood-engine-impl';
 
 describe('Mood engine', () => {
   describe('getMood', () => {
-    it('should return positive or neutral when 100 ≥ mood > 0', () => {
-      const tests = [
-        { mood: 100, random: () => 0.9, result: Mood.Positive },
-        { mood: 100, random: () => 0.5, result: Mood.Positive },
-        { mood: 100, random: () => 0.1, result: Mood.Positive },
-        { mood: 50, random: () => 0.9, result: Mood.Neutral },
-        { mood: 50, random: () => 0.5, result: Mood.Neutral },
-        { mood: 50, random: () => 0.1, result: Mood.Positive },
-        { mood: 10, random: () => 0.9, result: Mood.Neutral },
-        { mood: 10, random: () => 0.5, result: Mood.Neutral },
-        { mood: 10, random: () => 0.1, result: Mood.Neutral }
-      ];
+    const positiveTests: [Mood, number, number][] = [
+      [Mood.Positive, 100, 0.9],
+      [Mood.Positive, 100, 0.5],
+      [Mood.Positive, 100, 0.1],
+      [Mood.Neutral, 50, 0.9],
+      [Mood.Neutral, 50, 0.5],
+      [Mood.Positive, 50, 0.1],
+      [Mood.Neutral, 10, 0.9],
+      [Mood.Neutral, 10, 0.5],
+      [Mood.Neutral, 10, 0.1]
+    ];
+    const negativeTests: [Mood, number, number][] = [
+      [Mood.Negative, -100, 0.9],
+      [Mood.Negative, -100, 0.5],
+      [Mood.Negative, -100, 0.1],
+      [Mood.Neutral, -50, 0.9],
+      [Mood.Neutral, -50, 0.5],
+      [Mood.Negative, -50, 0.1],
+      [Mood.Neutral, -10, 0.9],
+      [Mood.Neutral, -10, 0.5],
+      [Mood.Neutral, -10, 0.1]
+    ];
+    const neutralTests: [Mood, number, number][] = [
+      [Mood.Neutral, 0, 0.9],
+      [Mood.Neutral, 0, 0.5],
+      [Mood.Neutral, 0, 0.1]
+    ];
 
-      tests.forEach(test => {
-        const moodEngine = new MoodEngineImpl(test.random);
-        moodEngine.setMood(test.mood);
+    test.each([...positiveTests, ...negativeTests, ...neutralTests])('should return %s when mood is %i and RNG returns %f', (result, mood, rng) => {
+      const moodEngine = new MoodEngineImpl(() => rng);
+      moodEngine.setMood(mood);
 
-        const actual = moodEngine.getMood();
+      const actual = moodEngine.getMood();
 
-        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
-      });
-    });
-
-    it('should return negative or neutral when -100 ≤ mood < 0', () => {
-      const tests = [
-        { mood: -100, random: () => 0.9, result: Mood.Negative },
-        { mood: -100, random: () => 0.5, result: Mood.Negative },
-        { mood: -100, random: () => 0.1, result: Mood.Negative },
-        { mood: -50, random: () => 0.9, result: Mood.Neutral },
-        { mood: -50, random: () => 0.5, result: Mood.Neutral },
-        { mood: -50, random: () => 0.1, result: Mood.Negative },
-        { mood: -10, random: () => 0.9, result: Mood.Neutral },
-        { mood: -10, random: () => 0.5, result: Mood.Neutral },
-        { mood: -10, random: () => 0.1, result: Mood.Neutral }
-      ];
-
-      tests.forEach(test => {
-        const moodEngine = new MoodEngineImpl(test.random);
-        moodEngine.setMood(test.mood);
-
-        const actual = moodEngine.getMood();
-
-        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
-      });
-    });
-
-    it('should return neutral when mood is zero', () => {
-      const tests = [
-        { mood: 0, random: () => 0.9, result: Mood.Neutral },
-        { mood: 0, random: () => 0.5, result: Mood.Neutral },
-        { mood: 0, random: () => 0.1, result: Mood.Neutral }
-      ];
-
-      tests.forEach(test => {
-        const moodEngine = new MoodEngineImpl(test.random);
-        moodEngine.setMood(test.mood);
-
-        const actual = moodEngine.getMood();
-
-        expect(actual).withContext(`F: ${test.mood} with ${test.random()}`).toBe(test.result);
-      });
+      expect(actual).toBe(result);
     });
   });
 

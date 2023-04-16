@@ -220,7 +220,7 @@ export class BotEngine implements Engine {
 
     const messageEmbed = new MessageEmbed();
     const topics = coreNames.length ? '`' + coreNames.join('`\n`') + '`' : 'No topics';
-    messageEmbed.addField('Help topics', topics);
+    messageEmbed.addFields([{ name: 'Help topics', value: topics }]);
 
     this.client.queueMessages([helpResponseText, messageEmbed]);
   }

@@ -2,19 +2,16 @@
   "compilerOptions": {
     "target": "es5",
     "lib": ["es6", "dom"],
-    "types": ["node", "jasmine"],
+    "types": ["node", "discord.js"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "module": "commonjs",
     "strict": true,
-    "noImplicitAny": true,
     "strictNullChecks": false,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
     "outDir": "dist",
     "rootDir": "src"
   },
-  "exclude": [
-    "**/*.spec.ts",
-    "**/*.specdata.ts",
-    "spec/**"
-  ]
+  "exclude": ["**/*.spec.ts", "**/*.specdata.ts", "spec/**"]
 }

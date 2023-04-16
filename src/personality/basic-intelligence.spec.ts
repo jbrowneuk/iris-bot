@@ -5,7 +5,7 @@ import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { BasicIntelligence } from './basic-intelligence';
 
 describe('basic intelligence', () => {
-  it('should not handle an addressed message', (done: DoneFn) => {
+  it('should not handle an addressed message', done => {
     const message = Mock.ofType<Message>();
     message.setup(m => m.content).returns(() => 'anything');
     const core = new BasicIntelligence();
@@ -16,7 +16,7 @@ describe('basic intelligence', () => {
     });
   });
 
-  it('should handle an ambient message with the echo command', (done: DoneFn) => {
+  it('should handle an ambient message with the echo command', done => {
     const message = Mock.ofType<Message>();
     message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'echo');
     const core = new BasicIntelligence();

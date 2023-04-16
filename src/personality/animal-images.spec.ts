@@ -4,9 +4,13 @@ import { StatusCodes } from 'http-status-codes';
 import { IMock, It, Mock } from 'typemoq';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
+import { Client } from '../interfaces/client';
+import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
+import { Engine } from '../interfaces/engine';
 import { Logger } from '../interfaces/logger';
 import { ResponseGenerator } from '../interfaces/response-generator';
+import { Settings } from '../interfaces/settings';
 import { AnimalImages, helpText, supportedApis } from './animal-images';
 
 describe('Animal Image API', () => {
@@ -21,12 +25,12 @@ describe('Animal Image API', () => {
     mockResponses.setup(m => m.generateResponse(It.isAnyString())).returns(input => Promise.resolve(input));
 
     mockDependencies = {
-      client: null,
-      database: null,
-      engine: null,
+      client: Mock.ofType<Client>().object,
+      database: Mock.ofType<Database>().object,
+      engine: Mock.ofType<Engine>().object,
       logger: mockLogger.object,
       responses: mockResponses.object,
-      settings: null
+      settings: Mock.ofType<Settings>().object
     };
 
     personality = new AnimalImages(mockDependencies);
@@ -42,10 +46,10 @@ describe('Animal Image API', () => {
   });
 
   describe('onMessage', () => {
-    let fetchSpy: jasmine.Spy;
+    let fetchSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      fetchSpy = spyOn(axios.default, 'get');
+      fetchSpy = jest.spyOn(axios.default, 'get');
     });
 
     supportedApis.forEach(apiName => {
@@ -56,7 +60,7 @@ describe('Animal Image API', () => {
           status: StatusCodes.OK
         };
 
-        fetchSpy.and.returnValue(Promise.resolve(mockSuccessResponse));
+        fetchSpy.mockReturnValue(Promise.resolve(mockSuccessResponse));
 
         const message = Mock.ofType<Message>();
         message.setup(m => m.content).returns(() => messageText);
@@ -70,7 +74,7 @@ describe('Animal Image API', () => {
 
       it(`should handle API error for ${apiName.name}`, done => {
         const messageText = COMMAND_PREFIX + apiName.name;
-        fetchSpy.and.returnValue(Promise.resolve({ status: StatusCodes.NOT_FOUND }));
+        fetchSpy.mockReturnValue(Promise.resolve({ status: StatusCodes.NOT_FOUND }));
 
         const message = Mock.ofType<Message>();
         message.setup(m => m.content).returns(() => messageText);
@@ -84,7 +88,7 @@ describe('Animal Image API', () => {
 
       it(`should handle parsing error for ${apiName.name}`, done => {
         const messageText = COMMAND_PREFIX + apiName.name;
-        fetchSpy.and.returnValue(Promise.reject());
+        fetchSpy.mockReturnValue(Promise.reject());
 
         const message = Mock.ofType<Message>();
         message.setup(m => m.content).returns(() => messageText);

@@ -28,7 +28,7 @@ describe('response generator', () => {
     expect(responseGenerator).toBeTruthy();
   });
 
-  it('should generate a response for a phrase', (done: DoneFn) => {
+  it('should generate a response for a phrase', done => {
     database.setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny())).returns(() => Promise.resolve(mockDbRows));
 
     responseGenerator.generateResponse('phrase').then((response: string) => {
@@ -39,7 +39,7 @@ describe('response generator', () => {
     });
   });
 
-  it('should return a generic string if no rows are returned from the database', (done: DoneFn) => {
+  it('should return a generic string if no rows are returned from the database', done => {
     database.setup(m => m.getRecordsFromCollection(It.isAnyString(), It.isAny())).returns(() => Promise.resolve([]));
 
     responseGenerator.generateResponse('phrase').then((response: string) => {
@@ -49,7 +49,7 @@ describe('response generator', () => {
     });
   });
 
-  it('should return positive and neutral phrases if mood is positive', (done: DoneFn) => {
+  it('should return positive and neutral phrases if mood is positive', done => {
     currentMood = Mood.Positive;
 
     let cachedFilter: QueryFilter;
@@ -62,15 +62,15 @@ describe('response generator', () => {
       .returns(() => Promise.resolve([]));
 
     responseGenerator.generateResponse('phrase').then(() => {
-      const moodClauses = cachedFilter.where.filter(clause => clause.field === 'mood');
+      const moodClauses = cachedFilter.where?.filter(clause => clause.field === 'mood');
 
-      expect(moodClauses.find(c => c.value === Mood.Positive)).toBeTruthy();
-      expect(moodClauses.find(c => c.value === Mood.Neutral)).toBeTruthy();
+      expect(moodClauses?.find(c => c.value === Mood.Positive)).toBeTruthy();
+      expect(moodClauses?.find(c => c.value === Mood.Neutral)).toBeTruthy();
       done();
     });
   });
 
-  it('should return negative and neutral phrases if mood is negative', (done: DoneFn) => {
+  it('should return negative and neutral phrases if mood is negative', done => {
     currentMood = Mood.Negative;
 
     let cachedFilter: QueryFilter;
@@ -83,10 +83,10 @@ describe('response generator', () => {
       .returns(() => Promise.resolve([]));
 
     responseGenerator.generateResponse('phrase').then(() => {
-      const moodClauses = cachedFilter.where.filter(clause => clause.field === 'mood');
+      const moodClauses = cachedFilter.where?.filter(clause => clause.field === 'mood');
 
-      expect(moodClauses.find(c => c.value === Mood.Negative)).toBeTruthy();
-      expect(moodClauses.find(c => c.value === Mood.Neutral)).toBeTruthy();
+      expect(moodClauses?.find(c => c.value === Mood.Negative)).toBeTruthy();
+      expect(moodClauses?.find(c => c.value === Mood.Neutral)).toBeTruthy();
       done();
     });
   });
