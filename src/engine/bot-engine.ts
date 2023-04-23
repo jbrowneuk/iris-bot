@@ -16,7 +16,7 @@ export const helpCommands = ['help', COMMAND_PREFIX + 'help'];
 export const helpResponseText = `Hi, I’m {£me}. To get help with something, simply @ me with \`${helpCommands[0]}\` and then a topic from the list below.`;
 
 export class BotEngine implements Engine {
-  private personalityConstructs: Personality[];
+  protected personalityConstructs: Personality[];
 
   constructor(private client: Client, private responses: ResponseGenerator, private settings: Settings, private logger: Logger) {
     this.personalityConstructs = [];
@@ -58,7 +58,7 @@ export class BotEngine implements Engine {
     this.logger.log('Connected to Discord services');
   }
 
-  private onMessage(message: Message): void {
+  protected onMessage(message: Message): void {
     const addressedMessage = this.calculateAddressedMessage(message);
     if (addressedMessage !== null) {
       this.handleAddressedMessage(message, addressedMessage);
@@ -68,7 +68,7 @@ export class BotEngine implements Engine {
     this.handleAmbientMessage(message);
   }
 
-  private dequeuePromises(funcs: Array<Promise<MessageType>>): Promise<MessageType> {
+  protected dequeueMessagePromises(source: Message, funcs: Array<Promise<MessageType>>): Promise<MessageType> {
     funcs.push(Promise.resolve(null)); // Lazy workaround
     return funcs.reduce((prev: Promise<MessageType>, curr: Promise<MessageType>) => {
       if (!prev) {
@@ -77,7 +77,7 @@ export class BotEngine implements Engine {
 
       return prev.then((result: MessageType) => {
         if (result !== null) {
-          this.client.queueMessages([result]);
+          this.client.queueMessages(source, [result]);
           return Promise.reject(new HandledResponseError());
         }
 
@@ -94,12 +94,12 @@ export class BotEngine implements Engine {
     this.logger.error(err);
   }
 
-  private handleAmbientMessage(message: Message): void {
+  protected handleAmbientMessage(message: Message): void {
     const funcs = this.personalityConstructs.map((c: Personality) => c.onMessage(message));
-    this.dequeuePromises(funcs).catch(this.onDequeueCatch.bind(this));
+    this.dequeueMessagePromises(message, funcs).catch(this.onDequeueCatch.bind(this));
   }
 
-  private handleAddressedMessage(message: Message, addressedMessage: string): void {
+  protected handleAddressedMessage(message: Message, addressedMessage: string): void {
     // Check if requesting help
     const selectedHelp = getValueStartedWith(addressedMessage, helpCommands);
     if (selectedHelp) {
@@ -110,18 +110,18 @@ export class BotEngine implements Engine {
     // Check if bot was simply mentioned
     if (addressedMessage.length === 0) {
       this.responses.generateResponse('addressedNoCommand').then((response: string) => {
-        this.client.queueMessages([response]);
+        this.client.queueMessages(message, [response]);
       });
       return;
     }
 
     const unhandledResponse = () =>
       this.responses.generateResponse('addressedNoResponse').then((response: string) => {
-        this.client.queueMessages([response]);
+        this.client.queueMessages(message, [response]);
       });
 
     const funcs = this.personalityConstructs.map((c: Personality) => c.onAddressed(message, addressedMessage));
-    this.dequeuePromises(funcs)
+    this.dequeueMessagePromises(message, funcs)
       .then(response => {
         if (response !== null) {
           return;
@@ -132,7 +132,7 @@ export class BotEngine implements Engine {
       .catch(this.onDequeueCatch.bind(this));
   }
 
-  private calculateAddressedMessage(message: Message): string {
+  protected calculateAddressedMessage(message: Message): string {
     const botInfo = this.client.getUserInformation();
     const username = this.calculateUserName(botInfo, message);
 
@@ -173,7 +173,7 @@ export class BotEngine implements Engine {
       messageLocation += 1;
     }
 
-    return messageText.substr(messageLocation).trim();
+    return messageText.substring(messageLocation).trim();
   }
 
   private calculateUserName(botInfo: User, message: Message): string {
@@ -199,7 +199,7 @@ export class BotEngine implements Engine {
 
     // General bot help provided if no personality specified
     if (trimText === helpCommand) {
-      return this.handleBotHelp();
+      return this.handleBotHelp(message);
     }
 
     const bits = text.split(' ');
@@ -211,7 +211,7 @@ export class BotEngine implements Engine {
   /**
    * Provides general help for the bot, i.e. listing personality plugins
    */
-  private handleBotHelp(): void {
+  private handleBotHelp(source: Message): void {
     const coresWithHelp = this.personalityConstructs.filter(core => {
       return typeof core.onHelp === 'function';
     });
@@ -222,7 +222,7 @@ export class BotEngine implements Engine {
     const topics = coreNames.length ? '`' + coreNames.join('`\n`') + '`' : 'No topics';
     messageEmbed.addFields([{ name: 'Help topics', value: topics }]);
 
-    this.client.queueMessages([helpResponseText, messageEmbed]);
+    this.client.queueMessages(source, [helpResponseText, messageEmbed]);
   }
 
   /**
@@ -235,11 +235,11 @@ export class BotEngine implements Engine {
     const helpingCore = this.personalityConstructs.find(core => core.constructor.name.toUpperCase() === personality.toUpperCase());
 
     if (!helpingCore) {
-      return this.client.queueMessages(['No help for that!']);
+      return this.client.queueMessages(message, ['No help for that!']);
     }
 
     helpingCore.onHelp(message).then(response => {
-      this.client.queueMessages([response]);
+      this.client.queueMessages(message, [response]);
     });
   }
 }

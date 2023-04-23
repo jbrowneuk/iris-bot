@@ -9,14 +9,12 @@ import { messageEvent, readyEvent } from './discord-events';
 
 export class DiscordClient extends EventEmitter implements Client {
   private client: DiscordApiClient;
-  private lastMessage: Message;
   private connected: boolean;
 
   constructor(private logger: Logger) {
     super();
 
     this.client = null;
-    this.lastMessage = null;
     this.connected = false;
   }
 
@@ -49,8 +47,8 @@ export class DiscordClient extends EventEmitter implements Client {
     return this.client.user;
   }
 
-  public queueMessages(messages: MessageType[]): void {
-    messages.forEach((message: MessageType) => this.sendMessage(message));
+  public queueMessages(source: Message, messages: MessageType[]): void {
+    messages.forEach((message: MessageType) => this.sendMessage(source, message));
   }
 
   public setPresence(data: PresenceData): void {
@@ -75,13 +73,12 @@ export class DiscordClient extends EventEmitter implements Client {
       return;
     }
 
-    this.lastMessage = message;
     this.emit(LifecycleEvents.MESSAGE, message);
   }
 
-  private performTextExpansion(input: string): string {
-    if (this.lastMessage.author) {
-      input = input.replace(/\{£user\}/g, this.lastMessage.author.username);
+  private performTextExpansion(source: Message, input: string): string {
+    if (source.author) {
+      input = input.replace(/\{£user\}/g, source.author.username);
     }
 
     input = input.replace(/\{£me\}/g, this.client.user.username);
@@ -89,7 +86,7 @@ export class DiscordClient extends EventEmitter implements Client {
     return input;
   }
 
-  private sendMessage(message: MessageType): void {
+  private sendMessage(source: Message, message: MessageType): void {
     if (!message) {
       return;
     }
@@ -100,7 +97,7 @@ export class DiscordClient extends EventEmitter implements Client {
         return;
       }
 
-      this.lastMessage.channel.send(this.performTextExpansion(message));
+      source.channel.send(this.performTextExpansion(source, message));
       return;
     }
 
@@ -115,9 +112,9 @@ export class DiscordClient extends EventEmitter implements Client {
     }
 
     if (messageOptions.content) {
-      messageOptions.content = this.performTextExpansion(messageOptions.content);
+      messageOptions.content = this.performTextExpansion(source, messageOptions.content);
     }
 
-    this.lastMessage.channel.send(messageOptions);
+    source.channel.send(messageOptions);
   }
 }
