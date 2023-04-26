@@ -1,4 +1,14 @@
-# Release 0.4.5 - Like before, but better
+# Release 0.4.6 - Better multi-server support (codename Peaches)
+
+The main gist of this release is to improve the multi-server handling with
+long-running tasks.
+
+This has been done by removing cached references to messages which could be
+overwritten if another message comes in while processing the older messages.
+Since the bot then sent the reply to the cached message this could occasionally
+send the response to the wrong channel or server.
+
+# Release 0.4.5 - Like before, but better (codename Snow White)
 
 - Fixes a typo introduced in v0.4.4
 - Moves Git tags to using vX.Y.Z format
