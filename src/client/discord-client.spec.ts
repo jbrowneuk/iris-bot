@@ -180,86 +180,82 @@ describe('Discord client wrapper', () => {
     });
 
     describe('message sending', () => {
+      const mockUserName = 'bob-bobertson';
+
+      let mockMessage: IMock<discord.Message>;
+      let mockChannel: IMock<discord.TextChannel>;
+      let mockAuthor: IMock<discord.User>;
+
+      beforeEach(() => {
+        mockChannel = Mock.ofType();
+
+        mockAuthor = Mock.ofType();
+        mockAuthor.setup(a => a.username).returns(() => mockUserName);
+
+        mockMessage = Mock.ofType();
+        mockMessage.setup(m => m.channel).returns(() => mockChannel.object);
+        mockMessage.setup(s => s.author).returns(() => mockAuthor.object);
+      });
+
       it('should queue messages', () => {
         jest.spyOn(untypedClient, 'sendMessage').mockImplementation(() => {});
 
         const messages = ['one', 'two', 'three'];
-        client.queueMessages(messages);
+        client.queueMessages(mockMessage.object, messages);
 
         expect(untypedClient.sendMessage).toHaveBeenCalledTimes(messages.length);
       });
 
       it('should send queued messages', () => {
         let sendCount = 0;
-        const mockChannel = {
-          send: () => {
-            sendCount += 1;
-          }
-        };
-        untypedClient.lastMessage = { channel: mockChannel };
+        mockChannel.setup(c => c.send(It.isAny())).callback(() => (sendCount += 1));
 
         const messages = ['one', 'two', 'three'];
-        client.queueMessages(messages);
+        client.queueMessages(mockMessage.object, messages);
 
-        expect(sendCount).toBe(3);
+        expect(sendCount).toBe(messages.length);
       });
 
       it('should replace user string with last message user name if message is string', () => {
-        const expectedName = 'bob-bobertson';
         let lastMessage = '';
-        const mockChannel = {
-          send: (message: string) => (lastMessage = message)
-        };
-        untypedClient.lastMessage = {
-          channel: mockChannel,
-          author: { username: expectedName }
-        };
+
+        mockChannel.setup(c => c.send(It.isAny())).callback(message => (lastMessage = message));
 
         const messages = ['{£user} {£user} {£user}'];
-        client.queueMessages(messages);
+        client.queueMessages(mockMessage.object, messages);
 
-        expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
+        expect(lastMessage).toBe(`${mockUserName} ${mockUserName} ${mockUserName}`);
       });
 
       it('should replace name string with bot user name if message is string', () => {
         let lastMessage = '';
-        const mockChannel = {
-          send: (message: string) => (lastMessage = message)
-        };
-        untypedClient.lastMessage = { channel: mockChannel };
+
+        mockChannel.setup(c => c.send(It.isAny())).callback(message => (lastMessage = message));
 
         const messages = ['{£me}'];
-        client.queueMessages(messages);
+        client.queueMessages(mockMessage.object, messages);
 
         expect(lastMessage).toBe(MOCK_BOT_USERNAME);
       });
 
       it('should replace user string with last message user name in content if message is MessageOptions', () => {
-        const expectedName = 'bob-bobertson';
         let lastMessage: string | null | undefined = null;
-        const mockChannel = {
-          send: (message: discord.MessageOptions) => (lastMessage = message.content)
-        };
-        untypedClient.lastMessage = {
-          channel: mockChannel,
-          author: { username: expectedName }
-        };
+
+        mockChannel.setup(c => c.send(It.isAny())).callback(message => (lastMessage = message.content));
 
         const messageOptions = { content: '{£user} {£user} {£user}' };
-        client.queueMessages([messageOptions]);
+        client.queueMessages(mockMessage.object, [messageOptions]);
 
-        expect(lastMessage).toBe(`${expectedName} ${expectedName} ${expectedName}`);
+        expect(lastMessage).toBe(`${mockUserName} ${mockUserName} ${mockUserName}`);
       });
 
       it('should replace name string with bot user name in content if message is MessageOptions', () => {
         let lastMessage: string | null | undefined = null;
-        const mockChannel = {
-          send: (message: discord.MessageOptions) => (lastMessage = message.content)
-        };
-        untypedClient.lastMessage = { channel: mockChannel };
+
+        mockChannel.setup(c => c.send(It.isAny())).callback(message => (lastMessage = message.content));
 
         const messageOptions = { content: '{£me}' };
-        client.queueMessages([messageOptions]);
+        client.queueMessages(mockMessage.object, [messageOptions]);
 
         expect(lastMessage).toBe(MOCK_BOT_USERNAME);
       });

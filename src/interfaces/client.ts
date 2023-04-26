@@ -1,4 +1,4 @@
-import { TextBasedChannel, PresenceData, User } from 'discord.js';
+import { Message, PresenceData, TextBasedChannel, User } from 'discord.js';
 import { EventEmitter } from 'events';
 
 import { MessageType } from '../types';
@@ -40,7 +40,7 @@ export interface Client extends EventEmitter {
    *
    * @param messages messages to queue
    */
-  queueMessages(messages: MessageType[]): void;
+  queueMessages(source: Message, messages: MessageType[]): void;
 
   /**
    * Sets the client's presence and activity data

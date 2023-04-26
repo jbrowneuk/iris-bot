@@ -1,8 +1,9 @@
-import { Guild, Message, MessageEmbed, User } from 'discord.js';
+import { Guild, GuildMember, GuildMemberManager, Message, MessageEmbed, TextChannel, User } from 'discord.js';
 import { IMock, It, Mock, Times } from 'typemoq';
 
 import * as LifecycleEvents from '../constants/lifecycle-events';
 import { Client } from '../interfaces/client';
+import { Logger } from '../interfaces/logger';
 import { Personality } from '../interfaces/personality';
 import { ResponseGenerator } from '../interfaces/response-generator';
 import { Settings } from '../interfaces/settings';
@@ -13,14 +14,70 @@ import { HandledResponseError } from './handled-response-error';
 const MOCK_USERNAME = 'bot';
 const MOCK_ID = 'BOT12345';
 
+class TestableBotEngine extends BotEngine {
+  public onConnectedSpy: jest.SpyInstance;
+  public onMessageSpy: jest.SpyInstance;
+  public calculateAddressedMessageSpy: jest.SpyInstance;
+  public handleAmbientMessageSpy: jest.SpyInstance;
+  public handleAddressedMessageSpy: jest.SpyInstance;
+  public dequeueMessagePromisesSpy: jest.SpyInstance;
+
+  public get cores() {
+    return this.personalityConstructs;
+  }
+
+  constructor(client: Client, responses: ResponseGenerator, settings: Settings, logger: Logger) {
+    super(client, responses, settings, logger);
+
+    this.initialiseMocks();
+  }
+
+  private initialiseMocks() {
+    // Mock out actual implementations for testing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const untypedEngine = this as any;
+    this.onConnectedSpy = jest.spyOn(untypedEngine, 'onConnected');
+    this.onMessageSpy = jest.spyOn(untypedEngine, 'onMessage');
+    this.calculateAddressedMessageSpy = jest.spyOn(untypedEngine, 'calculateAddressedMessage');
+    this.handleAmbientMessageSpy = jest.spyOn(untypedEngine, 'handleAmbientMessage');
+    this.handleAddressedMessageSpy = jest.spyOn(untypedEngine, 'handleAddressedMessage');
+    this.dequeueMessagePromisesSpy = jest.spyOn(untypedEngine, 'dequeueMessagePromises');
+  }
+
+  public triggerHandleMessage(msg: Message): void {
+    this.onMessage(msg);
+  }
+
+  public triggerDequeueMessagePromises(source: Message, funcs: Array<Promise<MessageType>>): Promise<MessageType> {
+    return this.dequeueMessagePromises(source, funcs);
+  }
+
+  public triggerHandleAddressedMessage(source: Message, text: string) {
+    this.handleAddressedMessage(source, text);
+  }
+
+  public triggerHandleAmbientMessage(source: Message) {
+    this.handleAmbientMessage(source);
+  }
+
+  public triggerCalculateAddressedMessage(source: Message) {
+    return this.calculateAddressedMessage(source);
+  }
+
+  public setCores(cores: Personality[]) {
+    this.personalityConstructs = cores;
+  }
+}
+
 describe('Bot engine', () => {
   let client: IMock<Client>;
   let responseGenerator: IMock<ResponseGenerator>;
   let settings: IMock<Settings>;
   let mockUserInfo: IMock<User>;
+  let mockMessage: IMock<Message>;
+  let mockChannel: IMock<TextChannel>;
 
-  let engine: BotEngine;
-  let untypedEngine: any;
+  let engine: TestableBotEngine;
 
   beforeEach(() => {
     mockUserInfo = Mock.ofType<User>();
@@ -35,8 +92,12 @@ describe('Bot engine', () => {
     settings = Mock.ofType<Settings>();
     settings.setup(s => s.getSettings()).returns(() => ({ token: 'bot-token' }));
 
-    engine = new BotEngine(client.object, responseGenerator.object, settings.object, console);
-    untypedEngine = engine;
+    mockChannel = Mock.ofType();
+
+    mockMessage = Mock.ofType();
+    mockMessage.setup(m => m.channel).returns(() => mockChannel.object);
+
+    engine = new TestableBotEngine(client.object, responseGenerator.object, settings.object, console);
   });
 
   it('should construct', () => {
@@ -62,8 +123,6 @@ describe('Bot engine', () => {
   });
 
   it('should add connection event handler on connection', () => {
-    jest.spyOn(untypedEngine, 'onConnected').mockImplementation(() => {});
-
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
       .setup(m => m.on(It.isAnyString(), It.isAny()))
@@ -76,11 +135,11 @@ describe('Bot engine', () => {
     const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.CONNECTED);
     relatedHandler?.cb.call(client);
 
-    expect(untypedEngine.onConnected).toHaveBeenCalled();
+    expect(engine.onConnectedSpy).toHaveBeenCalled();
   });
 
-  it('should add connection event handler on connection', () => {
-    jest.spyOn(untypedEngine, 'onMessage').mockImplementation(() => {});
+  it('should add message event handler on connection', () => {
+    engine.onMessageSpy.mockImplementation(() => '');
 
     const callbacks: Array<{ evt: string; cb: () => void }> = [];
     client
@@ -94,17 +153,17 @@ describe('Bot engine', () => {
     const relatedHandler = callbacks.find(cb => cb.evt === LifecycleEvents.MESSAGE);
     relatedHandler?.cb.call(client);
 
-    expect(untypedEngine.onMessage).toHaveBeenCalled();
+    expect(engine.onMessageSpy).toHaveBeenCalled();
   });
 
   it('should add personality construct', () => {
     const mockCore = Mock.ofType<Personality>();
 
-    expect(untypedEngine.personalityConstructs.length).toBe(0);
+    expect(engine.cores.length).toBe(0);
 
     engine.addPersonality(mockCore.object);
 
-    expect(untypedEngine.personalityConstructs.length).toBe(1);
+    expect(engine.cores.length).toBe(1);
   });
 
   it('should run initialise on personality constructs if implemented', () => {
@@ -156,31 +215,33 @@ describe('Bot engine', () => {
   });
 
   it('should handle ambient messages when message received', () => {
-    jest.spyOn(untypedEngine, 'calculateAddressedMessage').mockReturnValue(null);
-    jest.spyOn(untypedEngine, 'handleAmbientMessage').mockImplementation(() => {});
+    engine.calculateAddressedMessageSpy.mockReturnValue(null);
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- stub the method, no impl
+    engine.handleAmbientMessageSpy.mockImplementation(() => {});
 
-    untypedEngine.onMessage({});
+    engine.triggerHandleMessage(Mock.ofType<Message>().object);
 
-    expect(untypedEngine.handleAmbientMessage).toHaveBeenCalled();
+    expect(engine.handleAmbientMessageSpy).toHaveBeenCalled();
   });
 
   it('should handle addressed messages when message received', () => {
-    jest.spyOn(untypedEngine, 'calculateAddressedMessage').mockReturnValue('test');
-    jest.spyOn(untypedEngine, 'handleAddressedMessage').mockImplementation(() => {});
+    engine.calculateAddressedMessageSpy.mockReturnValue('test');
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- stub the method, no impl
+    engine.handleAmbientMessageSpy.mockImplementation(() => {});
 
-    untypedEngine.onMessage({});
+    engine.triggerHandleMessage(Mock.ofType<Message>().object);
 
-    expect(untypedEngine.handleAddressedMessage).toHaveBeenCalled();
+    expect(engine.handleAddressedMessageSpy).toHaveBeenCalled();
   });
 
   it('should send message when one is generated as a response', done => {
-    const mockMessage = 'hello world';
-    const fakeMessageFns = [Promise.resolve(mockMessage), Promise.resolve(null)];
+    const messageText = 'hello world';
+    const fakeMessageFns = [Promise.resolve(messageText), Promise.resolve(null)];
 
-    untypedEngine.dequeuePromises(fakeMessageFns).catch((err: Error) => expect(err instanceof HandledResponseError).toBeTruthy());
+    engine.triggerDequeueMessagePromises(mockMessage.object, fakeMessageFns).catch((err: Error) => expect(err instanceof HandledResponseError).toBeTruthy());
 
     setTimeout(() => {
-      client.verify(c => c.queueMessages(It.isValue([mockMessage])), Times.once());
+      client.verify(c => c.queueMessages(It.isAny(), It.isValue([messageText])), Times.once());
       done();
     }, 100);
   });
@@ -189,30 +250,30 @@ describe('Bot engine', () => {
     const failureMessage = 'I am a failure';
     const fakeMessageFns = [Promise.reject(failureMessage), Promise.resolve(null)];
 
-    untypedEngine
-      .dequeuePromises(fakeMessageFns)
+    engine
+      .triggerDequeueMessagePromises(mockMessage.object, fakeMessageFns)
       .then(() => fail('should not get here'))
       .catch((err: string) => {
         expect(err).toBe(failureMessage);
-        client.verify(c => c.queueMessages(It.isAny()), Times.never());
+        client.verify(c => c.queueMessages(It.isAny(), It.isAny()), Times.never());
         done();
       });
   });
 
   it('should queue messages from personality cores', () => {
     let queuedPromises = [];
-    const mockMessage = { content: 'lol hello' };
-    jest.spyOn(untypedEngine, 'dequeuePromises').mockImplementation((arg: any) => {
+    const testMessage = Mock.ofType<Message>();
+    testMessage.setup(s => s.content).returns(() => 'lol hello');
+    engine.dequeueMessagePromisesSpy.mockImplementation((_, arg) => {
       queuedPromises = arg;
       return Promise.resolve(null);
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore.setup(m => m.onMessage(It.isAny())).returns(() => Promise.resolve(null));
-    untypedEngine.personalityConstructs = [mockPersonalityCore.object];
+    engine.setCores([mockPersonalityCore.object]);
 
-    untypedEngine.handleAmbientMessage(mockMessage);
+    engine.triggerHandleAmbientMessage(testMessage.object);
 
-    expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
     expect(queuedPromises.length).toBe(1);
   });
 
@@ -239,11 +300,20 @@ describe('Bot engine', () => {
 
     messageMappedToExpectedResults.forEach((kvp: InputOutputPair) => {
       client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
-      const mockMessage = {
-        content: kvp.input,
-        guild: { members: { resolve: () => null } }
-      };
-      const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
+
+      // Mock guild override
+      const mockGuildMember = Mock.ofType<GuildMember>();
+      const testGuildMemberManager = Mock.ofType<GuildMemberManager>();
+      testGuildMemberManager.setup(g => g.resolve(It.isAny())).returns(() => mockGuildMember.object);
+
+      // Mock up message
+      const testGuild = Mock.ofType<Guild>();
+      testGuild.setup(g => g.members).returns(() => testGuildMemberManager.object);
+      const testMessage = Mock.ofType<Message>();
+      testMessage.setup(m => m.content).returns(() => kvp.input);
+      testMessage.setup(m => m.guild).returns(() => testGuild.object);
+
+      const actualResult = engine.triggerCalculateAddressedMessage(testMessage.object);
       expect(actualResult).toBe(kvp.expectedOutput);
     });
   });
@@ -252,30 +322,39 @@ describe('Bot engine', () => {
     const overridenUsername = 'totally_not_a_bot';
 
     client.setup(m => m.getUserInformation()).returns(() => mockUserInfo.object);
-    const mockMessage = {
-      content: `${overridenUsername}, hello`,
-      guild: { members: { resolve: () => ({ nickname: overridenUsername }) } }
-    };
 
-    const actualResult = untypedEngine.calculateAddressedMessage(mockMessage);
+    // Mock up guild override
+    const mockGuildMember = Mock.ofType<GuildMember>();
+    mockGuildMember.setup(g => g.nickname).returns(() => overridenUsername);
+    const testGuildMemberManager = Mock.ofType<GuildMemberManager>();
+    testGuildMemberManager.setup(g => g.resolve(It.isAny())).returns(() => mockGuildMember.object);
+
+    // Mock up message
+    const testGuild = Mock.ofType<Guild>();
+    testGuild.setup(g => g.members).returns(() => testGuildMemberManager.object);
+    const testMessage = Mock.ofType<Message>();
+    testMessage.setup(m => m.content).returns(() => `${overridenUsername}, hello`);
+    testMessage.setup(m => m.guild).returns(() => testGuild.object);
+
+    const actualResult = engine.triggerCalculateAddressedMessage(testMessage.object);
     expect(actualResult).toBe('hello');
   });
 
   it('should queue addressed messages from personality cores', () => {
     let queuedPromises = [];
     const messageText = 'lol hello';
-    const mockMessage = { content: `${MOCK_USERNAME} ${messageText}` };
-    jest.spyOn(untypedEngine, 'dequeuePromises').mockImplementation((arg: any) => {
+    engine.dequeueMessagePromisesSpy.mockImplementation((_, arg) => {
       queuedPromises = arg;
       return Promise.resolve(null);
     });
     const mockPersonalityCore = Mock.ofType<Personality>();
     mockPersonalityCore.setup(m => m.onAddressed(It.isAny(), It.isAnyString())).returns(() => Promise.resolve(null));
-    untypedEngine.personalityConstructs = [mockPersonalityCore.object];
+    engine.setCores([mockPersonalityCore.object]);
 
-    untypedEngine.handleAddressedMessage(mockMessage, messageText);
+    const testMessage = Mock.ofType<Message>();
+    testMessage.setup(m => m.content).returns(() => `${MOCK_USERNAME} ${messageText}`);
+    engine.triggerHandleAddressedMessage(testMessage.object, messageText);
 
-    expect(untypedEngine.dequeuePromises).toHaveBeenCalled();
     expect(queuedPromises.length).toBe(1);
   });
 
@@ -290,7 +369,6 @@ describe('Bot engine', () => {
         onHelp: () => Promise.resolve(helpText)
       };
 
-      let mockMessage: IMock<Message>;
       let messageQueue: MessageType[];
 
       beforeEach(() => {
@@ -300,15 +378,14 @@ describe('Bot engine', () => {
           .returns(
             () =>
               ({
-                resolve: (): any => undefined
+                resolve: () => undefined
               } as any)
           );
 
-        mockMessage = Mock.ofType<Message>();
         mockMessage.setup(msg => msg.guild).returns(() => mockGuild.object);
 
         messageQueue = [];
-        client.setup(c => c.queueMessages(It.isAny())).callback(messages => messageQueue.push(...messages));
+        client.setup(c => c.queueMessages(It.isAny(), It.isAny())).callback((_, messages) => messageQueue.push(...messages));
       });
 
       it('should respond with help and plugin summary if no personality core supplied and core loaded', () => {
@@ -316,7 +393,7 @@ describe('Bot engine', () => {
         engine.addPersonality(coreWithHelp);
 
         mockMessage.setup(msg => msg.content).returns(() => messageText);
-        untypedEngine.onMessage(mockMessage.object);
+        engine.triggerHandleMessage(mockMessage.object);
 
         expect(messageQueue.length).toBe(2);
 
@@ -334,7 +411,7 @@ describe('Bot engine', () => {
         const messageText = `${MOCK_USERNAME} ${helpCommand}`;
 
         mockMessage.setup(msg => msg.content).returns(() => messageText);
-        untypedEngine.onMessage(mockMessage.object);
+        engine.triggerHandleMessage(mockMessage.object);
 
         expect(messageQueue.length).toBe(2);
 
@@ -355,7 +432,7 @@ describe('Bot engine', () => {
         engine.addPersonality(coreWithHelp);
 
         mockMessage.setup(msg => msg.content).returns(() => messageText);
-        untypedEngine.onMessage(mockMessage.object);
+        engine.triggerHandleMessage(mockMessage.object);
 
         setTimeout(() => {
           expect(messageQueue.length).toBe(1);
@@ -369,7 +446,7 @@ describe('Bot engine', () => {
         const messageText = `${MOCK_USERNAME} ${helpCommand} Object`;
 
         mockMessage.setup(msg => msg.content).returns(() => messageText);
-        untypedEngine.onMessage(mockMessage.object);
+        engine.triggerHandleMessage(mockMessage.object);
 
         setTimeout(() => {
           expect(messageQueue.length).toBe(1);
