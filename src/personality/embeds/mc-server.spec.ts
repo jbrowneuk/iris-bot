@@ -10,17 +10,31 @@ describe('Embed formatting for Minecraft server utilities', () => {
     const serverVersion = '1.2.3';
 
     const onlineWithPlayers: ServerResponse = {
-      version: serverVersion,
-      onlinePlayers: 2,
-      maxPlayers: 4,
-      samplePlayers: [{ name: 'a' }, { name: 'b' }]
+      online: true,
+      host: 'online-server',
+      port: 25565,
+      version: {
+        name_clean: '1.2.3'
+      },
+      players: {
+        online: 2,
+        max: 5,
+        list: [{ name_clean: 'user' }, { name_clean: 'user2' }]
+      }
     };
 
     const onlineNoPlayers: ServerResponse = {
-      version: serverVersion,
-      onlinePlayers: 0,
-      maxPlayers: 4,
-      samplePlayers: []
+      online: true,
+      host: 'online-server',
+      port: 25565,
+      version: {
+        name_clean: '1.2.3'
+      },
+      players: {
+        online: 0,
+        max: 5,
+        list: []
+      }
     };
 
     const onlinePlayersEmbed = embeds.generateServerEmbed(serverUrl, onlineWithPlayers);
@@ -61,9 +75,9 @@ describe('Embed formatting for Minecraft server utilities', () => {
       expect(onlinePlayersEmbed.fields.length).toBeGreaterThan(0);
 
       const onlineServerPlayersField = onlinePlayersEmbed.fields.find(f => f.name.startsWith(embeds.fieldTitlePlayers));
-      expect(onlineServerPlayersField?.name).toBe(`${embeds.fieldTitlePlayers} (${onlineWithPlayers.onlinePlayers})`);
-      onlineWithPlayers.samplePlayers.forEach(player => {
-        expect(onlineServerPlayersField?.value).toContain(player.name);
+      expect(onlineServerPlayersField?.name).toBe(`${embeds.fieldTitlePlayers} (${onlineWithPlayers.players?.online})`);
+      onlineWithPlayers.players?.list.forEach(player => {
+        expect(onlineServerPlayersField?.value).toContain(player.name_clean);
       });
 
       const offlineServerPlayersField = onlineEmptyEmbed.fields.find(f => f.name.startsWith(embeds.fieldTitlePlayers));
