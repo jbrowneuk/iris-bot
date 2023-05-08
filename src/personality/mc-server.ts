@@ -1,8 +1,9 @@
+import * as axios from 'axios';
 import { Message, TextChannel } from 'discord.js';
 import * as fs from 'fs';
+import { StatusCodes } from 'http-status-codes';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { KeyedObject } from '../interfaces/keyed-object';
 import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 import { announceCommand, setCommand, statusCommand } from './constants/mc-server';
@@ -17,14 +18,11 @@ import {
 } from './embeds/mc-server';
 import { ServerInformation, ServerResponse } from './interfaces/mc-server';
 
-// This has to be const util = require as it breaks the build if not
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const util = require('minecraft-server-util');
-
 // Personality constants
 const updateMinutes = 5;
 const defaultSettingsFile = 'mc-servers.json';
 const settingsFileEnc = 'utf-8';
+const apiEndpoint = 'https://api.mcstatus.io/v2/status/java/';
 
 export class McServer implements Personality {
   protected servers: Map<string, ServerInformation>;
@@ -142,36 +140,30 @@ export class McServer implements Personality {
 
   private fetchStatus(serverDetails: ServerInformation): Promise<ServerResponse> {
     return this.getServerStatus(serverDetails.url).then(status => {
-      const isOnline = status !== null;
+      const isOnline = status !== null && status.online;
       serverDetails.lastKnownOnline = isOnline;
       return status;
     });
   }
 
   protected getServerStatus(url: string): Promise<ServerResponse> {
-    return util
-      .status(url)
-      .then((response: KeyedObject) => {
-        if (!response || !response.version) {
-          return null;
+    return axios.default
+      .get<ServerResponse>(apiEndpoint + url)
+      .then(response => {
+        if (response.status !== StatusCodes.OK) {
+          throw new Error('Unable to fetch API');
         }
 
-        // Handle Aternos/Exaroton servers
+        // Handle Aternos/Exaroton servers which have a "Sleeping" state in the version
         const versionRegex = /\b\d+(\.\d+){1,2}\b/;
-        const matches = response.version.match(versionRegex);
+        const matches = response.data?.version?.name_clean?.match(versionRegex) || null;
         if (matches === null || matches.length === 0) {
           return null;
         }
 
-        return {
-          version: matches[0],
-          onlinePlayers: response.onlinePlayers,
-          maxPlayers: response.maxPlayers,
-          samplePlayers: response.samplePlayers,
-          description: response.description && response.description.descriptionText ? response.description.descriptionText : null
-        };
+        return response.data;
       })
-      .catch((error: Error): ServerResponse => {
+      .catch(error => {
         this.dependencies.logger.error('Server unreachable:', error || 'no error');
         return null;
       });

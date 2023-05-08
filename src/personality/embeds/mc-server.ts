@@ -1,4 +1,4 @@
-import { EmbedFieldData, MessageEmbed } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 
 import { announceCommand, defaultDescription, noAssociationCopy, setCommand, statusCommand } from '../constants/mc-server';
 import { ServerResponse } from '../interfaces/mc-server';
@@ -41,8 +41,8 @@ export function generateHelpEmbed(): MessageEmbed {
  * @returns a MessageEmbed containing a summary of the server status
  */
 export function generateServerEmbed(url: string, status: ServerResponse | null): MessageEmbed {
-  const isOnline = status !== null;
-  const description = status && status.description ? status.description : defaultDescription;
+  const isOnline = status !== null && status.online;
+  const description = status?.motd?.clean || defaultDescription;
   const statusText = isOnline ? 'online' : 'offline';
 
   const embed = new MessageEmbed();
@@ -51,15 +51,15 @@ export function generateServerEmbed(url: string, status: ServerResponse | null):
   embed.setColor(isOnline ? embedSuccessColor : embedErrorColor);
 
   // Version field
-  if (status && status.version) {
-    const fieldData = { name: fieldTitleVersion, value: status.version };
+  if (status && status.version && status.version.name_clean) {
+    const fieldData = { name: fieldTitleVersion, value: status.version.name_clean };
     embed.addFields([fieldData]);
   }
 
-  if (isOnline && status.onlinePlayers && status.onlinePlayers > 0) {
+  if (isOnline && status.players && status.players.online > 0) {
     // Sample players is occasionally not populated
-    const players = (status.samplePlayers || []).map(p => p.name);
-    const fieldData = { name: `${fieldTitlePlayers} (${status.onlinePlayers})`, value: players.join('\n') };
+    const players = (status.players.list || []).map(p => p.name_clean);
+    const fieldData = { name: `${fieldTitlePlayers} (${status.players.online})`, value: players.join('\n') };
     embed.addFields([fieldData]);
   }
 
