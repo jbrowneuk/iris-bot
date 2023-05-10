@@ -15,7 +15,8 @@
     "lint": "eslint */**/*.ts",
     "lint:fix": "eslint */**/*.ts --fix",
     "pr-check": "npm run build && npm run test && npm run lint",
-    "quickstart": "npm i && npm run build && npm run start",
+    "gen-db": "node src/scripts/gen-db.js",
+    "quickstart": "npm i && npm run build && npm run gen-db && npm run start",
     "start": "node ./dist/index.js"
   },
   "repository": {
