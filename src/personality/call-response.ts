@@ -20,10 +20,7 @@ export class CallResponse implements Personality {
     return this.dependencies.database;
   }
 
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<string> {
+  public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     const callString = `{£me} ${addressedMessage}`;
     return this.generateResponseIfFound(callString);
   }
@@ -44,7 +41,7 @@ export class CallResponse implements Personality {
 
     return this.database
       .getRecordsFromCollection<CannedResponse>('call_response', filter)
-      .then((messagePairs) => {
+      .then(messagePairs => {
         if (!messagePairs || messagePairs.length === 0) {
           return null;
         }

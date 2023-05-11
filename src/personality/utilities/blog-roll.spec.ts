@@ -25,7 +25,7 @@ describe('Blog roll utilities', () => {
         { date: new Date(2020, 11, 1, 14), expectedString: 'December' }
       ];
 
-      dates.forEach((test) => {
+      dates.forEach(test => {
         const formatted = formatTimestamp(test.date.getTime() / 1000);
         expect(formatted).toBe(`1 ${test.expectedString} 2020`);
       });

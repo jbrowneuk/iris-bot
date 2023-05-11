@@ -67,7 +67,7 @@ describe('Blog roll', () => {
   let mockLogger: IMock<Logger>;
   let mockDependencies: DependencyContainer;
   let personality: TestableBlogRoll;
-  let mock = new MockAdapter(axios as any);
+  const mock = new MockAdapter(axios as any);
 
   beforeAll(() => jest.useFakeTimers());
   afterAll(() => jest.useRealTimers());
@@ -162,7 +162,7 @@ describe('Blog roll', () => {
     });
 
     it('should cache channel when set channel command invoked', () => {
-      const saveSpy = jest.spyOn(personality as any, 'saveSettings').mockImplementation(() => {});
+      const saveSpy = jest.spyOn(personality as any, 'saveSettings').mockImplementation(() => null);
       message.setup(m => m.content).returns(() => COMMAND_PREFIX + 'set channel');
 
       personality.onMessage(message.object);

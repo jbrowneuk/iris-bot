@@ -11,10 +11,7 @@ Using \`{£me} flip a coin\` will flip a virtual coin.`;
 export class SimpleInteractions implements Personality {
   constructor(private dependencies: DependencyContainer) {}
 
-  public onAddressed(
-    message: Message,
-    addressedMessage: string
-  ): Promise<string> {
+  public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     let response = this.highFive(message, addressedMessage);
     if (response) {
       return response;
@@ -59,7 +56,7 @@ export class SimpleInteractions implements Personality {
       return null;
     }
 
-    message.react('✋').catch((e) => this.dependencies.logger.error(e));
+    message.react('✋').catch(e => this.dependencies.logger.error(e));
     return this.dependencies.responses.generateResponse('highFive');
   }
 }
