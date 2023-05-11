@@ -1,2 +1,5 @@
 # Generated files
 /src/git-commit.ts
+
+# Dependencies
+/node_modules/**

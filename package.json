@@ -1,6 +1,6 @@
 {
   "name": "iris-bot",
-  "version": "0.4.6",
+  "version": "0.5.0",
   "description": "Discord chatbot",
   "engines": {
     "npm": ">=7.0.0",
@@ -12,10 +12,10 @@
     "test": "jest",
     "coverage": "jest --collect-coverage=true",
     "develop": "npm run prebuild && ts-node --project tsconfig.json ./src/index.ts",
-    "lint": "eslint */**/*.ts",
-    "lint:fix": "eslint */**/*.ts --fix",
+    "lint": "eslint src/**/*.ts",
     "pr-check": "npm run build && npm run test && npm run lint",
-    "quickstart": "npm i && npm run build && npm run start",
+    "gen-db": "node src/scripts/gen-db.js",
+    "quickstart": "npm i && npm run build && npm run gen-db && npm run start",
     "start": "node ./dist/index.js"
   },
   "repository": {
@@ -62,20 +62,5 @@
     "ts-node": "^10.9.1",
     "typemoq": "^2.1.0",
     "typescript": "^5.0.3"
-  },
-  "nyc": {
-    "check-coverage": true,
-    "all": true,
-    "extension": [
-      ".ts"
-    ],
-    "include": [
-      "src/**/!(*.spec).ts"
-    ],
-    "reporter": [
-      "html",
-      "lcov",
-      "text-summary"
-    ]
   }
 }

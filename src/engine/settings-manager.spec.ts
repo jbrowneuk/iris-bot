@@ -28,7 +28,7 @@ describe('Simple settings manager', () => {
   });
 
   it('should load configuration if path provided in constructor', () => {
-    const testObject = new TestableSettingsManager('./config.example.json');
+    const testObject = new TestableSettingsManager('./conf/config.example.json');
     expect(testObject.getSettings()).toBeTruthy();
     expect(testObject.getSettingsForKey('token')).toBeTruthy();
   });
@@ -56,7 +56,7 @@ describe('Simple settings manager', () => {
     testObject.mockOutSettings(fakeSettings);
 
     // Mock saving to ensure only this unit is tested
-    jest.spyOn(testObject as any, 'saveToFile').mockImplementation(() => {});
+    jest.spyOn(testObject as any, 'saveToFile').mockImplementation(() => null);
 
     const testKey = 'myKeyHere';
     const testValue = 'new value';

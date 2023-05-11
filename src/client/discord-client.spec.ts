@@ -68,7 +68,7 @@ describe('Discord client wrapper', () => {
     });
 
     it('should add connection event handler on connection', () => {
-      jest.spyOn(untypedClient, 'onConnected').mockImplementation(() => {});
+      jest.spyOn(untypedClient, 'onConnected').mockImplementation(() => null);
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
         .setup(m => m.on(It.isAny(), It.isAny()))
@@ -85,7 +85,7 @@ describe('Discord client wrapper', () => {
     });
 
     it('should add message event handler on connection', () => {
-      jest.spyOn(untypedClient, 'onMessage').mockImplementation(() => {});
+      jest.spyOn(untypedClient, 'onMessage').mockImplementation(() => null);
       const callbacks: Array<{ evt: string; cb: () => void }> = [];
       discordMock
         .setup(m => m.on(It.isAny(), It.isAny()))
@@ -198,7 +198,7 @@ describe('Discord client wrapper', () => {
       });
 
       it('should queue messages', () => {
-        jest.spyOn(untypedClient, 'sendMessage').mockImplementation(() => {});
+        jest.spyOn(untypedClient, 'sendMessage').mockImplementation(() => null);
 
         const messages = ['one', 'two', 'three'];
         client.queueMessages(mockMessage.object, messages);
@@ -262,9 +262,9 @@ describe('Discord client wrapper', () => {
     });
 
     describe('incoming message handling', () => {
-      function messageHandlerTest(mockMessage: any): boolean {
+      function messageHandlerTest(mockMessage): boolean {
         let eventRaised = false;
-        const callbacks: Array<{ evt: string; cb: (a: any) => void }> = [];
+        const callbacks: Array<{ evt: string; cb: (a) => void }> = [];
         discordMock
           .setup(m => m.on(It.isAny(), It.isAny()))
           .callback((evt: string, cb: () => void) => {
