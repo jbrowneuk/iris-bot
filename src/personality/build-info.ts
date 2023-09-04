@@ -1,10 +1,10 @@
 import { MessageEmbed } from 'discord.js';
 
 import { GIT_COMMIT } from '../git-commit';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
-export class BuildInfo implements Personality {
+export class BuildInfo extends PersonalityBase {
   public onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);
   }

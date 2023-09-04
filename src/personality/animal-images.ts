@@ -4,8 +4,8 @@ import { StatusCodes } from 'http-status-codes';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 const randomApiBaseUrl = 'https://some-random-api.ml/img/';
 const imageApiBaseUrl = 'https://jbrowne.io/api/image/?query=';
@@ -26,8 +26,10 @@ export interface ImageData {
   link?: string;
 }
 
-export class AnimalImages implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class AnimalImages extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);

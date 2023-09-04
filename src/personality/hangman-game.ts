@@ -4,7 +4,6 @@ import { StatusCodes } from 'http-status-codes';
 
 import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
 import {
   apiUrl,
@@ -19,10 +18,13 @@ import {
 } from './constants/hangman-game';
 import { generateDictionaryEmbed, generateGameEmbed, generateGameEndMesage, generateHelpEmbed, generateStatsEmbed } from './embeds/hangman-game';
 import { DictionaryInfo, GameData, SerialisableGameData, WordData } from './interfaces/hangman-game';
+import { PersonalityBase } from './personality-base';
 import { deserialiseGameData, isGameActive, serialiseGameData } from './utilities/hangman-game';
 
-export class HangmanGame implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class HangmanGame extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);

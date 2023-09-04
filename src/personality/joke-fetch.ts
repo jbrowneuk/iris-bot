@@ -3,8 +3,8 @@ import { Message } from 'discord.js';
 import { StatusCodes } from 'http-status-codes';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 export const commandString = 'TELL ME A JOKE';
 export const apiEndpoint = 'https://jbrowne.io/api/jokes/';
@@ -13,8 +13,10 @@ export interface ResponseData {
   text: string;
 }
 
-export class Jokes implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class Jokes extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   public onAddressed(_: Message, addressedMessage: string): Promise<MessageType> {
     if (addressedMessage.toUpperCase().trim() !== commandString) {

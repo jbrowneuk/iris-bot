@@ -1,8 +1,8 @@
 import { Message, MessageEmbed } from 'discord.js';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 const activities = [
   { request: 'hug', response: 'hug' },
@@ -17,7 +17,7 @@ const activities = [
 
 export const helpText = `This plugin lets you send virtual things to people.`;
 
-export class HugBot implements Personality {
+export class HugBot extends PersonalityBase {
   public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     return this.commandWrapper(message, addressedMessage, 'give a ', ' to');
   }

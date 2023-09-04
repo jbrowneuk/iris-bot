@@ -1,8 +1,8 @@
 import { Message, MessageEmbed } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 const maxNumberDice = 8;
 const maxNumberSides = 100;
@@ -14,10 +14,12 @@ Simply mention the bot with the roll you want: \`\`\`@bot roll 4d20\`\`\``;
 /**
  * Dice rolling feature
  */
-export class DieRoll implements Personality {
+export class DieRoll extends PersonalityBase {
   private totalDiceRolled: number;
 
-  constructor(private dependencies: DependencyContainer) {}
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     const response = this.rollDice(addressedMessage);

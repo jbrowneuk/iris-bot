@@ -1,8 +1,8 @@
 import { Message } from 'discord.js';
 
 import { COMMAND_PREFIX } from '../constants/personality-constants';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 /**
  * A basic personality implementation that can be used as a template to
@@ -10,7 +10,7 @@ import { MessageType } from '../types';
  *
  * Don't forget to initialise and add to the bot in the index.ts file!
  */
-export class BasicIntelligence implements Personality {
+export class BasicIntelligence extends PersonalityBase {
   /**
    * Called whenever the bot is addressed using one of the attention grabber phrases
    *

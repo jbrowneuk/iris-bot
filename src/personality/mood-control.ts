@@ -4,6 +4,7 @@ import { DependencyContainer } from '../interfaces/dependency-container';
 import { Mood, MoodEngine, MoodletDelta, MoodletSize } from '../interfaces/mood-engine';
 import { Personality } from '../interfaces/personality';
 import { getValueStartedWith, randomFloat, randomInteger } from '../utils';
+import { PersonalityBase } from './personality-base';
 
 const defaultInterval = 1000 * 60; // Fires every minute
 const activityStartThreshold = 0.25; // TODO: adjust this based on mood/eagerness
@@ -48,13 +49,15 @@ const activities: BotActivity[] = [
 
 export const moodSummaryCommands = ['how are you', 'how do you feel', "what's up", "how's life"];
 
-export class MoodControl implements Personality {
+export class MoodControl extends PersonalityBase {
   protected timerInterval: number | NodeJS.Timer;
   protected activity: BotActivity;
   protected activityDelta: MoodletDelta;
   protected activityEnd: Date;
 
-  constructor(private dependencies: DependencyContainer, private moodEngine: MoodEngine) {
+  constructor(dependencies: DependencyContainer, private moodEngine: MoodEngine) {
+    super(dependencies);
+
     this.activity = null;
   }
 

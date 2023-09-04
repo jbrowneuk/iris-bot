@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 
 import { Database } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
+import { PersonalityBase } from './personality-base';
 
 interface CannedResponse {
   response: string;
@@ -13,8 +13,10 @@ interface CannedResponse {
  *
  * Generates canned responses to messaages
  */
-export class CallResponse implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class CallResponse extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   private get database(): Database {
     return this.dependencies.database;

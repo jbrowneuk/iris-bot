@@ -1,15 +1,17 @@
 import { Message } from 'discord.js';
 
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { getValueStartedWith } from '../utils';
+import { PersonalityBase } from './personality-base';
 
 export const helpText = `The Simple Interactions plugin provides responses for flipping coins and high fives.
 Using \`{£me} high five\` or \`{£me} ^5\` will give you a virtual high five.
 Using \`{£me} flip a coin\` will flip a virtual coin.`;
 
-export class SimpleInteractions implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class SimpleInteractions extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   public onAddressed(message: Message, addressedMessage: string): Promise<string> {
     let response = this.highFive(message, addressedMessage);

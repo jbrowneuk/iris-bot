@@ -6,7 +6,7 @@ import { StatusCodes } from 'http-status-codes';
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { PostData, PostWrapper } from '../interfaces/blog-roll';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
+import { PersonalityBase } from './personality-base';
 import { calculateReadTime, formatTimestamp } from './utilities/blog-roll';
 
 const defaultUpdateMins = 60;
@@ -16,13 +16,15 @@ const settingsFileEnc = 'utf-8';
 export const blogRollSiteRoot = 'https://jbrowne.io/';
 export const blogRollApiPath = 'api/?posts';
 
-export class BlogRoll implements Personality {
+export class BlogRoll extends PersonalityBase {
   protected timerInterval: number | NodeJS.Timer;
   protected channelId: string;
   protected lastPostId: number;
   protected cachedUpdateInterval: number;
 
-  constructor(private dependencies: DependencyContainer, private settingsFilePath: string = defaultSettingsFile) {
+  constructor(dependencies: DependencyContainer, private settingsFilePath: string = defaultSettingsFile) {
+    super(dependencies);
+
     this.lastPostId = 0;
   }
 

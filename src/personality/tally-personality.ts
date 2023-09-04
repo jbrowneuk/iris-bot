@@ -3,8 +3,8 @@ import { Message } from 'discord.js';
 import { COMMAND_PREFIX } from '../constants/personality-constants';
 import { QueryFilter } from '../interfaces/database';
 import { DependencyContainer } from '../interfaces/dependency-container';
-import { Personality } from '../interfaces/personality';
 import { MessageType } from '../types';
+import { PersonalityBase } from './personality-base';
 
 export const collection = 'tally';
 export const addCommand = COMMAND_PREFIX + 'add';
@@ -22,8 +22,10 @@ function generateWhere(guildId: string): QueryFilter {
   };
 }
 
-export class TallyPersonality implements Personality {
-  constructor(private dependencies: DependencyContainer) {}
+export class TallyPersonality extends PersonalityBase {
+  constructor(dependencies: DependencyContainer) {
+    super(dependencies);
+  }
 
   onAddressed(): Promise<MessageType> {
     return Promise.resolve(null);

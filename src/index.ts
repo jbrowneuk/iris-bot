@@ -54,19 +54,19 @@ const dependencies: DependencyContainer = {
   settings
 };
 
-// Initialise personality
-engine.addPersonality(new AnimalImages(dependencies));
-engine.addPersonality(new BlogRoll(dependencies));
-engine.addPersonality(new BuildInfo());
-engine.addPersonality(new CallResponse(dependencies));
-engine.addPersonality(new DieRoll(dependencies));
-engine.addPersonality(new HangmanGame(dependencies));
-engine.addPersonality(new HugBot());
-engine.addPersonality(new Jokes(dependencies));
-engine.addPersonality(new MoodControl(dependencies, moodEngine));
-engine.addPersonality(new SimpleInteractions(dependencies));
-engine.addPersonality(new Stickers(dependencies));
-engine.addPersonality(new TallyPersonality(dependencies));
+// // Initialise personality
+// engine.addPersonality(new AnimalImages(dependencies));
+// engine.addPersonality(new BlogRoll(dependencies));
+// engine.addPersonality(new BuildInfo());
+// engine.addPersonality(new CallResponse(dependencies));
+// engine.addPersonality(new DieRoll(dependencies));
+// engine.addPersonality(new HangmanGame(dependencies));
+// engine.addPersonality(new HugBot());
+// engine.addPersonality(new Jokes(dependencies));
+// engine.addPersonality(new MoodControl(dependencies, moodEngine));
+// engine.addPersonality(new SimpleInteractions(dependencies));
+// engine.addPersonality(new Stickers(dependencies));
+// engine.addPersonality(new TallyPersonality(dependencies));
 
 // Start bot
 engine.initialise();
