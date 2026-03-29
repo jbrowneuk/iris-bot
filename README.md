@@ -1,3 +1,21 @@
+# This project has been retired
+
+I no longer have the motivation to work on this project. As such it's being archived. Thanks for being part of it.
+
+There are many better Discord bots out there. They come and go so I won't put any recommendations here.
+
+**From the Discord server:**
+
+> Hey all — so I’ve been thinking about the role of Skye in this server and in general.
+>
+> Skye doesn’t use ChatGPT or anything similar under the hood, but I also don’t really want her to be associated with that and people expecting things to work in certain ways. I’m not really working on the code any more and don’t have many plans going forward. I’m also getting weekly security alerts from GitHub (where I host the bot’s code) which I really should address but don’t know how to — e.g. outdated dependencies that are no longer compatible or maintained. Therefore I’m going to be switching off the current version with a long-term goal of simplifying the code to be a bot that simply responds to /slash commands (i.e. what Discord wants all bots to do). This should be fine as most of the interactions that happen with Skye right now are to do with guessing hangman letters.
+>
+> I’ll probably revisit this in the future but for now it’s a bittersweet farewell to the code I started in university over a decade ago.
+
+**Original readme follows:**
+
+---
+
 # iris-bot — a Discord bot focusing on natural language interaction
 
 `iris-bot` is a Discord bot written for the Domain of J community. It was ported from a version I made for Slack, which in turn was ported from a version written for IRC.
